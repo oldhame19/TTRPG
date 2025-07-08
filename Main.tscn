@@ -277,14 +277,12 @@ skin_offset = Vector2(2, 9)
 
 [node name="Cat" parent="GameBoard" instance=ExtResource("2")]
 position = Vector2(543.188, 415.064)
-is_player = false
 attack_range = 2
 skin = ExtResource("9")
 skin_offset = Vector2(5, 12)
 
 [node name="Squirrel" parent="GameBoard" instance=ExtResource("2")]
 position = Vector2(671.294, 361.315)
-is_player = false
 attack_range = 1
 move_range = 5
 skin = ExtResource("7")
@@ -294,7 +292,6 @@ skin_offset = Vector2(6, 17)
 modulate = Color(1, 0, 0, 1)
 position = Vector2(349.289, 363.685)
 is_enemy = true
-is_player = false
 is_wait = true
 attack_range = 1
 move_range = 3
@@ -305,7 +302,6 @@ skin_offset = Vector2(2, 9)
 modulate = Color(1, 0, 0, 1)
 position = Vector2(355.169, 424.696)
 is_enemy = true
-is_player = false
 is_wait = true
 attack_range = 1
 move_range = 3
@@ -316,7 +312,6 @@ skin_offset = Vector2(2, 9)
 modulate = Color(1, 0, 0, 1)
 position = Vector2(129.297, 359.254)
 is_enemy = true
-is_player = false
 attack_range = 1
 move_range = 3
 skin = ExtResource("8")

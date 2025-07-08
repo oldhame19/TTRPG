@@ -5,22 +5,18 @@
 class_name Unit
 extends Path2D
 
-enum Team {
-	ALLY,
-	ENEMY
-}
-
 signal walk_finished ## Emitted when the unit reached the end of a path along which it was walking.
 @export var is_enemy: bool
 @export var is_player: bool = false
 @export var grid: Resource ## Shared resource of type Grid, used to calculate map coordinates.
 
-@export var inventory: InventoryData
+@export var inventory: InventoryData = null
+@export var held_items: HeldItems = null
 @export var is_wait = false
 @export var attack_range := 0
 @export var move_range := 6
 @export var move_speed := 600.0
-@export var team: Team = Team.ALLY
+
 
 ## Texture representing the unit.
 @export var skin: Texture:

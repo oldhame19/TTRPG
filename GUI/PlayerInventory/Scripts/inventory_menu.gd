@@ -4,6 +4,7 @@ extends CanvasLayer
 
 # Individual tab buttons
 @onready var provisions_button = $Panel/VBoxContainer/CategoryTabs/ProvisionsButton
+@onready var misc_button = $Panel/VBoxContainer/CategoryTabs/MiscButton
 @onready var key_items_button = $Panel/VBoxContainer/CategoryTabs/KeyItemsButton
 @onready var armor_button = $Panel/VBoxContainer/CategoryTabs/ArmorButton
 @onready var ranged_button = $Panel/VBoxContainer/CategoryTabs/RangedButton
@@ -13,6 +14,7 @@ extends CanvasLayer
 func _ready():
 	# Connect tab button presses to populate_items with appropriate category
 	provisions_button.pressed.connect(func(): populate_items("Provisions"))
+	misc_button.pressed.connect(func(): populate_items("Misc"))
 	key_items_button.pressed.connect(func(): populate_items("KeyItems"))
 	armor_button.pressed.connect(func(): populate_items("Armor"))
 	ranged_button.pressed.connect(func(): populate_items("Ranged"))
@@ -52,4 +54,8 @@ func _on_melee_button_pressed() -> void:
 
 
 func _on_all_button_pressed() -> void:
+	pass # Replace with function body.
+
+
+func _on_misc_button_pressed() -> void:
 	pass # Replace with function body.

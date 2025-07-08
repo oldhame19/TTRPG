@@ -27,7 +27,7 @@ func _on_items_button_pressed() -> void:
 
 	if unit.is_player:
 		# Show the player's full inventory
-		var inventory_menu = preload("res://GUI/Inventory/player_inventory_menu.tscn").instantiate()
+		var inventory_menu = preload("res://GUI/PlayerInventory/Scenes/player_inventory_menu.tscn").instantiate()
 		inventory_menu.unit = unit  # Pass the unit to the menu
 		get_tree().get_root().add_child(inventory_menu)
 		hide()  # Hide the action menu while inventory is open
