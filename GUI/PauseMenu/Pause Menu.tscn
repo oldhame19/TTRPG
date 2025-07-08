@@ -1,9 +1,9 @@
 [gd_scene load_steps=2 format=3 uid="uid://dmmna53xx1mlm"]
 
-[ext_resource type="Script" uid="uid://jw1tyojb6qav" path="res://Menus/PauseMenu.gd" id="1_p308n"]
+[ext_resource type="Script" uid="uid://jw1tyojb6qav" path="res://GUI/PauseMenu/PauseMenu.gd" id="1_drvyg"]
 
 [node name="PauseMenu" type="CanvasLayer"]
-script = ExtResource("1_p308n")
+script = ExtResource("1_drvyg")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 anchors_preset = 8

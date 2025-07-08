@@ -1,9 +1,9 @@
 [gd_scene load_steps=2 format=3 uid="uid://b4u2ug2ljs6k8"]
 
-[ext_resource type="Script" uid="uid://ckuido6kcjhuu" path="res://Menus/ActionMenu.gd" id="1_3iebk"]
+[ext_resource type="Script" uid="uid://ckuido6kcjhuu" path="res://GUI/ActionMenu/ActionMenu.gd" id="1_jtl5q"]
 
 [node name="ActionMenu" type="CanvasLayer"]
-script = ExtResource("1_3iebk")
+script = ExtResource("1_jtl5q")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 anchors_preset = 8

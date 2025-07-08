@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bf0xfg077yr32"
-path="res://.godot/imported/1_tileset_unit_overlay.png-95ae332ace4d26290830648f8f437a85.ctex"
+path="res://.godot/imported/1_tileset_unit_overlay.png-cbbf5756c32a16c4238d8a5fc7e9992b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://UnitOverlay/1_tileset_unit_overlay.png"
-dest_files=["res://.godot/imported/1_tileset_unit_overlay.png-95ae332ace4d26290830648f8f437a85.ctex"]
+source_file="res://UnitOverlay/Tileset/1_tileset_unit_overlay.png"
+dest_files=["res://.godot/imported/1_tileset_unit_overlay.png-cbbf5756c32a16c4238d8a5fc7e9992b.ctex"]
 
 [params]
 

@@ -41,7 +41,6 @@ func _on_wait_button_pressed() -> void:
 	queue_free()
 
 
-
 func _on_cancel_button_pressed() -> void:
 	#reset the unit's position
 	get_parent()._reset_unit()

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b82ermd4qywbt"
-path="res://.godot/imported/arrows.svg-3b88e7a629b8cfce3558583111b7639a.ctex"
+uid="uid://bybooo6n8jonv"
+path="res://.godot/imported/terrain_tiled_80x80 (1).png-d184f3f934d89c17ebb06349704cec80.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://arrows.svg"
-dest_files=["res://.godot/imported/arrows.svg-3b88e7a629b8cfce3558583111b7639a.ctex"]
+source_file="res://Items/terrain_tiled_80x80 (1).png"
+dest_files=["res://.godot/imported/terrain_tiled_80x80 (1).png-d184f3f934d89c17ebb06349704cec80.ctex"]
 
 [params]
 
@@ -32,6 +32,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false

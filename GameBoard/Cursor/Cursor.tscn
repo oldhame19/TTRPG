@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://3p3k2vt5wr1d" path="res://GameBoard/Cursor/Cursor.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://dsmh2fn7kpkri" path="res://GameBoard/Cursor/menu_selection_arrow.png" id="2"]
-[ext_resource type="Resource" uid="uid://de03eq7e7ropp" path="res://GameBoard/Grid.tres" id="3"]
+[ext_resource type="Resource" uid="uid://de03eq7e7ropp" path="res://GameBoard/Resources/Grid.tres" id="3"]
 
 [sub_resource type="Animation" id="Animation_e2xsf"]
 resource_name = "idle"

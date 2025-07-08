@@ -7,8 +7,8 @@ extends Node2D
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 const OBSTACLE_ATLAS_ID = 2
 const MAX_VALUE: int = 99999
-const PauseMenu = preload("res://Menus/Pause Menu.tscn")
-const ActionMenu = preload("res://Menus/Action Menu.tscn")
+const PauseMenu = preload("res://GUI/PauseMenu/Pause Menu.tscn")
+const ActionMenu = preload("res://GUI/ActionMenu/Action Menu.tscn")
 ## Resource of type Grid.
 @export var grid: Resource
 

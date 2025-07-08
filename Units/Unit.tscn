@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://d4mhjq651egt"]
 
 [ext_resource type="Script" uid="uid://pyxorjdd81vm" path="res://Units/Unit.gd" id="1"]
-[ext_resource type="Resource" uid="uid://de03eq7e7ropp" path="res://GameBoard/Grid.tres" id="2"]
+[ext_resource type="Resource" uid="uid://de03eq7e7ropp" path="res://GameBoard/Resources/Grid.tres" id="2"]
 [ext_resource type="Texture2D" uid="uid://b5ghlcxjxmmgw" path="res://Units/unit_shadow.svg" id="3"]
 
 [sub_resource type="Animation" id="1"]
