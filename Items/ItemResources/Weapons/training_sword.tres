@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=3 format=3 uid="uid://b3tkm8iaftluh"]
+
+[ext_resource type="Script" uid="uid://bj0jjuon8i1ta" path="res://Items/Scripts/item_data.gd" id="1_3ohgg"]
+[ext_resource type="Texture2D" uid="uid://bxbbctpcw14fw" path="res://Items/Sprites/icon_32_2_09.png" id="2_gtlli"]
+
+[resource]
+script = ExtResource("1_3ohgg")
+name = "Training Sword"
+description = "A simple wooden sword used for training."
+category = 0
+stack_size = 1
+durability = 10
+weight = 0
+texture = ExtResource("2_gtlli")
+weapon_type = 1
+attack_bonus = 1
+defense_bonus = 0
+heal_amount = 0
+consumable = false
+metadata/_custom_type_script = "uid://bj0jjuon8i1ta"

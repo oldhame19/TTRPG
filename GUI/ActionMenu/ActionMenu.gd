@@ -25,7 +25,7 @@ func _on_action_button_pressed() -> void:
 func _on_items_button_pressed() -> void:
 	var unit = get_parent()._active_unit  # Replace with your actual reference if needed
 
-	if unit.is_player:
+	if unit and unit.is_player:
 		# Show the player's full inventory
 		var inventory_menu = preload("res://GUI/PlayerInventory/Scenes/player_inventory_menu.tscn").instantiate()
 		inventory_menu.unit = unit  # Pass the unit to the menu

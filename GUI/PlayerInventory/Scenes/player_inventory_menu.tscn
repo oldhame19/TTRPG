@@ -47,10 +47,6 @@ text = "MISC."
 layout_mode = 2
 text = "PROVISIONS"
 
-[node name="ArmorButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
-layout_mode = 2
-text = "ARMOR"
-
 [node name="RangedButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
 layout_mode = 2
 text = "RANGED"
@@ -64,11 +60,13 @@ layout_mode = 2
 text = "ALL"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(300, 300)
 layout_mode = 2
 
 [node name="ItemListContainer" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer"]
+custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
-size_flags_vertical = 4
+size_flags_vertical = 6
 
 [node name="CloseButton" type="Button" parent="."]
 offset_left = 263.0
@@ -80,7 +78,6 @@ text = "CLOSE"
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/KeyItemsButton" to="." method="_on_key_items_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/MiscButton" to="." method="_on_misc_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/ProvisionsButton" to="." method="_on_provisions_button_pressed"]
-[connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/ArmorButton" to="." method="_on_armor_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/RangedButton" to="." method="_on_ranged_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/MeleeButton" to="." method="_on_melee_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/AllButton" to="." method="_on_all_button_pressed"]

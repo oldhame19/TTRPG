@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="InventoryData" load_steps=6 format=3 uid="uid://dvworp6jnpmkd"]
+
+[ext_resource type="Script" uid="uid://bsywlhve0lm1k" path="res://GUI/PlayerInventory/Scripts/inventory_data.gd" id="1_obils"]
+[ext_resource type="Script" uid="uid://dmphg5nlphaa6" path="res://GUI/PlayerInventory/Scripts/slot_data.gd" id="2_csko2"]
+[ext_resource type="Resource" uid="uid://clra7hhuxjfdt" path="res://GUI/PlayerInventory/test/test_slot1.tres" id="3_4eiw2"]
+[ext_resource type="Resource" uid="uid://dexsegaw7vcr8" path="res://GUI/PlayerInventory/test/test_slot2.tres" id="4_74yyn"]
+[ext_resource type="Resource" uid="uid://bcpqj7dsmhwfs" path="res://GUI/PlayerInventory/test/test_slot3.tres" id="5_x27fd"]
+
+[resource]
+script = ExtResource("1_obils")
+slots = Array[ExtResource("2_csko2")]([ExtResource("3_4eiw2"), ExtResource("4_74yyn"), ExtResource("5_x27fd")])
+metadata/_custom_type_script = "uid://bsywlhve0lm1k"

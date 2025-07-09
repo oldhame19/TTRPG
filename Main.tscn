@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=4 uid="uid://30jb4kc5kf5p"]
+[gd_scene load_steps=28 format=4 uid="uid://30jb4kc5kf5p"]
 
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://GameBoard/Cursor/Cursor.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="2"]
@@ -17,6 +17,7 @@
 [ext_resource type="Texture2D" uid="uid://don6rhlapjhye" path="res://Units/bear.png" id="8"]
 [ext_resource type="Script" uid="uid://deiujsdcxpcod" path="res://GameBoard/Scripts/UnitPath.gd" id="8_xru6b"]
 [ext_resource type="Texture2D" uid="uid://x4kxxdinjx3r" path="res://Units/bugcat.png" id="9"]
+[ext_resource type="Resource" uid="uid://dvworp6jnpmkd" path="res://GUI/PlayerInventory/test/test_inventory.tres" id="15_kjvhd"]
 
 [sub_resource type="GDScript" id="GDScript_d1qvb"]
 script/source = "@export var movement_data: Dictionary
@@ -270,6 +271,7 @@ position = Vector2(744.918, 553.46)
 [node name="Bear" parent="GameBoard" instance=ExtResource("2")]
 position = Vector2(610.294, 361.196)
 is_player = true
+inventory = ExtResource("15_kjvhd")
 attack_range = 1
 move_range = 3
 skin = ExtResource("8")
