@@ -1,5 +1,5 @@
 class_name InventoryUtils
-
+extends Node
 
 
 #static func use_item(slots: Array[SlotData], slot: SlotData, user_unit: Unit) -> bool:

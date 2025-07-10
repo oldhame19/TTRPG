@@ -256,16 +256,19 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if not _active_unit and _units.has(cell):
 		_select_unit(cell)
 	elif _active_unit != null:
-		if is_occupied(cell) and _units[cell] == _active_unit: #Chosing to not move
-			
+		if is_occupied(cell) and _units[cell] == _active_unit:
 			_units.erase(_active_unit.cell)
 			_units[cell] = _active_unit
-			
+
 			_deselect_active_unit()
-			_clear_active_unit()
-			
+
 			var action_menu = ActionMenu.instantiate()
 			add_child(action_menu)
+
+			# Delay clearing until after the menu closes (see below)
+			action_menu.tree_exited.connect(func():
+				_clear_active_unit())
+
 		elif not is_occupied(cell) and _walkable_cells.has(cell): #Chosing to move
 			await(_move_active_unit(cell))
 			var action_menu = ActionMenu.instantiate()

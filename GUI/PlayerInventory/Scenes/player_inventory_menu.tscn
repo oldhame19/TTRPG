@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cneyq3qvy1yse"]
 
-[ext_resource type="Script" uid="uid://bj5t0frixr7yd" path="res://GUI/PlayerInventory/Scripts/inventory_menu.gd" id="1_2kqk1"]
+[ext_resource type="Script" uid="uid://bj5t0frixr7yd" path="res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd" id="1_2kqk1"]
 
 [node name="PlayerInventory" type="CanvasLayer"]
 script = ExtResource("1_2kqk1")
@@ -12,10 +12,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -338.5
-offset_top = -200.0
-offset_right = 338.5
-offset_bottom = 200.0
+offset_left = -375.0
+offset_top = -250.0
+offset_right = 375.0
+offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 4
@@ -23,8 +23,8 @@ size_flags_horizontal = 4
 [node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
 layout_mode = 1
 anchors_preset = -1
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchor_right = 0.997046
+anchor_bottom = 0.9875
 offset_left = 8.0
 offset_top = 5.0
 offset_right = -4.0
@@ -32,12 +32,9 @@ offset_bottom = -1.0
 metadata/_edit_use_anchors_ = true
 
 [node name="CategoryTabs" type="HBoxContainer" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
 layout_direction = 3
 layout_mode = 2
-
-[node name="KeyItemsButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
-layout_mode = 2
-text = "KEY ITEMS"
 
 [node name="MiscButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
 layout_mode = 2
@@ -46,6 +43,10 @@ text = "MISC."
 [node name="ProvisionsButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
 layout_mode = 2
 text = "PROVISIONS"
+
+[node name="EquipmentButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
+layout_mode = 2
+text = "EQUIPMENT"
 
 [node name="RangedButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
 layout_mode = 2
@@ -60,25 +61,32 @@ layout_mode = 2
 text = "ALL"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer"]
-custom_minimum_size = Vector2(300, 300)
+custom_minimum_size = Vector2(360, 425)
+layout_direction = 2
 layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.0
+horizontal_scroll_mode = 0
 
 [node name="ItemListContainer" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer"]
-custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
-size_flags_vertical = 6
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.0
 
-[node name="CloseButton" type="Button" parent="."]
-offset_left = 263.0
-offset_top = 456.0
-offset_right = 341.0
-offset_bottom = 502.0
+[node name="CloseButton" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 19.0
+offset_top = 435.0
+offset_right = 97.0
+offset_bottom = 481.0
 text = "CLOSE"
 
-[connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/KeyItemsButton" to="." method="_on_key_items_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/MiscButton" to="." method="_on_misc_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/ProvisionsButton" to="." method="_on_provisions_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/EquipmentButton" to="." method="_on_key_items_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/RangedButton" to="." method="_on_ranged_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/MeleeButton" to="." method="_on_melee_button_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/AllButton" to="." method="_on_all_button_pressed"]
-[connection signal="pressed" from="CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="Panel/CloseButton" to="." method="_on_close_button_pressed"]

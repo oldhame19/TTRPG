@@ -11,39 +11,34 @@ func _on_attack_button_pressed() -> void:
 	pass # Replace with function body.
 
 
-
 func _on_trade_button_pressed() -> void:
 	pass # Replace with function body.
-
 
 
 func _on_action_button_pressed() -> void:
 	pass # Replace with function body.
 
 
-
 func _on_items_button_pressed() -> void:
-	var unit = get_parent()._active_unit  # Replace with your actual reference if needed
+	var unit = get_parent()._active_unit
+	if not unit:
+		return
 
-	if unit and unit.is_player:
+	if unit.is_player:
 		# Show the player's full inventory
 		var inventory_menu = preload("res://GUI/PlayerInventory/Scenes/player_inventory_menu.tscn").instantiate()
-		inventory_menu.unit = unit  # Pass the unit to the menu
+		inventory_menu.unit = unit
 		get_tree().get_root().add_child(inventory_menu)
-		hide()  # Hide the action menu while inventory is open
+		hide()
 
-		# Re-show menu when inventory closes
 		inventory_menu.tree_exited.connect(func(): show())
 	else:
-		# For non-player units, treat the button as a no-op and just close the menu like "Cancel"
-		get_parent()._reset_unit()
-		cursor.process_mode = Node.PROCESS_MODE_INHERIT
-		cursor.reset_cursor()
-		cursor.show()
-		queue_free()
-
-
-
+		# Show the held items menu for non-player units
+		var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
+		held_items_menu.unit = unit
+		get_tree().get_root().add_child(held_items_menu)
+		hide()
+		held_items_menu.tree_exited.connect(func(): show())
 
 func _on_wait_button_pressed() -> void:
 	#Add:
@@ -57,7 +52,6 @@ func _on_wait_button_pressed() -> void:
 	cursor.reset_cursor()
 	cursor.show()
 	queue_free()
-
 
 func _on_cancel_button_pressed() -> void:
 	#reset the unit's position
