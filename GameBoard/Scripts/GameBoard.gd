@@ -263,6 +263,8 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			_deselect_active_unit()
 
 			var action_menu = ActionMenu.instantiate()
+			action_menu.unit = _active_unit
+			action_menu.game_board = self 
 			add_child(action_menu)
 
 			# Delay clearing until after the menu closes (see below)
@@ -272,7 +274,10 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		elif not is_occupied(cell) and _walkable_cells.has(cell): #Chosing to move
 			await(_move_active_unit(cell))
 			var action_menu = ActionMenu.instantiate()
+			action_menu.unit = _active_unit
+			action_menu.game_board = self 
 			add_child(action_menu)
+
 	else: #Selecting an emppty cell
 		var pause_menu = PauseMenu.instantiate()
 		add_child(pause_menu)

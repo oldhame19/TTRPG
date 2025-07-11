@@ -10,25 +10,38 @@ func _ready():
 	$VBoxContainer/TradeButton.pressed.connect(_on_trade_button_pressed)
 	$VBoxContainer/StoreButton.pressed.connect(_on_store_button_pressed)
 	$VBoxContainer/CloseButton.pressed.connect(_on_close_button_pressed)
+	$VBoxContainer/UseButton.pressed.connect(_on_use_button_pressed)
 
+	# Conditional visibility
+	$VBoxContainer/HoldButton.visible = (source == "inventory")
+	$VBoxContainer/StoreButton.visible = (source == "held_items")
+
+	# Only show Equip if it's an equippable item
+	if slot.item_data.category != ItemData.Category.Equipment:
+		$VBoxContainer/EquipButton.visible = false
+
+	# Only show Use button if the item is consumable
+	$VBoxContainer/UseButton.visible = slot.item_data.is_consumable()
 
 func _on_close_button_pressed() -> void:
 	# deselects the item
 	queue_free()
 
 func _on_store_button_pressed() -> void:
-	if source == "held_items":
-		print("Store", slot.item_data.name)
+	pass
 
 
 func _on_hold_button_pressed() -> void:
-	if source == "inventory":
-		print("Hold", slot.item_data.name)
+	pass
 
 
 func _on_trade_button_pressed() -> void:
-	print("Trade placeholder")
+	pass
 
 
 func _on_equip_button_pressed() -> void:
-	print("Equip", slot.item_data.name)
+	pass
+
+
+func _on_use_button_pressed() -> void:
+	pass # Replace with function body.

@@ -16,6 +16,7 @@ enum EquipmentType {None, Shield, Headgear, Jewelry}
 @export var attack_bonus: int = 0
 #equipment variables
 @export var defense_bonus: int = 0
+@export var equipped: bool = false
 #provisions variables
 @export var heal_amount: int = 0
 @export var consumable: bool = false
