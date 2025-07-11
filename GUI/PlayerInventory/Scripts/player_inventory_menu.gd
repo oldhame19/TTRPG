@@ -28,16 +28,44 @@ func _ready():
 
 	populate_items(CATEGORY_ALL)  # Show all items initially
 
+func _on_item_selected(slot: SlotData, button: Button) -> void:
+	# Close existing selected item menus
+	for child in get_tree().get_root().get_children():
+		if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
+			child.queue_free()
 
-func _on_close_button_pressed() -> void:
-	queue_free()
+	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
+	popup.slot = slot
+	popup.unit = unit
+	popup.source = "inventory"
+	get_tree().get_root().add_child(popup)
 
-func _on_item_selected(slot: SlotData) -> void:
-	print("Selected:", slot.item_data.name)
-	# You could open a Use/Equip/Discard menu here
+	# Position popup to the right of the pressed button with a small offset
+	var button_global_pos = button.get_global_position()
+	var button_size = button.get_size()
+
+	# Offset right by button width + 10 pixels, and align vertically with button
+	var popup_offset = Vector2(button_size.x + 175, 170)
+	popup.set_global_position(button_global_pos + popup_offset)
+
+
+
+
+#func _on_item_selected(slot: SlotData) -> void:
+	## Close existing selected item menus
+	#for child in get_tree().get_root().get_children():
+		#if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
+			#child.queue_free()
+#
+	#var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
+	#popup.slot = slot
+	#popup.unit = unit
+	#popup.source = "inventory"
+	#get_tree().get_root().add_child(popup)
 
 func populate_items(category: int) -> void:
 	var items: Array[SlotData]
+	
 
 	if category == CATEGORY_ALL:
 		items = unit.inventory.slots.duplicate()
@@ -60,7 +88,8 @@ func display_items(items: Array[SlotData]) -> void:
 		button.custom_minimum_size = Vector2(400, 40)
 		button.focus_mode = Control.FOCUS_ALL
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.pressed.connect(func(): _on_item_selected(slot))
+		button.pressed.connect(func(b=button, s=slot): _on_item_selected(s, b))
+		
 
 		# HBox inside the button
 		var hbox := HBoxContainer.new()
@@ -89,23 +118,22 @@ func display_items(items: Array[SlotData]) -> void:
 		# Item name
 		var name_label := Label.new()
 		name_label.text = slot.item_data.name
-		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# Change from EXPAND_FILL to SHRINK_CENTER with fixed width so qty_label isn’t pushed far right
+		name_label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		name_label.custom_minimum_size = Vector2(275, 0)  # Adjust width as needed
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		hbox.add_child(name_label)
 
 		# Quantity label
 		var qty_label := Label.new()
 		qty_label.text = "x%d" % slot.quantity
-		qty_label.size_flags_horizontal = Control.SIZE_EXPAND
+		qty_label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		qty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		qty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		qty_label.custom_minimum_size = Vector2(50, 32)
 		hbox.add_child(qty_label)
 
-		# Right buffer to give padding from edge
-		var right_buffer := Control.new()
-		right_buffer.custom_minimum_size = Vector2(16, 0)
-		hbox.add_child(right_buffer)
+		# *** Removed right buffer spacer here ***
 
 		# Assemble and add to container
 		button.add_child(hbox)

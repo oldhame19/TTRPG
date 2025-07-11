@@ -20,11 +20,11 @@ grow_vertical = 2
 
 [node name="UnitsButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Units"
+text = "UNITS"
 
 [node name="OptionsButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Options"
+text = "OPTIONS"
 
 [node name="EmptyButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
@@ -33,11 +33,11 @@ mouse_filter = 2
 
 [node name="EndTurnButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "End Turn"
+text = "END "
 
 [node name="CloseButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Close"
+text = "CLOSE"
 
 [connection signal="pressed" from="VBoxContainer/UnitsButton" to="." method="_on_units_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/OptionsButton" to="." method="_on_options_button_pressed"]

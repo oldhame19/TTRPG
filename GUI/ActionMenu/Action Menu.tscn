@@ -20,19 +20,19 @@ grow_vertical = 2
 
 [node name="AttackButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Attack"
+text = "ATTACK"
 
 [node name="TradeButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Trade"
+text = "TRADE"
 
 [node name="ActionButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Action"
+text = "ACTION"
 
 [node name="ItemsButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Items"
+text = "ITEMS"
 
 [node name="EmptyButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
@@ -41,11 +41,11 @@ mouse_filter = 2
 
 [node name="WaitButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Wait"
+text = "WAIT"
 
 [node name="CancelButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Cancel"
+text = "CLOSE"
 
 [connection signal="pressed" from="VBoxContainer/AttackButton" to="." method="_on_attack_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/TradeButton" to="." method="_on_trade_button_pressed"]

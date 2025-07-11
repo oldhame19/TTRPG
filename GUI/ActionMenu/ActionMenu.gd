@@ -18,27 +18,66 @@ func _on_trade_button_pressed() -> void:
 func _on_action_button_pressed() -> void:
 	pass # Replace with function body.
 
-
 func _on_items_button_pressed() -> void:
 	var unit = get_parent()._active_unit
 	if not unit:
 		return
 
 	if unit.is_player:
-		# Show the player's full inventory
+		# Load and show the inventory menu (use its editor-set position)
 		var inventory_menu = preload("res://GUI/PlayerInventory/Scenes/player_inventory_menu.tscn").instantiate()
 		inventory_menu.unit = unit
 		get_tree().get_root().add_child(inventory_menu)
+
+		# Load and show the held items menu
+		var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
+		held_items_menu.unit = unit
+		get_tree().get_root().add_child(held_items_menu)
+
+		# Only move the held items panel to align next to the inventory
+		held_items_menu.get_node("Panel").position = Vector2(201, 73)  # Adjust as needed
+
+		# Hide this action menu until both close
 		hide()
 
-		inventory_menu.tree_exited.connect(func(): show())
+		inventory_menu.tree_exited.connect(func():
+			if not is_instance_valid(held_items_menu):
+				show()
+		)
+		held_items_menu.tree_exited.connect(func():
+			if not is_instance_valid(inventory_menu):
+				show()
+		)
 	else:
-		# Show the held items menu for non-player units
+		# Non-player units: just show held items
 		var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
 		held_items_menu.unit = unit
 		get_tree().get_root().add_child(held_items_menu)
 		hide()
 		held_items_menu.tree_exited.connect(func(): show())
+
+
+
+#func _on_items_button_pressed() -> void:
+	#var unit = get_parent()._active_unit
+	#if not unit:
+		#return
+#
+	#if unit.is_player:
+		## Show the player's full inventory
+		#var inventory_menu = preload("res://GUI/PlayerInventory/Scenes/player_inventory_menu.tscn").instantiate()
+		#inventory_menu.unit = unit
+		#get_tree().get_root().add_child(inventory_menu)
+		#hide()
+#
+		#inventory_menu.tree_exited.connect(func(): show())
+	#else:
+		## Show the held items menu for non-player units
+		#var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
+		#held_items_menu.unit = unit
+		#get_tree().get_root().add_child(held_items_menu)
+		#hide()
+		#held_items_menu.tree_exited.connect(func(): show())
 
 func _on_wait_button_pressed() -> void:
 	#Add:
