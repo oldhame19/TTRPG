@@ -6,11 +6,11 @@ extends CanvasLayer
 const CATEGORY_ALL: int = -1  # For showing everything
 
 @onready var tab_buttons := {
-	ItemData.Category.Provisions: $Panel/VBoxContainer/CategoryTabs/ProvisionsButton,
-	ItemData.Category.Misc: $Panel/VBoxContainer/CategoryTabs/MiscButton,
-	ItemData.Category.Equipment: $Panel/VBoxContainer/CategoryTabs/EquipmentButton,
-	ItemData.Category.Ranged: $Panel/VBoxContainer/CategoryTabs/RangedButton,
-	ItemData.Category.Melee: $Panel/VBoxContainer/CategoryTabs/MeleeButton,
+	ItemData.Category.PROVISIONS: $Panel/VBoxContainer/CategoryTabs/ProvisionsButton,
+	ItemData.Category.MISC: $Panel/VBoxContainer/CategoryTabs/MiscButton,
+	ItemData.Category.EQUIPMENT: $Panel/VBoxContainer/CategoryTabs/EquipmentButton,
+	ItemData.Category.RANGED: $Panel/VBoxContainer/CategoryTabs/RangedButton,
+	ItemData.Category.MELEE: $Panel/VBoxContainer/CategoryTabs/MeleeButton,
 	CATEGORY_ALL: $Panel/VBoxContainer/CategoryTabs/AllButton
 }
 
@@ -48,20 +48,6 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	var popup_offset = Vector2(button_size.x + 175, 170)
 	popup.set_global_position(button_global_pos + popup_offset)
 
-
-
-
-#func _on_item_selected(slot: SlotData) -> void:
-	## Close existing selected item menus
-	#for child in get_tree().get_root().get_children():
-		#if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
-			#child.queue_free()
-#
-	#var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
-	#popup.slot = slot
-	#popup.unit = unit
-	#popup.source = "inventory"
-	#get_tree().get_root().add_child(popup)
 
 func populate_items(category: int) -> void:
 	var items: Array[SlotData]
@@ -138,3 +124,16 @@ func display_items(items: Array[SlotData]) -> void:
 		# Assemble and add to container
 		button.add_child(hbox)
 		item_list_container.add_child(button)
+		
+
+#func _on_item_selected(slot: SlotData) -> void:
+	## Close existing selected item menus
+	#for child in get_tree().get_root().get_children():
+		#if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
+			#child.queue_free()
+#
+	#var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
+	#popup.slot = slot
+	#popup.unit = unit
+	#popup.source = "inventory"
+	#get_tree().get_root().add_child(popup)

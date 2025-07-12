@@ -11,13 +11,13 @@ func _ready():
 	$VBoxContainer/StoreButton.pressed.connect(_on_store_button_pressed)
 	$VBoxContainer/CloseButton.pressed.connect(_on_close_button_pressed)
 	$VBoxContainer/UseButton.pressed.connect(_on_use_button_pressed)
-
+	$VBoxContainer/DescriptionButton.pressed.connect(_on_description_button_pressed)
 	# Conditional visibility
 	$VBoxContainer/HoldButton.visible = (source == "inventory")
 	$VBoxContainer/StoreButton.visible = (source == "held_items")
 
 	# Only show Equip if it's an equippable item
-	if slot.item_data.category != ItemData.Category.Equipment:
+	if slot.item_data.category != ItemData.Category.EQUIPMENT:
 		$VBoxContainer/EquipButton.visible = false
 
 	# Only show Use button if the item is consumable
@@ -45,3 +45,12 @@ func _on_equip_button_pressed() -> void:
 
 func _on_use_button_pressed() -> void:
 	pass # Replace with function body.
+
+
+func _on_description_button_pressed() -> void:
+	var desc_box_scene = preload("res://GUI/ItemMenus/item_description_box.tscn")  # This is a PackedScene
+	var desc_box = desc_box_scene.instantiate()  # Instantiate the PackedScene to get the node instance
+	get_tree().get_root().add_child(desc_box)
+
+	desc_box.show_item_description(slot.item_data)
+	desc_box.popup_centered()

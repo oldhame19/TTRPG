@@ -19,6 +19,7 @@ texture = SubResource("AtlasTexture_kd8d5")
 weapon_type = 0
 attack_bonus = 0
 defense_bonus = 0
+equipped = false
 heal_amount = 10
 consumable = true
 metadata/_custom_type_script = "uid://bj0jjuon8i1ta"
