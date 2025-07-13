@@ -29,8 +29,9 @@ func _ready():
 	populate_items(CATEGORY_ALL)  # Show all items initially
 
 func _on_item_selected(slot: SlotData, button: Button) -> void:
-	# Close existing selected item menus
-	for child in get_tree().get_root().get_children():
+	
+	# Close existing popups
+	for child in get_children():
 		if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
 			child.queue_free()
 
@@ -38,15 +39,10 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	popup.slot = slot
 	popup.unit = unit
 	popup.source = "inventory"
-	get_tree().get_root().add_child(popup)
+	add_child(popup)  # ← Add to *this* inventory menu node
 
-	# Position popup to the right of the pressed button with a small offset
-	var button_global_pos = button.get_global_position()
-	var button_size = button.get_size()
-
-	# Offset right by button width + 10 pixels, and align vertically with button
-	var popup_offset = Vector2(button_size.x + 175, 170)
-	popup.set_global_position(button_global_pos + popup_offset)
+	var button_pos = button.get_position()
+	popup.set_position(button_pos + Vector2(953, 75))
 
 
 func populate_items(category: int) -> void:
@@ -126,14 +122,21 @@ func display_items(items: Array[SlotData]) -> void:
 		item_list_container.add_child(button)
 		
 
-#func _on_item_selected(slot: SlotData) -> void:
-	## Close existing selected item menus
-	#for child in get_tree().get_root().get_children():
-		#if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
-			#child.queue_free()
-#
-	#var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
-	#popup.slot = slot
-	#popup.unit = unit
-	#popup.source = "inventory"
-	#get_tree().get_root().add_child(popup)
+
+func _on_close_button_pressed() -> void:
+	if unit and unit.is_player:
+		# Close held items menu if it's still open
+		for child in get_tree().get_root().get_children():
+			if child is CanvasLayer and child.get_script().resource_path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
+				if child.unit == unit:
+					child.queue_free()
+					break
+
+	# Close selected item popup if any
+	for child in get_children():
+		if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
+			child.queue_free()
+			break
+
+	# Close this inventory menu
+	queue_free()

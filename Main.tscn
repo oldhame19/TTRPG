@@ -288,7 +288,7 @@ grid = ExtResource("4")
 position = Vector2(744.918, 553.46)
 
 [node name="Bear" parent="GameBoard" instance=ExtResource("2")]
-position = Vector2(610.294, 361.196)
+position = Vector2(608.282, 367.192)
 is_player = true
 inventory = ExtResource("15_kjvhd")
 held_items = ExtResource("18_5tuhn")

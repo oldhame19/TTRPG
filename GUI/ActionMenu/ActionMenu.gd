@@ -59,7 +59,6 @@ func _on_trade_button_pressed() -> void:
 func _on_action_button_pressed() -> void:
 	pass # Replace with function body.
 
-
 func _on_items_button_pressed() -> void:
 	var unit = get_parent()._active_unit
 	if not unit:
@@ -75,6 +74,9 @@ func _on_items_button_pressed() -> void:
 		var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
 		held_items_menu.unit = unit
 		get_tree().get_root().add_child(held_items_menu)
+
+		# Hide the close button in held items menu
+		held_items_menu.get_node("Panel/CloseButton").visible = false
 
 		# Only move the held items panel to align next to the inventory
 		held_items_menu.get_node("Panel").position = Vector2(201, 73)  # Adjust as needed
@@ -97,6 +99,7 @@ func _on_items_button_pressed() -> void:
 		get_tree().get_root().add_child(held_items_menu)
 		hide()
 		held_items_menu.tree_exited.connect(func(): show())
+
 
 
 func _on_wait_button_pressed() -> void:
