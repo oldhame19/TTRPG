@@ -29,11 +29,6 @@ func _ready():
 	populate_items(CATEGORY_ALL)  # Show all items initially
 
 func _on_item_selected(slot: SlotData, button: Button) -> void:
-	
-	# Close existing popups
-	for child in get_children():
-		if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
-			child.queue_free()
 
 	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
 	popup.slot = slot
@@ -96,26 +91,47 @@ func display_items(items: Array[SlotData]) -> void:
 		var icon_name_spacer := Control.new()
 		icon_name_spacer.custom_minimum_size = Vector2(8, 0)
 		hbox.add_child(icon_name_spacer)
+		
+# Name + Durability wrapper
+		var name_durability_box := HBoxContainer.new()
+		name_durability_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_durability_box.custom_minimum_size = Vector2(0, 32)
+		name_durability_box.alignment = BoxContainer.ALIGNMENT_BEGIN
+		name_durability_box.add_theme_constant_override("separation", 4)
 
-		# Item name
+# Item name
 		var name_label := Label.new()
 		name_label.text = slot.item_data.name
-		# Change from EXPAND_FILL to SHRINK_CENTER with fixed width so qty_label isn’t pushed far right
-		name_label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-		name_label.custom_minimum_size = Vector2(275, 0)  # Adjust width as needed
+		name_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		hbox.add_child(name_label)
+		name_durability_box.add_child(name_label)
 
-		# Quantity label
+# Durability label (if applicable)
+		if slot.item_data.max_durability > 0:
+			var durability_label := Label.new()
+			durability_label.text = "[%02d/%02d]" % [slot.item_data.durability, slot.item_data.max_durability]
+			durability_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+			durability_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			durability_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			name_durability_box.add_child(durability_label)
+
+		hbox.add_child(name_durability_box)
+
+# Quantity label (if more than one)
+		
 		var qty_label := Label.new()
 		qty_label.text = "x%d" % slot.quantity
-		qty_label.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		qty_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		qty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		qty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		qty_label.custom_minimum_size = Vector2(50, 32)
 		hbox.add_child(qty_label)
+		
+		# Right buffer spacer (to match held items look)
+		var right_spacer := Control.new()
+		right_spacer.custom_minimum_size = Vector2(16, 0)
+		hbox.add_child(right_spacer)
 
-		# *** Removed right buffer spacer here ***
 
 		# Assemble and add to container
 		button.add_child(hbox)

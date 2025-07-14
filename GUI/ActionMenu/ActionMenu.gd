@@ -73,6 +73,7 @@ func _on_items_button_pressed() -> void:
 		# Load and show the held items menu
 		var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
 		held_items_menu.unit = unit
+		held_items_menu.game_board = game_board 
 		get_tree().get_root().add_child(held_items_menu)
 
 		# Hide the close button in held items menu
@@ -96,6 +97,7 @@ func _on_items_button_pressed() -> void:
 		# Non-player units: just show held items
 		var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
 		held_items_menu.unit = unit
+		held_items_menu.game_board = game_board
 		get_tree().get_root().add_child(held_items_menu)
 		hide()
 		held_items_menu.tree_exited.connect(func(): show())

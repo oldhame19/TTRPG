@@ -9,6 +9,7 @@ name = "Training Sword"
 description = "A simple wooden sword used for training."
 category = 0
 stack_size = 1
+max_durability = 10
 durability = 10
 weight = 2
 texture = ExtResource("2_gtlli")

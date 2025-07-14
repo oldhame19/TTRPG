@@ -13,6 +13,7 @@ name = "Bread"
 description = "It's nearly stale, but it will do. Restores 10 HP."
 category = 2
 stack_size = 3
+max_durability = 1
 durability = 1
 weight = 0
 texture = SubResource("AtlasTexture_kd8d5")

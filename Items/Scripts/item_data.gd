@@ -9,6 +9,7 @@ enum Effectiveness {NONE, GIANT, CAVALRY}
 @export_multiline var description : String = ""
 @export var category: Category = Category.MISC
 @export var stack_size: int = 1
+@export var max_durability: int = 0
 @export var durability: int = 0 #used for both weapon durability and consumables
 @export var weight: int = 0
 @export var texture: Texture2D
