@@ -133,8 +133,8 @@ func populate_items():
 		item_list_container.add_child(button)
 
 func _on_item_selected(slot: SlotData, button: Button) -> void:
-
 	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
+	popup.source_button = button
 	popup.slot = slot
 	popup.unit = unit
 	popup.source = "held_items"
@@ -145,9 +145,24 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	var offset = Vector2()
 
 	if unit and unit.is_player:
-		offset = Vector2(140, 75)  # Offset when unit is player
+		offset = Vector2(140, 75)
 	else:
-		offset = Vector2(344, 75)  # Different offset when unit is not player
+		var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+		var directions = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+		var adjacent_to_player = false
+
+		for dir in directions:
+			var neighbor_cell = unit_cell + dir
+			if game_board._units.has(neighbor_cell):
+				var neighbor = game_board._units[neighbor_cell]
+				if neighbor.is_player:
+					adjacent_to_player = true
+					break
+
+		if adjacent_to_player:
+			offset = Vector2(140, 75)  # Use player-style offset
+		else:
+			offset = Vector2(344, 75)  # Default for non-player units
 
 	popup.set_position(button_pos + offset)
 

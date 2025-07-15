@@ -140,13 +140,11 @@ func display_items(items: Array[SlotData]) -> void:
 
 
 func _on_close_button_pressed() -> void:
-	if unit and unit.is_player:
 		# Close held items menu if it's still open
-		for child in get_tree().get_root().get_children():
-			if child is CanvasLayer and child.get_script().resource_path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
-				if child.unit == unit:
-					child.queue_free()
-					break
+	for child in get_tree().get_root().get_children():
+		if child is CanvasLayer and child.get_script().resource_path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
+			child.queue_free()
+			
 
 	# Close selected item popup if any
 	for child in get_children():

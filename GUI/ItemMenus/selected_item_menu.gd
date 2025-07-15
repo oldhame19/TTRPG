@@ -2,15 +2,22 @@ extends Control  # Or PopupPanel, etc.
 
 static var active_popup: Control = null
 
+
 var slot: SlotData
 var unit: Unit
 var source: String  # "inventory" or "held_items"
 var game_board       # Assigned when creating the popup
+var source_button: Button
 
 func _ready():
-	# When opening, if there's already an active popup, close it
+	# Close previous selected item menu
 	if active_popup and active_popup != self:
 		active_popup.queue_free()
+
+	# Close any open store item menu popup
+	if StoreItemMenu.active_store_popup:
+		StoreItemMenu.active_store_popup.queue_free()
+
 	active_popup = self
 	set_process_unhandled_input(true)
 
@@ -23,30 +30,42 @@ func _ready():
 	$VBoxContainer/DescriptionButton.pressed.connect(_on_description_button_pressed)
 
 	$VBoxContainer/HoldButton.visible = (source == "inventory")
-	$VBoxContainer/StoreButton.visible = (source == "held_items")
+
+	# Store button visibility logic
+	var store_visible := false
+	if unit and unit.is_player:
+		store_visible = (source == "held_items")
+	elif unit and not unit.is_player and game_board:
+		var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+		var directions = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+		for dir in directions:
+			var neighbor_cell = unit_cell + dir
+			if game_board._units.has(neighbor_cell):
+				var neighbor = game_board._units[neighbor_cell]
+				if neighbor.is_player:
+					store_visible = true
+					break
+
+	$VBoxContainer/StoreButton.visible = store_visible
 
 	if slot.item_data.category != ItemData.Category.EQUIPMENT:
 		$VBoxContainer/EquipButton.visible = false
 
 	$VBoxContainer/UseButton.visible = slot.item_data.is_consumable()
-	if not unit:
-		print("SelectedItemMenu: unit is null")
-		return
-	if not game_board:
-		print("SelectedItemMenu: game_board is null")
-		return
-		
 
+	if not unit or not game_board:
+		return
+
+	# Trade button visibility logic
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
 	var directions = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 	var trade_visible := false
 
 	if source == "inventory":
-		trade_visible = true  # Always visible from inventory
+		trade_visible = true
 	elif unit and unit.is_player:
-		trade_visible = true  # Always visible for player's held items
+		trade_visible = true
 	elif unit and not unit.is_player and game_board:
-
 		for dir in directions:
 			var neighbor_cell = unit_cell + dir
 			if game_board._units.has(neighbor_cell):
@@ -54,20 +73,37 @@ func _ready():
 				if not neighbor.is_enemy:
 					trade_visible = true
 					break
-
 	$VBoxContainer/TradeButton.visible = trade_visible
-
+  
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
-		var global_mouse_pos = get_viewport().get_mouse_position()
-		if not get_global_rect().has_point(global_mouse_pos):
+		if not get_global_rect().has_point(get_viewport().get_mouse_position()):
 			queue_free()
 
 func _on_close_button_pressed() -> void:
 	queue_free()
 
 func _on_store_button_pressed() -> void:
-	pass
+	var store_menu_scene = preload("res://GUI/HeldItems/Scenes/store_item_menu.tscn")
+	var store_menu = store_menu_scene.instantiate()
+	store_menu.unit = unit
+	store_menu.slot = slot
+
+	# Pass the actual Store button node so store menu can position relative to it
+	store_menu.store_button = $VBoxContainer/StoreButton
+
+	# Add store_menu as sibling to this popup so layering/order remains consistent
+	get_parent().add_child(store_menu)
+
+	# Position store_menu relative to the StoreButton's global position
+	if store_menu.store_button:
+		var button_global_pos = store_menu.store_button.get_global_position()
+		var offset = Vector2(-65, -35)  # tweak this to position the store_menu nicely to the right or left
+		store_menu.global_position = button_global_pos + offset
+	else:
+		# fallback positioning
+		store_menu.global_position = global_position + Vector2(0, 0)
+
 
 func _on_hold_button_pressed() -> void:
 	pass

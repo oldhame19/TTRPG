@@ -60,29 +60,23 @@ func _on_action_button_pressed() -> void:
 	pass # Replace with function body.
 
 func _on_items_button_pressed() -> void:
-	var unit = get_parent()._active_unit
-	if not unit:
+	var selected_unit = get_parent()._active_unit
+	if not selected_unit:
 		return
 
-	if unit.is_player:
-		# Load and show the inventory menu (use its editor-set position)
+	if selected_unit.is_player:
+		# PLAYER: Show player inventory + held items
 		var inventory_menu = preload("res://GUI/PlayerInventory/Scenes/player_inventory_menu.tscn").instantiate()
-		inventory_menu.unit = unit
+		inventory_menu.unit = selected_unit
 		get_tree().get_root().add_child(inventory_menu)
 
-		# Load and show the held items menu
 		var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
-		held_items_menu.unit = unit
-		held_items_menu.game_board = game_board 
+		held_items_menu.unit = selected_unit
+		held_items_menu.game_board = game_board
 		get_tree().get_root().add_child(held_items_menu)
 
-		# Hide the close button in held items menu
 		held_items_menu.get_node("Panel/CloseButton").visible = false
-
-		# Only move the held items panel to align next to the inventory
-		held_items_menu.get_node("Panel").position = Vector2(201, 73)  # Adjust as needed
-
-		# Hide this action menu until both close
+		held_items_menu.get_node("Panel").position = Vector2(201, 73)
 		hide()
 
 		inventory_menu.tree_exited.connect(func():
@@ -93,14 +87,54 @@ func _on_items_button_pressed() -> void:
 			if not is_instance_valid(inventory_menu):
 				show()
 		)
+
 	else:
-		# Non-player units: just show held items
-		var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
-		held_items_menu.unit = unit
-		held_items_menu.game_board = game_board
-		get_tree().get_root().add_child(held_items_menu)
-		hide()
-		held_items_menu.tree_exited.connect(func(): show())
+		# Check if selected unit is adjacent to the player
+		var unit_cell = selected_unit.grid.calculate_grid_coordinates(selected_unit.position)
+		var directions = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+		var adjacent_to_player := false
+		var player_unit: Unit = null
+
+		for dir in directions:
+			var neighbor_cell = unit_cell + dir
+			if game_board._units.has(neighbor_cell):
+				var neighbor = game_board._units[neighbor_cell]
+				if neighbor.is_player:
+					adjacent_to_player = true
+					player_unit = neighbor
+					break
+
+		if adjacent_to_player and player_unit:
+			# Show both: selected unit's held items and player's inventory
+			var inventory_menu = preload("res://GUI/PlayerInventory/Scenes/player_inventory_menu.tscn").instantiate()
+			inventory_menu.unit = player_unit
+			get_tree().get_root().add_child(inventory_menu)
+
+			var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
+			held_items_menu.unit = selected_unit
+			held_items_menu.game_board = game_board
+			get_tree().get_root().add_child(held_items_menu)
+
+			held_items_menu.get_node("Panel/CloseButton").visible = false
+			held_items_menu.get_node("Panel").position = Vector2(201, 73)
+			hide()
+
+			inventory_menu.tree_exited.connect(func():
+				if not is_instance_valid(held_items_menu):
+					show()
+			)
+			held_items_menu.tree_exited.connect(func():
+				if not is_instance_valid(inventory_menu):
+					show()
+			)
+		else:
+			# Just show held items (normal case)
+			var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
+			held_items_menu.unit = selected_unit
+			held_items_menu.game_board = game_board
+			get_tree().get_root().add_child(held_items_menu)
+			hide()
+			held_items_menu.tree_exited.connect(func(): show())
 
 
 
