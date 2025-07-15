@@ -1,5 +1,5 @@
+#store_item_menu.gd
 class_name StoreItemMenu
-
 extends Control
 var selected_item_menu: Control = null
 static var active_store_popup: Control = null
@@ -25,14 +25,6 @@ func _ready():
 	$VBoxContainer/StoreAllButton.pressed.connect(_on_store_all_button_pressed)
 	$VBoxContainer/BackButton.pressed.connect(_on_back_button_pressed)
 
-func _on_store_one_button_pressed() -> void:
-	# Add your store one logic here
-	queue_free()
-
-func _on_store_all_button_pressed() -> void:
-	# Add your store all logic here
-	queue_free()
-
 func _on_back_button_pressed() -> void:
 	queue_free()
 
@@ -56,6 +48,66 @@ func _unhandled_input(event):
 		# If click was NOT inside any of the buttons, close the menu
 		if not clicked_inside_button:
 			queue_free()
+func _on_store_one_button_pressed() -> void:
+	_store_items(1)
+	queue_free()
+
+func _on_store_all_button_pressed() -> void:
+	_store_items(slot.quantity)
+	queue_free()
+
+func _store_items(amount_to_store: int) -> void:
+	var player_inventory := unit.inventory
+	var held_items := unit.held_items
+	var item_data := slot.item_data
+	var remaining: int = min(amount_to_store, slot.quantity)  # can't store more than held
+
+	if remaining <= 0:
+		return  # nothing to store
+
+	var total_transferred: int = 0
+
+	# Merge into existing stacks in player inventory
+	for inv_slot in player_inventory.slots:
+		if inv_slot.item_data == item_data and inv_slot.item_data.durability == item_data.durability:
+			var max_stack: int = item_data.stack_size
+			var space_left: int = max_stack - inv_slot.quantity
+			if space_left > 0:
+				var transfer: int = min(remaining, space_left)
+				inv_slot.quantity += transfer
+				remaining -= transfer
+				total_transferred += transfer
+				if remaining <= 0:
+					break
+
+	# Add as new stack if any remain
+	if remaining > 0:
+		var new_slot := slot.duplicate()  # make a *new* independent slot
+		new_slot.quantity = remaining  # set only the remaining quantity
+		player_inventory.slots.append(new_slot)
+		total_transferred += remaining
+		remaining = 0
+
+	# Decrement held item slot only once, after all transfers
+	slot.quantity -= total_transferred
+
+	# Remove slot from held items if empty or below zero (prevent negatives)
+	if slot.quantity <= 0:
+		slot.quantity = 0
+		if held_items.slots.has(slot):
+			held_items.slots.erase(slot)
+
+	# Refresh UI menus to reflect changes
+	_refresh_menus()
+
+
+func _refresh_menus():
+	for child in get_tree().get_root().get_children():
+		if child is CanvasLayer:
+			if child.get_script() and child.get_script().resource_path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
+				child.populate_items()
+			elif child.get_script() and child.get_script().resource_path == "res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd":
+				child.populate_items(-1)  # Show all
 
 func _exit_tree():
 	if active_popup == self:

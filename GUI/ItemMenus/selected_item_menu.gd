@@ -1,7 +1,6 @@
+#selected_item_menu.gd
 extends Control  # Or PopupPanel, etc.
-
 static var active_popup: Control = null
-
 
 var slot: SlotData
 var unit: Unit

@@ -1,3 +1,4 @@
+#player_inventory_menu.gs
 extends CanvasLayer
 
 @export var unit: Unit

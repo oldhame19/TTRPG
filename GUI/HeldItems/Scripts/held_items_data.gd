@@ -1,3 +1,4 @@
+#held_items_data.gd
 class_name HeldItemsData extends Resource
 
 @export var slots: Array[SlotData] = []

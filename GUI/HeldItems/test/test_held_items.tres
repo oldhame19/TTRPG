@@ -1,12 +1,26 @@
-[gd_resource type="Resource" script_class="HeldItemsData" load_steps=6 format=3 uid="uid://db4v7fqoho8p4"]
+[gd_resource type="Resource" script_class="HeldItemsData" load_steps=10 format=3 uid="uid://db4v7fqoho8p4"]
 
 [ext_resource type="Script" uid="uid://b3bnc4m3u2lkx" path="res://GUI/HeldItems/Scripts/held_items_data.gd" id="1_7x6df"]
 [ext_resource type="Script" uid="uid://dmphg5nlphaa6" path="res://GUI/PlayerInventory/Scripts/slot_data.gd" id="2_jrp0e"]
 [ext_resource type="Resource" uid="uid://clra7hhuxjfdt" path="res://GUI/PlayerInventory/test/test_slot1.tres" id="3_4nhip"]
 [ext_resource type="Resource" uid="uid://dexsegaw7vcr8" path="res://GUI/PlayerInventory/test/test_slot2.tres" id="4_hjrdd"]
 [ext_resource type="Resource" uid="uid://bcpqj7dsmhwfs" path="res://GUI/PlayerInventory/test/test_slot3.tres" id="5_bvekf"]
+[ext_resource type="Resource" uid="uid://bb66nenqr0wyu" path="res://Items/ItemResources/Provisions/bread.tres" id="6_4nhip"]
+[ext_resource type="Resource" uid="uid://sj3kjirnpkk0" path="res://Items/ItemResources/Misc/stone.tres" id="7_hjrdd"]
+
+[sub_resource type="Resource" id="Resource_bvekf"]
+script = ExtResource("2_jrp0e")
+item_data = ExtResource("6_4nhip")
+quantity = 3
+metadata/_custom_type_script = "uid://dmphg5nlphaa6"
+
+[sub_resource type="Resource" id="Resource_1n2rd"]
+script = ExtResource("2_jrp0e")
+item_data = ExtResource("7_hjrdd")
+quantity = 5
+metadata/_custom_type_script = "uid://dmphg5nlphaa6"
 
 [resource]
 script = ExtResource("1_7x6df")
-slots = Array[ExtResource("2_jrp0e")]([ExtResource("3_4nhip"), ExtResource("4_hjrdd"), ExtResource("5_bvekf"), ExtResource("3_4nhip"), ExtResource("4_hjrdd")])
+slots = Array[ExtResource("2_jrp0e")]([ExtResource("3_4nhip"), ExtResource("4_hjrdd"), ExtResource("5_bvekf"), SubResource("Resource_bvekf"), SubResource("Resource_1n2rd")])
 metadata/_custom_type_script = "uid://b3bnc4m3u2lkx"
