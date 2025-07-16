@@ -4,6 +4,7 @@ extends CanvasLayer
 @export var unit: Unit
 @onready var item_list_container = $Panel/VBoxContainer/ScrollContainer/ItemListContainer
 var game_board
+const CATEGORY_ALL: int = -1
 
 func _ready():
 	if not unit:
@@ -96,12 +97,41 @@ func populate_items():
 		item_list_container.add_child(button)
 
 func _on_item_selected(slot: SlotData, button: Button) -> void:
+	if SelectedItemMenu.pending_trade_data.has("slot"):
+		var first_data = SelectedItemMenu.pending_trade_data
+		var temp_data = first_data.slot.item_data
+		var temp_qty = first_data.slot.quantity
+		first_data.slot.item_data = slot.item_data
+		first_data.slot.quantity = slot.quantity
+		slot.item_data = temp_data
+		slot.quantity = temp_qty
+
+		# Refresh this menu (held items menu)
+		populate_items()
+
+		# Refresh other menus correctly depending on their populate_items signature
+		for node in get_tree().get_root().get_children():
+			if node is CanvasLayer and node != self:
+				var script = node.get_script()
+				if script != null:
+					var path = script.resource_path
+					if path == "res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd":
+						node.populate_items()  # no arguments now
+					elif path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
+						node.populate_items()
+
+		SelectedItemMenu.pending_trade_data = {}
+		if SelectedItemMenu.active_popup:
+			SelectedItemMenu.active_popup.queue_free()
+		return
+
+	# Normal item select flow (open selected item popup)
 	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
-	popup.source_button = button
 	popup.slot = slot
 	popup.unit = unit
-	popup.source = "held_items"
-	popup.game_board = game_board
+	popup.source = "held_items"  # or "inventory" depending on your usage
+	popup.source_button = button
+	popup.game_board = game_board  # include game_board for adjacency check
 	add_child(popup)
 
 	var button_pos = button.get_position()
@@ -128,6 +158,9 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 			offset = Vector2(344, 75)  # Default for non-player units
 
 	popup.set_position(button_pos + offset)
+
+
+
 
 func _on_close_button_pressed() -> void:
 	if unit and unit.is_player:

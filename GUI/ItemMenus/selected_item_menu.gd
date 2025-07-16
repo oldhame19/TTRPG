@@ -1,6 +1,8 @@
 #selected_item_menu.gd
 extends Control  # Or PopupPanel, etc.
+class_name SelectedItemMenu
 static var active_popup: Control = null
+static var pending_trade_data := {}
 
 var slot: SlotData
 var unit: Unit
@@ -82,10 +84,26 @@ func _ready():
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
 		if not get_global_rect().has_point(get_viewport().get_mouse_position()):
+			if pending_trade_data.has("slot"):
+				print("Trade cancelled.")
+				pending_trade_data.clear()
+
+				# Restore buttons
+				for child in $VBoxContainer.get_children():
+					child.modulate.a = 1.0
+					child.mouse_filter = Control.MOUSE_FILTER_STOP
+
+				return  # Don’t close the popup anymore
 			queue_free()
 
+
+
 func _on_close_button_pressed() -> void:
+	if pending_trade_data.has("slot"):
+		print("Trade cancelled.")
+		pending_trade_data.clear()
 	queue_free()
+
 
 func _on_store_button_pressed() -> void:
 	var store_menu_scene = preload("res://GUI/HeldItems/Scenes/store_item_menu.tscn")
@@ -133,7 +151,24 @@ func _on_hold_button_pressed() -> void:
 
 
 func _on_trade_button_pressed() -> void:
-	pass
+	# Store this slot as the first half of the trade
+	pending_trade_data = {
+		"slot": slot,
+		"unit": unit,
+		"source": source,
+		"source_button": source_button,
+		"game_board": game_board
+	}
+
+	# Notify the user (you can make this a real visual hint later)
+	print("Trade started. Select another item to swap with.")
+
+	# Close this menu, wait for next item to be selected
+	for child in $VBoxContainer.get_children():
+		if child != $VBoxContainer/CloseButton:
+			child.modulate.a = 0.0
+			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
 
 func _on_equip_button_pressed() -> void:
 	pass

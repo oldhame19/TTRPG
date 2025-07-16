@@ -5,7 +5,7 @@ extends CanvasLayer
 @onready var item_list_container = $Panel/VBoxContainer/ScrollContainer/ItemListContainer
 
 const CATEGORY_ALL: int = -1  # For showing everything
-
+var current_category: int = CATEGORY_ALL
 @onready var tab_buttons := {
 	ItemData.Category.PROVISIONS: $Panel/VBoxContainer/CategoryTabs/ProvisionsButton,
 	ItemData.Category.MISC: $Panel/VBoxContainer/CategoryTabs/MiscButton,
@@ -24,22 +24,42 @@ func _ready():
 	# Hook up tab button presses to filter inventory
 	for category in tab_buttons:
 		tab_buttons[category].pressed.connect(func():
-			populate_items(category)
-		)
-
-	populate_items(CATEGORY_ALL)  # Show all items initially
+			current_category = category
+			populate_items())
+	tab_buttons[CATEGORY_ALL].button_pressed = true  # visually mark it
+	populate_items()
 
 func _on_item_selected(slot: SlotData, button: Button) -> void:
+	if SelectedItemMenu.pending_trade_data.has("slot"):
+		var first_data = SelectedItemMenu.pending_trade_data
+		var temp_data = first_data.slot.item_data
+		var temp_qty = first_data.slot.quantity
+		first_data.slot.item_data = slot.item_data
+		first_data.slot.quantity = slot.quantity
+		slot.item_data = temp_data
+		slot.quantity = temp_qty
+
+		populate_items()
+
+		for node in get_tree().get_root().get_children():
+			if node is CanvasLayer and node != self and node.has_method("populate_items"):
+				node.populate_items()
+
+		SelectedItemMenu.pending_trade_data = {}
+		if SelectedItemMenu.active_popup:
+			SelectedItemMenu.active_popup.queue_free()
+		return
+
 	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
 	popup.slot = slot
 	popup.unit = unit
 	popup.source = "inventory"
-	add_child(popup)  # ← Add to *this* inventory menu node
+	popup.source_button = button
+	add_child(popup)
 
-	var button_pos = button.get_position()
-	popup.set_position(button_pos + Vector2(953, 75))
+	popup.set_position(button.get_position() + Vector2(953, 75))
 
-func populate_items(category: int) -> void:
+func populate_items() -> void:
 	# Deep copy inventory slots to ensure unique instances
 	var copied_slots: Array[SlotData] = []
 	for slot in unit.inventory.slots:
@@ -49,14 +69,15 @@ func populate_items(category: int) -> void:
 	unit.inventory.slots = copied_slots
 
 	var items: Array[SlotData]
-	if category == CATEGORY_ALL:
+	if current_category == CATEGORY_ALL:
 		items = copied_slots
 	else:
 		items = copied_slots.filter(func(slot: SlotData) -> bool:
-			return slot.item_data.category == category
+			return slot.item_data.category == current_category
 		)
 
 	display_items(items)
+
 
 func display_items(items: Array[SlotData]) -> void:
 	# Clear previous list
