@@ -17,6 +17,10 @@ func _ready():
 	if StoreItemMenu.active_store_popup:
 		StoreItemMenu.active_store_popup.queue_free()
 
+	# Close any open hold item menu popup
+	if HoldItemMenu.active_hold_popup:
+		HoldItemMenu.active_hold_popup.queue_free()
+
 	active_popup = self
 	set_process_unhandled_input(true)
 
@@ -73,6 +77,7 @@ func _ready():
 					trade_visible = true
 					break
 	$VBoxContainer/TradeButton.visible = trade_visible
+
   
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.pressed:
@@ -105,7 +110,27 @@ func _on_store_button_pressed() -> void:
 
 
 func _on_hold_button_pressed() -> void:
-	pass
+	var hold_item_menu_scene = preload("res://GUI/PlayerInventory/Scenes/hold_item_menu.tscn")
+	var hold_item_menu = hold_item_menu_scene.instantiate()
+	hold_item_menu.unit = unit
+	hold_item_menu.slot = slot
+
+	# Pass the source button (HoldButton) so hold_item_menu can position relative to it
+	hold_item_menu.source_button = $VBoxContainer/HoldButton
+
+	# Add hold_item_menu as sibling to this popup for layering
+	get_parent().add_child(hold_item_menu)
+
+	# Position hold_item_menu relative to the HoldButton's global position
+	if hold_item_menu.source_button:
+		var button_global_pos = hold_item_menu.source_button.get_global_position()
+		var offset = Vector2(65, -35)  # Adjust offset as needed
+		hold_item_menu.global_position = button_global_pos + offset
+	else:
+		# fallback positioning
+		hold_item_menu.global_position = global_position + Vector2(0, 0)
+
+
 
 func _on_trade_button_pressed() -> void:
 	pass
