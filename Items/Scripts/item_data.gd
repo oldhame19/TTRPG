@@ -33,3 +33,12 @@ func is_weapon() -> bool:
 
 func is_consumable() -> bool:
 	return category == Category.PROVISIONS and heal_amount > 0 and consumable
+func clone() -> ItemData:
+	var new_item = ItemData.new()
+	# Copy all necessary fields, including durability
+	new_item.name = name
+	new_item.texture = texture
+	new_item.max_durability = max_durability
+	new_item.durability = durability
+	# copy other fields as needed
+	return new_item

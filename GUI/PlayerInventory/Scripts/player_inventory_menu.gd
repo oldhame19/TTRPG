@@ -1,4 +1,4 @@
-#player_inventory_menu.gs
+#player_inventory_menu.gd
 extends CanvasLayer
 
 @export var unit: Unit
@@ -30,7 +30,6 @@ func _ready():
 	populate_items(CATEGORY_ALL)  # Show all items initially
 
 func _on_item_selected(slot: SlotData, button: Button) -> void:
-
 	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
 	popup.slot = slot
 	popup.unit = unit
@@ -40,15 +39,20 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	var button_pos = button.get_position()
 	popup.set_position(button_pos + Vector2(953, 75))
 
-
 func populate_items(category: int) -> void:
-	var items: Array[SlotData]
-	
+	# Deep copy inventory slots to ensure unique instances
+	var copied_slots: Array[SlotData] = []
+	for slot in unit.inventory.slots:
+		copied_slots.append(slot.clone())
 
+	# Replace inventory slots with copies
+	unit.inventory.slots = copied_slots
+
+	var items: Array[SlotData]
 	if category == CATEGORY_ALL:
-		items = unit.inventory.slots.duplicate()
+		items = copied_slots
 	else:
-		items = unit.inventory.slots.filter(func(slot: SlotData) -> bool:
+		items = copied_slots.filter(func(slot: SlotData) -> bool:
 			return slot.item_data.category == category
 		)
 
@@ -67,7 +71,6 @@ func display_items(items: Array[SlotData]) -> void:
 		button.focus_mode = Control.FOCUS_ALL
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.pressed.connect(func(b=button, s=slot): _on_item_selected(s, b))
-		
 
 		# HBox inside the button
 		var hbox := HBoxContainer.new()
@@ -92,22 +95,22 @@ func display_items(items: Array[SlotData]) -> void:
 		var icon_name_spacer := Control.new()
 		icon_name_spacer.custom_minimum_size = Vector2(8, 0)
 		hbox.add_child(icon_name_spacer)
-		
-# Name + Durability wrapper
+
+		# Name + Durability wrapper
 		var name_durability_box := HBoxContainer.new()
 		name_durability_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		name_durability_box.custom_minimum_size = Vector2(0, 32)
 		name_durability_box.alignment = BoxContainer.ALIGNMENT_BEGIN
 		name_durability_box.add_theme_constant_override("separation", 4)
 
-# Item name
+		# Item name
 		var name_label := Label.new()
 		name_label.text = slot.item_data.name
 		name_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		name_durability_box.add_child(name_label)
 
-# Durability label (if applicable)
+		# Durability label (if applicable)
 		if slot.item_data.max_durability > 0:
 			var durability_label := Label.new()
 			durability_label.text = "[%02d/%02d]" % [slot.item_data.durability, slot.item_data.max_durability]
@@ -118,8 +121,7 @@ func display_items(items: Array[SlotData]) -> void:
 
 		hbox.add_child(name_durability_box)
 
-# Quantity label (if more than one)
-		
+		# Quantity label (if more than one)
 		var qty_label := Label.new()
 		qty_label.text = "x%d" % slot.quantity
 		qty_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -127,25 +129,21 @@ func display_items(items: Array[SlotData]) -> void:
 		qty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		qty_label.custom_minimum_size = Vector2(50, 32)
 		hbox.add_child(qty_label)
-		
+
 		# Right buffer spacer (to match held items look)
 		var right_spacer := Control.new()
 		right_spacer.custom_minimum_size = Vector2(16, 0)
 		hbox.add_child(right_spacer)
 
-
 		# Assemble and add to container
 		button.add_child(hbox)
 		item_list_container.add_child(button)
-		
-
 
 func _on_close_button_pressed() -> void:
-		# Close held items menu if it's still open
+	# Close held items menu if it's still open
 	for child in get_tree().get_root().get_children():
 		if child is CanvasLayer and child.get_script().resource_path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
 			child.queue_free()
-			
 
 	# Close selected item popup if any
 	for child in get_children():

@@ -82,8 +82,9 @@ func _store_items(amount_to_store: int) -> void:
 
 	# Add as new stack if any remain
 	if remaining > 0:
-		var new_slot := slot.duplicate()  # make a *new* independent slot
-		new_slot.quantity = remaining  # set only the remaining quantity
+		# Create a new SlotData clone for the new stack
+		var new_slot := slot.clone()  # This should produce a new SlotData instance with same item_data and quantity
+		new_slot.quantity = remaining  # Set quantity to the remaining amount to store
 		player_inventory.slots.append(new_slot)
 		total_transferred += remaining
 		remaining = 0
@@ -99,6 +100,9 @@ func _store_items(amount_to_store: int) -> void:
 
 	# Refresh UI menus to reflect changes
 	_refresh_menus()
+
+
+
 
 
 func _refresh_menus():
