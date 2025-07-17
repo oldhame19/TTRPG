@@ -1,8 +1,10 @@
+#ActionMenu.gd
 extends CanvasLayer
 @onready var cursor: Cursor = get_parent()._cursor
-
+var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 var unit        # assign before _ready runs
 var game_board  # assign before _ready runs
+var trade_mode_active := false
 
 func _ready() -> void:
 	$VBoxContainer/AttackButton.grab_focus()
@@ -19,10 +21,10 @@ func _ready() -> void:
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
 
 	# Check for adjacent allies (existing code)
-	var directions = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+	
 	var has_adjacent_ally = false
 
-	for dir in directions:
+	for dir in DIRECTIONS:
 		var neighbor_cell = unit_cell + dir
 		if game_board._units.has(neighbor_cell):
 			var neighbor = game_board._units[neighbor_cell]
@@ -53,8 +55,13 @@ func _on_attack_button_pressed() -> void:
 
 
 func _on_trade_button_pressed() -> void:
-	pass # Replace with function body.
-
+	var tradeable_cells = game_board.get_tradeable_cells(unit)
+	game_board._unit_overlay.draw_tradeable_cells(tradeable_cells)
+	trade_mode_active = true
+	# Hide all buttons except the Close button
+	for button in $VBoxContainer.get_children():
+		if button.name != "CancelButton":
+			button.visible = false
 
 func _on_action_button_pressed() -> void:
 	pass # Replace with function body.
@@ -91,11 +98,11 @@ func _on_items_button_pressed() -> void:
 	else:
 		# Check if selected unit is adjacent to the player
 		var unit_cell = selected_unit.grid.calculate_grid_coordinates(selected_unit.position)
-		var directions = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+		var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 		var adjacent_to_player := false
 		var player_unit: Unit = null
 
-		for dir in directions:
+		for dir in DIRECTIONS:
 			var neighbor_cell = unit_cell + dir
 			if game_board._units.has(neighbor_cell):
 				var neighbor = game_board._units[neighbor_cell]
@@ -152,11 +159,27 @@ func _on_wait_button_pressed() -> void:
 
 
 func _on_cancel_button_pressed() -> void:
-	# Reset the unit's position
+	if trade_mode_active:
+		trade_mode_active = false
+		
+		# Clear trade highlights from the overlay
+		game_board._unit_overlay.clear_tradeable_cells()
+		
+		# Restore visibility of all buttons
+		for button in $VBoxContainer.get_children():
+			button.visible = true
+		
+		# Make sure CancelButton stays visible
+		$VBoxContainer/CancelButton.visible = true
+		
+		# Don't close the menu, just exit trade mode
+		return
+
+	# Normal cancel behavior (reset unit and close menu)
 	get_parent()._reset_unit()
 
-	# Enable cursor and close menu
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	cursor.reset_cursor()
 	cursor.show()
+
 	queue_free()

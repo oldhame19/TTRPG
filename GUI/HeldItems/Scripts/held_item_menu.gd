@@ -141,10 +141,10 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 		offset = Vector2(140, 75)
 	else:
 		var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
-		var directions = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+		var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 		var adjacent_to_player = false
 
-		for dir in directions:
+		for dir in DIRECTIONS:
 			var neighbor_cell = unit_cell + dir
 			if game_board._units.has(neighbor_cell):
 				var neighbor = game_board._units[neighbor_cell]

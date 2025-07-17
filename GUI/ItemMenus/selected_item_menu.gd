@@ -42,8 +42,8 @@ func _ready():
 		store_visible = (source == "held_items")
 	elif unit and not unit.is_player and game_board:
 		var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
-		var directions = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
-		for dir in directions:
+		var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+		for dir in DIRECTIONS:
 			var neighbor_cell = unit_cell + dir
 			if game_board._units.has(neighbor_cell):
 				var neighbor = game_board._units[neighbor_cell]
@@ -63,7 +63,7 @@ func _ready():
 
 	# Trade button visibility logic
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
-	var directions = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+	var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 	var trade_visible := false
 
 	if source == "inventory":
@@ -71,7 +71,7 @@ func _ready():
 	elif unit and unit.is_player:
 		trade_visible = true
 	elif unit and not unit.is_player and game_board:
-		for dir in directions:
+		for dir in DIRECTIONS:
 			var neighbor_cell = unit_cell + dir
 			if game_board._units.has(neighbor_cell):
 				var neighbor = game_board._units[neighbor_cell]

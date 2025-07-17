@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.4")
 [autoload]
 
 Inventory_Utils="*res://Globals/inventory_utils.gd"
+Globals="*res://Globals/globals.gd"
 
 [display]
 

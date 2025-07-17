@@ -17,3 +17,11 @@ func draw_walkable_cells(cells: Array) -> void:
 func draw_attackable_cells(cells: Array) -> void:
 	for cell in cells:
 		set_cell(cell, 1, Vector2i(0,0))
+
+func draw_tradeable_cells(cells: Array) -> void:
+	clear()
+	for cell in cells:
+		set_cell(cell, 2, Vector2i(0,0))
+
+func clear_tradeable_cells() -> void:
+	clear()

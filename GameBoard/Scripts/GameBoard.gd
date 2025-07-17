@@ -1,6 +1,4 @@
-## Represents and manages the game board. Stores references to entities that are in each cell and
-## tells whether cells are occupied or not.
-## Units can only move around the grid one at a time.
+#GameBoard.gd
 class_name GameBoard
 extends Node2D
 
@@ -53,6 +51,19 @@ func is_occupied(cell: Vector2) -> bool:
 ## Returns an array of cells a given unit can walk using the flood fill algorithm.
 func get_walkable_cells(unit: Unit) -> Array:
 	return _dijkstra(unit.cell, unit.move_range, false)
+	
+func get_tradeable_cells(unit: Unit) -> Array:
+	var tradeable_cells := []
+	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+
+	for direction in DIRECTIONS:
+		var neighbor_cell = unit_cell + direction
+		if _units.has(neighbor_cell):
+			var neighbor = _units[neighbor_cell]
+			if not neighbor.is_enemy:
+				tradeable_cells.append(neighbor_cell)
+
+	return tradeable_cells
 
 ## Return an array of cells a given unit can attack using dijkstra's and flood fill algorithm
 func get_attackable_cells(unit: Unit) -> Array:
