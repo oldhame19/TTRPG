@@ -7,6 +7,8 @@ const OBSTACLE_ATLAS_ID = 2
 const MAX_VALUE: int = 99999
 const PauseMenu = preload("res://GUI/PauseMenu/Pause Menu.tscn")
 const ActionMenu = preload("res://GUI/ActionMenu/Action Menu.tscn")
+var _current_action_menu: ActionMenu = null
+
 ## Resource of type Grid.
 @export var grid: Resource
 
@@ -264,9 +266,41 @@ func _clear_active_unit() -> void:
 
 ## Selects or moves a unit based on where the cursor is.
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
+	if _current_action_menu and _current_action_menu.trade_mode_active:
+		var active_cell = _active_unit.cell
+
+		# Check if the selected cell is in tradeable cells of the active unit
+		if cell in get_tradeable_cells(_active_unit):
+			var target_unit = _units[cell]
+			if target_unit != _active_unit:
+				# Instantiate and open the trade scene between active unit and target unit
+				var trade_scene = preload("res://GUI/ActionMenu/trade_ui.tscn").instantiate()
+				trade_scene.set_units(_active_unit, target_unit) # Define this method in your trade scene
+				add_child(trade_scene)
+
+				# Exit trade mode
+				_current_action_menu.trade_mode_active = false
+
+				# Clear trade highlights from overlay
+				_unit_overlay.clear_tradeable_cells()
+
+				# Optionally, restore ActionMenu buttons or handle UI here
+
+				return
+
+		# If clicked outside valid trade target, cancel trade mode
+		_current_action_menu.trade_mode_active = false
+		_unit_overlay.clear_tradeable_cells()
+
+		# Optionally, restore ActionMenu buttons or handle UI here
+
+		return # Prevent further processing
+
+	# If no active unit and cell occupied, select unit
 	if not _active_unit and _units.has(cell):
 		_select_unit(cell)
 	elif _active_unit != null:
+		# If cell occupied and is the active unit's current cell, open action menu
 		if is_occupied(cell) and _units[cell] == _active_unit:
 			_units.erase(_active_unit.cell)
 			_units[cell] = _active_unit
@@ -275,23 +309,30 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 
 			var action_menu = ActionMenu.instantiate()
 			action_menu.unit = _active_unit
-			action_menu.game_board = self 
+			action_menu.game_board = self
 			add_child(action_menu)
 
-			# Delay clearing until after the menu closes (see below)
+			_current_action_menu = action_menu 
+			# Delay clearing until after menu closes
 			action_menu.tree_exited.connect(func():
-				_clear_active_unit())
+				_clear_active_unit()
+				_current_action_menu = null)
 
-		elif not is_occupied(cell) and _walkable_cells.has(cell): #Chosing to move
+		# If cell not occupied and walkable, move active unit there
+		elif not is_occupied(cell) and _walkable_cells.has(cell):
 			await(_move_active_unit(cell))
+
 			var action_menu = ActionMenu.instantiate()
 			action_menu.unit = _active_unit
-			action_menu.game_board = self 
+			action_menu.game_board = self
 			add_child(action_menu)
 
-	else: #Selecting an emppty cell
+	else:
+		# Selecting an empty cell with no active unit - open pause menu
 		var pause_menu = PauseMenu.instantiate()
 		add_child(pause_menu)
+
+
 
 
 ## Updates the interactive path's drawing if there's an active and selected unit.

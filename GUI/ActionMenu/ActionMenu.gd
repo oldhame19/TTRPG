@@ -1,10 +1,11 @@
 #ActionMenu.gd
 extends CanvasLayer
+class_name ActionMenu
 @onready var cursor: Cursor = get_parent()._cursor
 var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 var unit        # assign before _ready runs
 var game_board  # assign before _ready runs
-var trade_mode_active := false
+var trade_mode_active: bool = false
 
 func _ready() -> void:
 	$VBoxContainer/AttackButton.grab_focus()
