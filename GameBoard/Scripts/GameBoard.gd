@@ -347,10 +347,17 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _active_unit and _active_unit.is_selected:
 		_unit_path.draw(_active_unit.cell, new_cell)
 	elif _unit_overlay != null and _walkable_cells != []:
-		_walkable_cells.clear()
-		_unit_overlay.clear()
+		# Don't clear overlays if trade mode is active
+		if _current_action_menu and _current_action_menu.trade_mode_active:
+			# Keep trade highlights intact
+			pass
+		else:
+			_walkable_cells.clear()
+			_unit_overlay.clear()
+
 	if _units.has(new_cell) and _active_unit == null:
 		_hover_display(new_cell)
+
 # Represents and manages the game board. Stores references to entities that are in each cell and
 # tells whether cells are occupied or not.
 # Units can only move around the grid one at a time.

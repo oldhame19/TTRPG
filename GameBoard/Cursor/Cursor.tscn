@@ -17,7 +17,7 @@ _data = {
 script = ExtResource("1")
 grid = ExtResource("3")
 
-[node name="Sprite" type="Sprite2D" parent="."]
+[node name="PointerTexture" type="Sprite2D" parent="."]
 position = Vector2(0.193848, 0)
 rotation = 2.35619
 texture = ExtResource("2")

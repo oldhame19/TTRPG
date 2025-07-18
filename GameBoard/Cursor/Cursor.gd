@@ -100,6 +100,9 @@ func reset_cursor() -> void:
 	if(is_mouse):
 		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
 		cell = grid_coords
+func set_pointer_visible(visible: bool) -> void:
+	if $PointerTexture:
+		$PointerTexture.visible = visible
 
 func set_allowed_cells(cells: Array) -> void:
 	restricted_cells.clear()

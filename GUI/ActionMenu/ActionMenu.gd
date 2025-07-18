@@ -67,11 +67,9 @@ func _on_trade_button_pressed() -> void:
 	cursor.show()
 	cursor.set_allowed_cells(tradeable_cells)
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
-	cursor.show_sprite = true  # or false if you want to hide outline during trade mode
 
-
-
-
+	cursor.show_sprite = true  # keep outline visible
+	cursor.set_pointer_visible(false)  # hide the pointer sprite
 
 
 func _on_action_button_pressed() -> void:
@@ -173,14 +171,17 @@ func _on_cancel_button_pressed() -> void:
 	if trade_mode_active:
 		trade_mode_active = false
 
-		# Clear trade highlights
 		game_board._unit_overlay.clear_tradeable_cells()
 
-		# Restore buttons
 		for button in $VBoxContainer.get_children():
 			button.visible = true
 		$VBoxContainer/CancelButton.visible = true
 
+		cursor.restricted_cells.clear()
+		cursor.reset_cursor()
+		cursor.set_pointer_visible(true)
+		cursor.hide()
+		cursor.process_mode = Node.PROCESS_MODE_DISABLED
 		return
 
 	# Normal cancel
@@ -188,5 +189,6 @@ func _on_cancel_button_pressed() -> void:
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	cursor.restricted_cells.clear()
 	cursor.reset_cursor()
+	cursor.set_pointer_visible(true)  # just in case
 	cursor.show()
 	queue_free()
