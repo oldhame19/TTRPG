@@ -1,8 +1,9 @@
 ## Player-controlled cursor. Allows them to navigate the game grid, select units, and move them.
 ## Supports both keyboard and mouse (or touch) input.
-@tool
+#@tool
 class_name Cursor
 extends Node2D
+
 
 ## Emitted when clicking on the currently hovered cell or when pressing "ui_accept".
 signal accept_pressed(cell)
@@ -13,6 +14,9 @@ signal moved(new_cell)
 @export var grid: Resource
 ## Time before the cursor can move again in seconds.
 @export var ui_cooldown := 0.1
+var restricted_cells := {}  # Use Dictionary as Set[Vector2]
+@onready var pointer_texture := $PointerTexture
+var show_sprite := true  # controls _draw outline
 
 var zoom_minimum = Vector2(.0100001,.0100001)
 var zoom_maximum = Vector2(2.500001,2.500001)
@@ -24,20 +28,20 @@ var is_mouse = false
 ## Coordinates of the current cell the cursor is hovering.
 var cell := Vector2.ZERO:
 	set(value):
-		# We first clamp the cell coordinates and ensure that we aren't
-		#	trying to move outside the grid boundaries
 		var new_cell: Vector2 = grid.grid_clamp(value)
+
+		# Reject movement to cells not in allowed set, if restriction is active
+		if restricted_cells.size() > 0 and not restricted_cells.has(new_cell):
+			return
+
 		if new_cell.is_equal_approx(cell):
 			return
 
 		cell = new_cell
-		# If we move to a new cell, we update the cursor's position, emit
-		#	a signal, and start the cooldown timer that will limit the rate
-		#	at which the cursor moves when we keep the direction key held
-		#	down
 		position = grid.calculate_map_position(cell)
 		emit_signal("moved", cell)
 		_timer.start()
+
 
 func _ready() -> void:
 	_timer.wait_time = ui_cooldown
@@ -74,7 +78,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if not should_move:
 		return
-
 	# Moves the cursor by one grid cell.
 	if event.is_action("ui_right"):
 		cell += Vector2.RIGHT
@@ -89,11 +92,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		cell += Vector2.DOWN
 		is_mouse = false
 
-
 func _draw() -> void:
-	draw_rect(Rect2(-grid.cell_size / 2, grid.cell_size), Color.ALICE_BLUE, false, 2.0)
+	if show_sprite:
+		draw_rect(Rect2(-grid.cell_size / 2, grid.cell_size), Color.ALICE_BLUE, false, 2.0)
 
 func reset_cursor() -> void:
 	if(is_mouse):
 		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
 		cell = grid_coords
+
+func set_allowed_cells(cells: Array) -> void:
+	restricted_cells.clear()
+	for c in cells:
+		restricted_cells[c] = true

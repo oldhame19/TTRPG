@@ -59,10 +59,20 @@ func _on_trade_button_pressed() -> void:
 	var tradeable_cells = game_board.get_tradeable_cells(unit)
 	game_board._unit_overlay.draw_tradeable_cells(tradeable_cells)
 	trade_mode_active = true
-	# Hide all buttons except the Close button
+
 	for button in $VBoxContainer.get_children():
 		if button.name != "CancelButton":
 			button.visible = false
+
+	cursor.show()
+	cursor.set_allowed_cells(tradeable_cells)
+	cursor.process_mode = Node.PROCESS_MODE_INHERIT
+	cursor.show_sprite = true  # or false if you want to hide outline during trade mode
+
+
+
+
+
 
 func _on_action_button_pressed() -> void:
 	pass # Replace with function body.
@@ -162,25 +172,21 @@ func _on_wait_button_pressed() -> void:
 func _on_cancel_button_pressed() -> void:
 	if trade_mode_active:
 		trade_mode_active = false
-		
-		# Clear trade highlights from the overlay
+
+		# Clear trade highlights
 		game_board._unit_overlay.clear_tradeable_cells()
-		
-		# Restore visibility of all buttons
+
+		# Restore buttons
 		for button in $VBoxContainer.get_children():
 			button.visible = true
-		
-		# Make sure CancelButton stays visible
 		$VBoxContainer/CancelButton.visible = true
-		
-		# Don't close the menu, just exit trade mode
+
 		return
 
-	# Normal cancel behavior (reset unit and close menu)
+	# Normal cancel
 	get_parent()._reset_unit()
-
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
+	cursor.restricted_cells.clear()
 	cursor.reset_cursor()
 	cursor.show()
-
 	queue_free()

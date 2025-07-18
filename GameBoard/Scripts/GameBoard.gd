@@ -2,6 +2,8 @@
 class_name GameBoard
 extends Node2D
 
+@onready var cursor = $Cursor
+
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 const OBSTACLE_ATLAS_ID = 2
 const MAX_VALUE: int = 99999
@@ -269,13 +271,19 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _current_action_menu and _current_action_menu.trade_mode_active:
 		var active_cell = _active_unit.cell
 
+		# Show cursor in trade mode
+		cursor.show()
+		cursor.process_mode = Node.PROCESS_MODE_INHERIT
+
 		# Check if the selected cell is in tradeable cells of the active unit
 		if cell in get_tradeable_cells(_active_unit):
 			var target_unit = _units[cell]
 			if target_unit != _active_unit:
+				_current_action_menu.queue_free()
+
 				# Instantiate and open the trade scene between active unit and target unit
 				var trade_scene = preload("res://GUI/ActionMenu/trade_ui.tscn").instantiate()
-				trade_scene.set_units(_active_unit, target_unit) # Define this method in your trade scene
+				#trade_scene.set_units(_active_unit, target_unit) # Define this method in your trade scene
 				add_child(trade_scene)
 
 				# Exit trade mode
@@ -284,15 +292,14 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				# Clear trade highlights from overlay
 				_unit_overlay.clear_tradeable_cells()
 
-				# Optionally, restore ActionMenu buttons or handle UI here
-
+				# Keep cursor visible for trade UI if needed
 				return
 
 		# If clicked outside valid trade target, cancel trade mode
 		_current_action_menu.trade_mode_active = false
 		_unit_overlay.clear_tradeable_cells()
-
-		# Optionally, restore ActionMenu buttons or handle UI here
+		cursor.reset_cursor()
+		cursor.show()
 
 		return # Prevent further processing
 
@@ -312,7 +319,8 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			action_menu.game_board = self
 			add_child(action_menu)
 
-			_current_action_menu = action_menu 
+			_current_action_menu = action_menu
+
 			# Delay clearing until after menu closes
 			action_menu.tree_exited.connect(func():
 				_clear_active_unit()
@@ -320,7 +328,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 
 		# If cell not occupied and walkable, move active unit there
 		elif not is_occupied(cell) and _walkable_cells.has(cell):
-			await(_move_active_unit(cell))
+			await _move_active_unit(cell)
 
 			var action_menu = ActionMenu.instantiate()
 			action_menu.unit = _active_unit
@@ -331,7 +339,6 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		# Selecting an empty cell with no active unit - open pause menu
 		var pause_menu = PauseMenu.instantiate()
 		add_child(pause_menu)
-
 
 
 
