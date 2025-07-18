@@ -6,6 +6,8 @@ var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 var unit        # assign before _ready runs
 var game_board  # assign before _ready runs
 var trade_mode_active: bool = false
+var _current_trade_scene: Control = null
+var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")
 
 func _ready() -> void:
 	$VBoxContainer/AttackButton.grab_focus()
@@ -151,7 +153,6 @@ func _on_items_button_pressed() -> void:
 			get_tree().get_root().add_child(held_items_menu)
 			hide()
 			held_items_menu.tree_exited.connect(func(): show())
-
 
 
 func _on_wait_button_pressed() -> void:

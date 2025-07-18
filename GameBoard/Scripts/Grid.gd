@@ -35,3 +35,6 @@ func grid_clamp(grid_position: Vector2) -> Vector2:
 	out.x = clamp(out.x, 0, size.x - 1.0)
 	out.y = clamp(out.y, 0, size.y - 1.0)
 	return out
+
+func map_to_world(cell: Vector2i) -> Vector2:
+	return Vector2(cell.x * cell_size.x, cell.y * cell_size.y)

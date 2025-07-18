@@ -1,4 +1,3 @@
-#GameBoard.gd
 class_name GameBoard
 extends Node2D
 
@@ -10,6 +9,7 @@ const MAX_VALUE: int = 99999
 const PauseMenu = preload("res://GUI/PauseMenu/Pause Menu.tscn")
 const ActionMenu = preload("res://GUI/ActionMenu/Action Menu.tscn")
 var _current_action_menu: ActionMenu = null
+var _current_trade_scene = null
 
 ## Resource of type Grid.
 @export var grid: Resource
@@ -282,10 +282,30 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				_current_action_menu.queue_free()
 
 				# Instantiate and open the trade scene between active unit and target unit
-				var trade_scene = preload("res://GUI/ActionMenu/trade_ui.tscn").instantiate()
-				#trade_scene.set_units(_active_unit, target_unit) # Define this method in your trade scene
-				add_child(trade_scene)
+				_current_trade_scene = preload("res://GUI/ActionMenu/trade_ui.tscn").instantiate()
+				_current_trade_scene.set_units(_active_unit, target_unit) # Define this method in your trade scene
+				add_child(_current_trade_scene)
 
+				_current_trade_scene.trade_closed.connect(func():
+					_current_trade_scene.queue_free()
+					_current_trade_scene = null
+					
+					var action_menu = ActionMenu.instantiate()
+					action_menu.unit = _active_unit
+					action_menu.game_board = self
+					add_child(action_menu)
+					_current_action_menu = action_menu
+
+					action_menu.tree_exited.connect(func():
+						_clear_active_unit()
+						_current_action_menu = null))
+				
+				
+				_current_trade_scene.trade_completed.connect(func():
+					_clear_active_unit()  # Ends the unit's turn
+					_current_action_menu = null
+				)
+				
 				# Exit trade mode
 				_current_action_menu.trade_mode_active = false
 
@@ -341,7 +361,6 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		add_child(pause_menu)
 
 
-
 ## Updates the interactive path's drawing if there's an active and selected unit.
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _active_unit and _active_unit.is_selected:
@@ -357,7 +376,3 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 
 	if _units.has(new_cell) and _active_unit == null:
 		_hover_display(new_cell)
-
-# Represents and manages the game board. Stores references to entities that are in each cell and
-# tells whether cells are occupied or not.
-# Units can only move around the grid one at a time.

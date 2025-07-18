@@ -4,7 +4,7 @@
 class_name Cursor
 extends Node2D
 
-
+var zoom_enabled := true 
 ## Emitted when clicking on the currently hovered cell or when pressing "ui_accept".
 signal accept_pressed(cell)
 ## Emitted when the cursor moved to a new cell.
@@ -57,10 +57,12 @@ func _process(_delta):
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.is_pressed():
+			if not zoom_enabled:
+				return
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				if camera.zoom > zoom_minimum:
 					camera.zoom -= zoom_speed
-					pass
+					
 			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				if camera.zoom < zoom_maximum:
 					camera.zoom += zoom_speed

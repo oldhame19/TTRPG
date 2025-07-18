@@ -1,3 +1,54 @@
-[gd_scene format=3 uid="uid://bvkd5o7wrd0x5"]
+[gd_scene load_steps=3 format=3 uid="uid://bvkd5o7wrd0x5"]
 
-[node name="TradeUi" type="Node2D"]
+[ext_resource type="Script" uid="uid://c8wp3a4mukptl" path="res://GUI/ActionMenu/trade_ui.gd" id="1_e0s6l"]
+[ext_resource type="PackedScene" uid="uid://d2s3n3i0irexy" path="res://GUI/HeldItems/Scenes/held_item_menu.tscn" id="2_pwtaj"]
+
+[node name="TradeUi" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+script = ExtResource("1_e0s6l")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="HeldItemMenu" parent="VBoxContainer/HBoxContainer" instance=ExtResource("2_pwtaj")]
+offset = Vector2(210, 0)
+transform = Transform2D(1, 0, 0, 1, 210, 0)
+
+[node name="HeldItemMenu2" parent="VBoxContainer/HBoxContainer" instance=ExtResource("2_pwtaj")]
+offset = Vector2(-210, 0)
+transform = Transform2D(1, 0, 0, 1, -210, 0)
+
+[node name="CancelButton" type="Button" parent="."]
+layout_mode = 2
+offset_left = -34.5
+offset_top = -20.0
+offset_right = 34.5
+offset_bottom = 11.0
+text = "CANCEL"
+
+[connection signal="pressed" from="CancelButton" to="." method="_on_cancel_button_pressed"]
