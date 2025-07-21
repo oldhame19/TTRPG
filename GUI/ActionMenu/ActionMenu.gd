@@ -4,7 +4,7 @@ class_name ActionMenu
 @onready var cursor: Cursor = get_parent()._cursor
 var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 var unit        # assign before _ready runs
-var game_board  # assign before _ready runs
+var game_board: GameBoard  # assign before _ready runs
 var trade_mode_active: bool = false
 var _current_trade_scene: Control = null
 var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")

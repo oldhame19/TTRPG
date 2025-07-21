@@ -7,7 +7,7 @@ var unit_a: Unit
 var unit_b: Unit
 var held_items_menu_a := preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn")
 var held_items_menu_b := preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn")
-#var trade_ui_close_button := preload("res://GUI/ActionMenu/trade_ui.tscn")
+var game_board: GameBoard
 
 
 @onready var cursor = get_parent().get_node("_cursor")  # assuming cursor is a sibling of this node
@@ -86,15 +86,12 @@ func set_units(a: Unit, b: Unit) -> void:
 		#cursor.zoom_enabled = false
 
 func update_ui() -> void:
-	# Clear previous menus
 	for child in get_children():
 		if child != $CanvasLayer:
 			child.queue_free()
 
-	# RELOAD cancel_button every time (in case scene tree changed)
 	cancel_button = $CanvasLayer/CancelButton
 
-	# Safety check
 	if cancel_button:
 		cancel_button.position = Vector2(535, 535)
 		if not cancel_button.is_connected("pressed", Callable(self, "_on_cancel_button_pressed")):
@@ -102,35 +99,30 @@ func update_ui() -> void:
 	else:
 		push_error("CancelButton is null in update_ui()")
 
-	# Instantiate and set up menu A
 	var menu_a = held_items_menu_a.instantiate()
 	menu_a.unit = unit_a
-	menu_a.game_board = get_node("/root/GameBoard")
+	menu_a.game_board = game_board  
 	add_child(menu_a)
 	menu_a.get_node("Panel").position = Vector2(-400, -250)
-	
-	# Hide the CloseButton if it exists
 	var close_button_a = menu_a.get_node_or_null("Panel/CloseButton")
 	if close_button_a:
 		close_button_a.visible = false
 
-	# Instantiate and set up menu B
 	var menu_b = held_items_menu_b.instantiate()
 	menu_b.unit = unit_b
-	menu_b.game_board = get_node("/root/GameBoard")
+	menu_b.game_board = game_board  
 	add_child(menu_b)
 	menu_b.get_node("Panel").position = Vector2(50, -250)
-	
-	# Hide the CloseButton if it exists
 	var close_button_b = menu_b.get_node_or_null("Panel/CloseButton")
 	if close_button_b:
 		close_button_b.visible = false
-
-	# Hide cursor
+	menu_a.side = "A"
+	menu_b.side = "B"
 	if cursor:
 		cursor.visible = false
 		cursor.process_mode = Node.PROCESS_MODE_DISABLED
 		cursor.zoom_enabled = false
+
 
 
 

@@ -3,8 +3,9 @@ extends CanvasLayer
 
 @export var unit: Unit
 @onready var item_list_container = $Panel/VBoxContainer/ScrollContainer/ItemListContainer
-var game_board
+var game_board: GameBoard
 const CATEGORY_ALL: int = -1
+var side: String = "A" 
 
 func _ready():
 	if not unit:
@@ -116,7 +117,7 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 				if script != null:
 					var path = script.resource_path
 					if path == "res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd":
-						node.populate_items()  # no arguments now
+						node.populate_items()
 					elif path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
 						node.populate_items()
 
@@ -129,37 +130,46 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
 	popup.slot = slot
 	popup.unit = unit
-	popup.source = "held_items"  # or "inventory" depending on your usage
+	popup.source = "held_items"
 	popup.source_button = button
-	popup.game_board = game_board  # include game_board for adjacency check
+	popup.game_board = game_board
+	popup.side = side
 	add_child(popup)
 
 	var button_pos = button.get_position()
-	var offset = Vector2()
+	var offset := Vector2()
 
-	if unit and unit.is_player:
-		offset = Vector2(140, 75)
+	# Use trade UI positioning if active
+	if game_board._current_trade_scene != null:
+		match side:
+			"A":
+				offset = Vector2(113, 75)  # Trade UI - Left side
+			"B":
+				offset = Vector2(970, 75)    # Trade UI - Right side
+			_:
+				offset = Vector2(140, 75)   # Fallback
 	else:
-		var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
-		var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
-		var adjacent_to_player = false
-
-		for dir in DIRECTIONS:
-			var neighbor_cell = unit_cell + dir
-			if game_board._units.has(neighbor_cell):
-				var neighbor = game_board._units[neighbor_cell]
-				if neighbor.is_player:
-					adjacent_to_player = true
-					break
-
-		if adjacent_to_player:
-			offset = Vector2(140, 75)  # Use player-style offset
+		if unit and unit.is_player:
+			offset = Vector2(140, 75)
 		else:
-			offset = Vector2(344, 75)  # Default for non-player units
+			var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+			var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+			var adjacent_to_player := false
+
+			for dir in DIRECTIONS:
+				var neighbor_cell = unit_cell + dir
+				if game_board._units.has(neighbor_cell):
+					var neighbor = game_board._units[neighbor_cell]
+					if neighbor.is_player:
+						adjacent_to_player = true
+						break
+
+			if adjacent_to_player:
+				offset = Vector2(140, 75)
+			else:
+				offset = Vector2(344, 75)
 
 	popup.set_position(button_pos + offset)
-
-
 
 
 func _on_close_button_pressed() -> void:

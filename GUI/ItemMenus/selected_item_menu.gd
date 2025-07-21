@@ -7,8 +7,9 @@ static var pending_trade_data := {}
 var slot: SlotData
 var unit: Unit
 var source: String  # "inventory" or "held_items"
-var game_board       # Assigned when creating the popup
+var game_board: GameBoard       # Assigned when creating the popup
 var source_button: Button
+var side: String = "A" 
 
 func _ready():
 	# Close previous selected item menu

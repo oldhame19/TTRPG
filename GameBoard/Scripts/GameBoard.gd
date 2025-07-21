@@ -310,6 +310,8 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				_current_action_menu.queue_free()
 
 				_current_trade_scene = preload("res://GUI/ActionMenu/trade_ui.tscn").instantiate()
+				_current_trade_scene.game_board = self
+
 				_current_trade_scene.set_units(_active_unit, target_unit)
 				add_child(_current_trade_scene)
 
