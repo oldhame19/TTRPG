@@ -229,6 +229,8 @@ func _move_active_unit(new_cell: Vector2) -> void:
 
 
 func _select_unit(cell: Vector2) -> void:
+	if _current_action_menu and _current_action_menu.trade_mode_active:
+		return  # Block unit selection during trade
 	if not _units.has(cell):
 		return
 
@@ -279,6 +281,8 @@ func _reset_unit() -> void:
 
 
 func _deselect_active_unit() -> void:
+	if _current_action_menu and _current_action_menu.trade_mode_active:
+		return  # Don’t clear during trade
 	_active_unit.is_selected = false
 	_unit_overlay.clear()
 	_unit_path.stop()
@@ -336,10 +340,10 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				)
 				
 				_current_action_menu.trade_mode_active = false
-
 				_unit_overlay.clear_tradeable_cells()
-
 				return
+		else:
+			return
 
 		_current_action_menu.trade_mode_active = false
 		_unit_overlay.clear_tradeable_cells()
