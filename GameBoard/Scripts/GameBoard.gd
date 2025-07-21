@@ -221,6 +221,7 @@ func _move_active_unit(new_cell: Vector2) -> void:
 	if is_occupied(new_cell) or not new_cell in _walkable_cells:
 		return
 	_units.erase(_active_unit.cell)
+	_active_unit.cell = new_cell
 	_units[new_cell] = _active_unit
 	_deselect_active_unit()
 	_active_unit.walk_along(_unit_path.current_path)
@@ -379,6 +380,11 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 			action_menu.unit = _active_unit
 			action_menu.game_board = self
 			add_child(action_menu)
+			
+			_current_action_menu = action_menu
+			action_menu.tree_exited.connect(func():
+				_clear_active_unit()
+				_current_action_menu = null)
 
 	else:
 		var pause_menu = PauseMenu.instantiate()

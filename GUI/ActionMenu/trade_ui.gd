@@ -20,8 +20,6 @@ func _ready() -> void:
 		cursor.process_mode = Node.PROCESS_MODE_DISABLED
 		cursor.zoom_enabled = false
 
-
-
 func set_units(a: Unit, b: Unit) -> void:
 	unit_a = a
 	unit_b = b
@@ -122,8 +120,6 @@ func update_ui() -> void:
 		cursor.visible = false
 		cursor.process_mode = Node.PROCESS_MODE_DISABLED
 		cursor.zoom_enabled = false
-
-
 
 
 func _on_trade_completed() -> void:

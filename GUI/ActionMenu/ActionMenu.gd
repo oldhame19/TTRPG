@@ -3,7 +3,7 @@ extends CanvasLayer
 class_name ActionMenu
 @onready var cursor: Cursor = get_parent()._cursor
 var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
-var unit        # assign before _ready runs
+var unit: Unit        # assign before _ready runs
 var game_board: GameBoard  # assign before _ready runs
 var trade_mode_active: bool = false
 var _current_trade_scene: Control = null
@@ -17,14 +17,11 @@ func _ready() -> void:
 
 	if not unit:
 		return
-
 	if not game_board:
 		return
-
+		
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
-
 	# Check for adjacent allies (existing code)
-	
 	var has_adjacent_ally = false
 
 	for dir in DIRECTIONS:
@@ -38,7 +35,6 @@ func _ready() -> void:
 
 	# NEW: Check if enemy is within attack range
 	var enemy_in_range = false
-
 	# Use flood fill to get cells within attack range ignoring obstacles for simplicity
 	var attack_range_cells = game_board._flood_fill(unit_cell, unit.attack_range)
 
@@ -48,7 +44,6 @@ func _ready() -> void:
 			if target_unit.is_enemy:
 				enemy_in_range = true
 				break
-
 	$VBoxContainer/AttackButton.visible = enemy_in_range
 
 
@@ -162,9 +157,7 @@ func _on_items_button_pressed() -> void:
 func _on_wait_button_pressed() -> void:
 	# Set curr_unit to wait status
 	# Clear active unit
-
 	get_parent()._clear_active_unit()
-
 	# Enable cursor and close menu
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	cursor.reset_cursor()
