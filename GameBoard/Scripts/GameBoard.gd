@@ -66,8 +66,7 @@ func get_walkable_cells(unit: Unit) -> Array:
 func get_tradeable_cells(unit: Unit) -> Array:
 	var tradeable_cells := []
 	
-	if unit.grid == null:
-		push_error("Unit grid is null in get_tradeable_cells() for unit: %s" % unit.name)
+	if unit == null or unit.grid == null:
 		return []
 		
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
@@ -293,6 +292,22 @@ func _clear_active_unit() -> void:
 	_active_unit = null
 	_walkable_cells.clear()
 
+func _on_Cursor_moved(new_cell: Vector2) -> void:
+	if _current_trade_scene != null:
+		return  # Prevent cursor movement during trade UI
+
+	if _active_unit and _active_unit.is_selected:
+		_unit_path.draw(_active_unit.cell, new_cell)
+	elif _unit_overlay != null and _walkable_cells != []:
+		if _current_action_menu and _current_action_menu.trade_mode_active:
+			pass
+		else:
+			_walkable_cells.clear()
+			_unit_overlay.clear()
+
+	if _units.has(new_cell) and _active_unit == null:
+		_hover_display(new_cell)
+
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _current_trade_scene != null:
@@ -321,17 +336,19 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 				add_child(_current_trade_scene)
 
 				_current_trade_scene.trade_closed.connect(func():
+					var retained_unit = _active_unit 
 					_current_trade_scene.queue_free()
 					_current_trade_scene = null
 					
 					var action_menu = ActionMenu.instantiate()
-					action_menu.unit = _active_unit
+					action_menu.unit = retained_unit
 					action_menu.game_board = self
 					add_child(action_menu)
 					_current_action_menu = action_menu
 
 					action_menu.tree_exited.connect(func():
-						_clear_active_unit()
+						if not action_menu.trade_mode_active:
+							_clear_active_unit()
 						_current_action_menu = null))
 				
 				
@@ -389,20 +406,3 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	else:
 		var pause_menu = PauseMenu.instantiate()
 		add_child(pause_menu)
-
-
-func _on_Cursor_moved(new_cell: Vector2) -> void:
-	if _current_trade_scene != null:
-		return  # Prevent cursor movement during trade UI
-
-	if _active_unit and _active_unit.is_selected:
-		_unit_path.draw(_active_unit.cell, new_cell)
-	elif _unit_overlay != null and _walkable_cells != []:
-		if _current_action_menu and _current_action_menu.trade_mode_active:
-			pass
-		else:
-			_walkable_cells.clear()
-			_unit_overlay.clear()
-
-	if _units.has(new_cell) and _active_unit == null:
-		_hover_display(new_cell)

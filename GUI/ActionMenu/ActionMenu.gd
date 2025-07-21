@@ -53,8 +53,8 @@ func _on_attack_button_pressed() -> void:
 
 
 func _on_trade_button_pressed() -> void:
-	if unit.grid == null:
-		game_board._reinitialize()  # <- Fixes crash on second trade
+	if unit == null or unit.grid == null:
+		game_board._reinitialize()
 
 	var tradeable_cells = game_board.get_tradeable_cells(unit)
 	game_board._unit_overlay.draw_tradeable_cells(tradeable_cells)
