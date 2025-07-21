@@ -263,7 +263,6 @@ rotation = -0.00195814
 
 [node name="GameBoard" type="Node2D" parent="."]
 script = ExtResource("3")
-grid = ExtResource("4")
 
 [node name="Map" type="TileMapLayer" parent="GameBoard"]
 use_parent_material = true

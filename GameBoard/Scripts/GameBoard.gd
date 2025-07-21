@@ -37,9 +37,14 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _current_trade_scene != null:
+		# Ignore all input while trade UI is active
+		return
+	
 	if _active_unit and event.is_action_pressed("ui_cancel"):
 		_deselect_active_unit()
 		_clear_active_unit()
+
 
 
 func _get_configuration_warning() -> String:
@@ -285,6 +290,8 @@ func _clear_active_unit() -> void:
 
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
+	if _current_trade_scene != null:
+		return  # Prevent accept input during trade UI
 	if _current_action_menu and _current_action_menu.trade_mode_active:
 		var active_cell = _active_unit.cell
 
@@ -373,6 +380,9 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 
 
 func _on_Cursor_moved(new_cell: Vector2) -> void:
+	if _current_trade_scene != null:
+		return  # Prevent cursor movement during trade UI
+
 	if _active_unit and _active_unit.is_selected:
 		_unit_path.draw(_active_unit.cell, new_cell)
 	elif _unit_overlay != null and _walkable_cells != []:

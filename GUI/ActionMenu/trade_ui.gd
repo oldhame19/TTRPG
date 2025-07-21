@@ -102,24 +102,36 @@ func update_ui() -> void:
 	else:
 		push_error("CancelButton is null in update_ui()")
 
-	# Continue with menu setup
+	# Instantiate and set up menu A
 	var menu_a = held_items_menu_a.instantiate()
 	menu_a.unit = unit_a
 	menu_a.game_board = get_node("/root/GameBoard")
 	add_child(menu_a)
 	menu_a.get_node("Panel").position = Vector2(-400, -250)
+	
+	# Hide the CloseButton if it exists
+	var close_button_a = menu_a.get_node_or_null("Panel/CloseButton")
+	if close_button_a:
+		close_button_a.visible = false
 
+	# Instantiate and set up menu B
 	var menu_b = held_items_menu_b.instantiate()
 	menu_b.unit = unit_b
 	menu_b.game_board = get_node("/root/GameBoard")
 	add_child(menu_b)
 	menu_b.get_node("Panel").position = Vector2(50, -250)
+	
+	# Hide the CloseButton if it exists
+	var close_button_b = menu_b.get_node_or_null("Panel/CloseButton")
+	if close_button_b:
+		close_button_b.visible = false
 
 	# Hide cursor
 	if cursor:
 		cursor.visible = false
 		cursor.process_mode = Node.PROCESS_MODE_DISABLED
 		cursor.zoom_enabled = false
+
 
 
 func _on_trade_completed() -> void:
