@@ -58,6 +58,9 @@ func _on_attack_button_pressed() -> void:
 
 
 func _on_trade_button_pressed() -> void:
+	if unit.grid == null:
+		game_board._reinitialize()  # <- Fixes crash on second trade
+
 	var tradeable_cells = game_board.get_tradeable_cells(unit)
 	game_board._unit_overlay.draw_tradeable_cells(tradeable_cells)
 	trade_mode_active = true
@@ -70,8 +73,9 @@ func _on_trade_button_pressed() -> void:
 	cursor.set_allowed_cells(tradeable_cells)
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
 
-	cursor.show_sprite = true  # keep outline visible
-	cursor.set_pointer_visible(false)  # hide the pointer sprite
+	cursor.show_sprite = true
+	cursor.set_pointer_visible(false)
+
 
 
 func _on_action_button_pressed() -> void:

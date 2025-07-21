@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://c8wp3a4mukptl" path="res://GUI/ActionMenu/trade_ui.gd" id="1_e0s6l"]
 [ext_resource type="PackedScene" uid="uid://d2s3n3i0irexy" path="res://GUI/HeldItems/Scenes/held_item_menu.tscn" id="2_pwtaj"]
 
-[node name="TradeUi" type="Control"]
+[node name="TradeUI" type="Control"]
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5
@@ -43,12 +43,13 @@ transform = Transform2D(1, 0, 0, 1, 210, 0)
 offset = Vector2(-210, 0)
 transform = Transform2D(1, 0, 0, 1, -210, 0)
 
-[node name="CancelButton" type="Button" parent="."]
-layout_mode = 2
-offset_left = -34.5
-offset_top = -20.0
-offset_right = 34.5
-offset_bottom = 11.0
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="CancelButton" type="Button" parent="CanvasLayer"]
+offset_left = 541.5
+offset_top = 304.0
+offset_right = 610.5
+offset_bottom = 335.0
 text = "CANCEL"
 
-[connection signal="pressed" from="CancelButton" to="." method="_on_cancel_button_pressed"]
+[connection signal="pressed" from="CanvasLayer/CancelButton" to="." method="_on_cancel_button_pressed"]
