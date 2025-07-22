@@ -54,10 +54,10 @@ func _ready():
 
 	$VBoxContainer/StoreButton.visible = store_visible
 
-	if slot.item_data.category != ItemData.Category.EQUIPMENT:
+	if slot.item_data == null or slot.item_data.category != ItemData.Category.EQUIPMENT:
 		$VBoxContainer/EquipButton.visible = false
 
-	$VBoxContainer/UseButton.visible = slot.item_data.is_consumable()
+	$VBoxContainer/UseButton.visible = slot.item_data and slot.item_data.is_consumable()
 
 	if not unit or not game_board:
 		return

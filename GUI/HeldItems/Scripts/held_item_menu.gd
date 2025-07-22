@@ -21,18 +21,20 @@ func populate_items():
 	for child in item_list_container.get_children():
 		child.queue_free()
 
-	# Deep copy held items slots to unique SlotData instances
-	var copied_slots = []
+	# Clone and pad the held items to always show 5 slots
+	var padded_slots: Array[SlotData] = []
 	for slot in unit.held_items.slots:
-		copied_slots.append(slot.clone())  # assuming SlotData.clone() returns a new SlotData instance
+		padded_slots.append(slot.clone())
 
-	# Clear original slots and append clones to avoid direct assignment error
-	unit.held_items.slots.clear()
-	for cloned_slot in copied_slots:
-		unit.held_items.slots.append(cloned_slot)
+	# Pad with empty slots if needed
+	while padded_slots.size() < 5:
+		var empty_slot := SlotData.new()
+		empty_slot.item_data = null  # no item
+		empty_slot.quantity = 0
+		padded_slots.append(empty_slot)
 
-	# Populate UI using the cloned slots
-	for slot in unit.held_items.slots:
+	# Populate UI using the padded slots
+	for slot in padded_slots:
 		var button := Button.new()
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size = Vector2(340, 40)
@@ -50,10 +52,12 @@ func populate_items():
 		left_spacer.custom_minimum_size = Vector2(10, 0)
 		hbox.add_child(left_spacer)
 
+		# Item icon
 		var icon := TextureRect.new()
-		icon.texture = slot.item_data.texture
 		icon.custom_minimum_size = Vector2(32, 32)
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		if slot.item_data:
+			icon.texture = slot.item_data.texture
 		hbox.add_child(icon)
 
 		var icon_name_spacer := Control.new()
@@ -67,12 +71,15 @@ func populate_items():
 		name_durability_box.add_theme_constant_override("separation", 4)
 
 		var name_label := Label.new()
-		name_label.text = slot.item_data.name
+		if slot.item_data:
+			name_label.text = slot.item_data.name
+		else:
+			name_label.text = "(Empty)"
 		name_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		name_durability_box.add_child(name_label)
 
-		if slot.item_data.max_durability > 0:
+		if slot.item_data and slot.item_data.max_durability > 0:
 			var durability_label := Label.new()
 			durability_label.text = "[%02d/%02d]" % [slot.item_data.durability, slot.item_data.max_durability]
 			durability_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -82,8 +89,12 @@ func populate_items():
 
 		hbox.add_child(name_durability_box)
 
+		# Quantity label
 		var qty_label := Label.new()
-		qty_label.text = "x%d" % slot.quantity
+		if slot.item_data:
+			qty_label.text = "x%d" % slot.quantity
+		else:
+			qty_label.text = ""
 		qty_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		qty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		qty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -97,7 +108,10 @@ func populate_items():
 		button.add_child(hbox)
 		item_list_container.add_child(button)
 
+
 func _on_item_selected(slot: SlotData, button: Button) -> void:
+	if slot.item_data == null and not SelectedItemMenu.pending_trade_data.has("slot"):
+		return
 	if SelectedItemMenu.pending_trade_data.has("slot"):
 		var first_data = SelectedItemMenu.pending_trade_data
 		var temp_data = first_data.slot.item_data
