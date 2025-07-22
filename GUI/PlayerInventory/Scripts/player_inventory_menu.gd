@@ -29,9 +29,13 @@ func _ready():
 	tab_buttons[CATEGORY_ALL].button_pressed = true  # visually mark it
 	populate_items()
 
-func _on_item_selected(slot: SlotData, button: Button) -> void:
+func _on_item_selected(slot: SlotData, button: Button, selected_source: String = "inventory") -> void:
 	if SelectedItemMenu.pending_trade_data.has("slot"):
 		var first_data = SelectedItemMenu.pending_trade_data
+		if first_data.source == "inventory" and selected_source == "inventory":
+			print("Cannot trade between two inventory items.")
+			SelectedItemMenu.pending_trade_data = {}
+			return
 		var temp_data = first_data.slot.item_data
 		var temp_qty = first_data.slot.quantity
 		first_data.slot.item_data = slot.item_data
@@ -91,7 +95,7 @@ func display_items(items: Array[SlotData]) -> void:
 		button.custom_minimum_size = Vector2(400, 40)
 		button.focus_mode = Control.FOCUS_ALL
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.pressed.connect(func(b=button, s=slot): _on_item_selected(s, b))
+		button.pressed.connect(func(b=button, s=slot): _on_item_selected(s, b, "inventory"))
 
 		# HBox inside the button
 		var hbox := HBoxContainer.new()
