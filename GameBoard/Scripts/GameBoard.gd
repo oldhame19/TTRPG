@@ -1,5 +1,4 @@
-
-class_name GameBoard
+class_name GameBoard 
 extends Node2D
 
 @onready var cursor = $Cursor
@@ -24,6 +23,7 @@ var _attackable_cells := []
 var _movement_costs
 var _prev_cell
 var _prev_position
+var _active_trade_target_cell: Vector2 = Vector2(-1, -1)
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
 @onready var _unit_path: UnitPath = $UnitPath
@@ -64,11 +64,15 @@ func get_walkable_cells(unit: Unit) -> Array:
 	return _dijkstra(unit.cell, unit.move_range, false)
 	
 func get_tradeable_cells(unit: Unit) -> Array:
-	var tradeable_cells := []
-	
 	if unit == null or unit.grid == null:
 		return []
-		
+	
+	# If trade mode active, only highlight locked trade target cell
+	if _current_action_menu and _current_action_menu.trade_mode_active:
+		if _active_trade_target_cell != Vector2(-1, -1):
+			return [_active_trade_target_cell]
+	
+	var tradeable_cells := []
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
 
 	for direction in DIRECTIONS:
@@ -79,6 +83,7 @@ func get_tradeable_cells(unit: Unit) -> Array:
 				tradeable_cells.append(neighbor_cell)
 
 	return tradeable_cells
+
 
 ## Return an array of cells a given unit can attack using dijkstra's and flood fill algorithm
 func get_attackable_cells(unit: Unit) -> Array:
@@ -294,8 +299,18 @@ func _clear_active_unit() -> void:
 
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _current_trade_scene != null:
-		return  # Prevent cursor movement during trade UI
-
+		# If trade UI is active, forcibly lock cursor position to _active_trade_target_cell
+		if _active_trade_target_cell != Vector2(-1, -1):
+			# Directly set cursor position visually and logically to locked cell
+			cursor.position = grid.calculate_map_position(_active_trade_target_cell)  # Adjust method name to your cursor API
+			return
+		else:
+			# If somehow no active trade cell, just block movement
+			return
+	if _current_action_menu and _current_action_menu.trade_mode_active:
+		# Prevent clearing while trading
+		return
+	# Normal behavior when not trading
 	if _active_unit and _active_unit.is_selected:
 		_unit_path.draw(_active_unit.cell, new_cell)
 	elif _unit_overlay != null and _walkable_cells != []:
@@ -307,6 +322,7 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 
 	if _units.has(new_cell) and _active_unit == null:
 		_hover_display(new_cell)
+
 
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
@@ -336,12 +352,21 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 
 				_current_trade_scene.set_units(_active_unit, target_unit)
 				add_child(_current_trade_scene)
+
+				_active_trade_target_cell = cell  # <-- Lock trade target cell here
+				var tradeable_cells = get_tradeable_cells(_active_unit)
+
+				_unit_overlay.draw_tradeable_cells(tradeable_cells)
+
+				_unit_overlay.draw_highlight_cell(_active_trade_target_cell, 2)
 				var retained_unit = _active_unit 
+				
 				_current_trade_scene.trade_closed.connect(func():
-					
 					_current_trade_scene.queue_free()
 					_current_trade_scene = null
-					
+
+					_active_trade_target_cell = Vector2(-1, -1)  # <-- Reset when trade UI closes
+					_unit_overlay.clear_tradeable_cells()
 					_active_unit = retained_unit
 					
 					var action_menu = ActionMenu.instantiate()

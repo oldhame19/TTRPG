@@ -37,10 +37,25 @@ func _ready():
 
 	$VBoxContainer/HoldButton.visible = (source == "inventory")
 
-	# Store button visibility logic
+	# Determine how many HeldItemsMenu nodes exist in the scene
+	var held_items_count := 0
+	for child in get_tree().get_root().get_children():
+		if child is HeldItemsMenu:
+			held_items_count += 1
+
+	# Store button is only visible if source is "held_items" AND only one HeldItemsMenu exists
 	var store_visible := false
-	if unit and unit.is_player:
-		store_visible = (source == "held_items")
+	if source == "held_items" and held_items_count == 1:
+		store_visible = true
+
+	$VBoxContainer/StoreButton.visible = store_visible
+
+	# Trade button logic
+	var trade_visible := false
+	if source == "inventory":
+		trade_visible = true
+	elif unit and unit.is_player:
+		trade_visible = true
 	elif unit and not unit.is_player and game_board:
 		var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
 		var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
@@ -48,11 +63,11 @@ func _ready():
 			var neighbor_cell = unit_cell + dir
 			if game_board._units.has(neighbor_cell):
 				var neighbor = game_board._units[neighbor_cell]
-				if neighbor.is_player:
-					store_visible = true
+				if not neighbor.is_enemy:
+					trade_visible = true
 					break
 
-	$VBoxContainer/StoreButton.visible = store_visible
+	$VBoxContainer/TradeButton.visible = trade_visible
 
 	if slot.item_data == null or slot.item_data.category != ItemData.Category.EQUIPMENT:
 		$VBoxContainer/EquipButton.visible = false
@@ -62,24 +77,7 @@ func _ready():
 	if not unit or not game_board:
 		return
 
-	# Trade button visibility logic
-	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
-	var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
-	var trade_visible := false
 
-	if source == "inventory":
-		trade_visible = true
-	elif unit and unit.is_player:
-		trade_visible = true
-	elif unit and not unit.is_player and game_board:
-		for dir in DIRECTIONS:
-			var neighbor_cell = unit_cell + dir
-			if game_board._units.has(neighbor_cell):
-				var neighbor = game_board._units[neighbor_cell]
-				if not neighbor.is_enemy:
-					trade_visible = true
-					break
-	$VBoxContainer/TradeButton.visible = trade_visible
 
   
 func _unhandled_input(event):

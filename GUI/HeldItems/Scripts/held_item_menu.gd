@@ -1,6 +1,6 @@
 #held_items_menu.gd
 extends CanvasLayer
-
+class_name HeldItemsMenu
 @export var unit: Unit
 @onready var item_list_container = $Panel/VBoxContainer/ScrollContainer/ItemListContainer
 var game_board: GameBoard
