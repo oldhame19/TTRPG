@@ -313,8 +313,10 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _current_trade_scene != null:
 		return  # Prevent accept input during trade UI
 	if _current_action_menu and _current_action_menu.trade_mode_active:
-		var active_cell = _active_unit.cell
+		if _active_unit == null:
+			return  # Prevent crash due to missing active unit
 
+		var active_cell = _active_unit.cell
 		cursor.show()
 		cursor.process_mode = Node.PROCESS_MODE_INHERIT
 		
@@ -334,18 +336,19 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 
 				_current_trade_scene.set_units(_active_unit, target_unit)
 				add_child(_current_trade_scene)
-
+				var retained_unit = _active_unit 
 				_current_trade_scene.trade_closed.connect(func():
-					var retained_unit = _active_unit 
+					
 					_current_trade_scene.queue_free()
 					_current_trade_scene = null
+					
+					_active_unit = retained_unit
 					
 					var action_menu = ActionMenu.instantiate()
 					action_menu.unit = retained_unit
 					action_menu.game_board = self
 					add_child(action_menu)
 					_current_action_menu = action_menu
-
 					action_menu.tree_exited.connect(func():
 						if not action_menu.trade_mode_active:
 							_clear_active_unit()

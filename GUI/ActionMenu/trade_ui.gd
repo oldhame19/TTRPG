@@ -132,6 +132,7 @@ func _on_trade_completed() -> void:
 	queue_free()
 
 func _on_cancel_button_pressed() -> void:
+
 	emit_signal("trade_closed")
 
 	if cursor:
