@@ -149,32 +149,50 @@ func _on_hold_button_pressed() -> void:
 
 
 
+#func _on_trade_button_pressed() -> void:
+	## If there's already a pending trade
+	#if pending_trade_data.has("slot"):
+		#var previous_source = pending_trade_data["source"]
+		#var current_source = source
+#
+		## Prevent inventory-to-inventory trades
+		#if previous_source == "inventory" and current_source == "inventory":
+			#print("Cannot trade between two inventory items.")
+			#pending_trade_data.clear()
+#
+			## Restore buttons
+			#for child in $VBoxContainer.get_children():
+				#child.modulate.a = 1.0
+				#child.mouse_filter = Control.MOUSE_FILTER_STOP
+			#return
+#
+		## Valid trade; perform trade logic here (you likely have this elsewhere)
+		## e.g. swap items between slots, call a function on game_board, etc.
+#
+		## Clean up after successful trade
+		#pending_trade_data.clear()
+		#queue_free()
+		#return
+#
+	## Start trade (first selection)
+	#pending_trade_data = {
+		#"slot": slot,
+		#"unit": unit,
+		#"source": source,
+		#"source_button": source_button,
+		#"game_board": game_board
+	#}
+#
+	#print("Trade started. Select a second item to complete the trade.")
+#
+	## Hide all buttons except Close
+	#for child in $VBoxContainer.get_children():
+		#if child != $VBoxContainer/CloseButton:
+			#child.modulate.a = 0.0
+			#child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
 func _on_trade_button_pressed() -> void:
-	# If there's already a pending trade
-	if pending_trade_data.has("slot"):
-		var previous_source = pending_trade_data["source"]
-		var current_source = source
-
-		# Prevent inventory-to-inventory trades
-		if previous_source == "inventory" and current_source == "inventory":
-			print("Cannot trade between two inventory items.")
-			pending_trade_data.clear()
-
-			# Restore buttons
-			for child in $VBoxContainer.get_children():
-				child.modulate.a = 1.0
-				child.mouse_filter = Control.MOUSE_FILTER_STOP
-			return
-
-		# Valid trade; perform trade logic here (you likely have this elsewhere)
-		# e.g. swap items between slots, call a function on game_board, etc.
-
-		# Clean up after successful trade
-		pending_trade_data.clear()
-		queue_free()
-		return
-
-	# Start trade (first selection)
+	# Store this slot as the first half of the trade
 	pending_trade_data = {
 		"slot": slot,
 		"unit": unit,
@@ -183,13 +201,15 @@ func _on_trade_button_pressed() -> void:
 		"game_board": game_board
 	}
 
-	print("Trade started. Select a second item to complete the trade.")
+	# Notify the user (you can make this a real visual hint later)
+	print("Trade started. Select another item to swap with.")
 
-	# Hide all buttons except Close
+	# Close this menu, wait for next item to be selected
 	for child in $VBoxContainer.get_children():
 		if child != $VBoxContainer/CloseButton:
 			child.modulate.a = 0.0
 			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
 
 
 func _on_equip_button_pressed() -> void:

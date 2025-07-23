@@ -102,9 +102,6 @@ func _store_items(amount_to_store: int) -> void:
 	_refresh_menus()
 
 
-
-
-
 func _refresh_menus():
 	for child in get_tree().get_root().get_children():
 		if child is CanvasLayer:

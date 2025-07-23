@@ -40,7 +40,7 @@ func populate_items():
 		button.custom_minimum_size = Vector2(340, 40)
 		button.focus_mode = Control.FOCUS_ALL
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.pressed.connect(func(b=button, s=slot): _on_item_selected(s, b, "held_items"))
+		button.pressed.connect(func(b=button, s=slot): _on_item_selected(s, b))
 
 		var hbox := HBoxContainer.new()
 		hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -109,20 +109,11 @@ func populate_items():
 		item_list_container.add_child(button)
 
 
-func _on_item_selected(slot: SlotData, button: Button, selected_source: String) -> void:
+func _on_item_selected(slot: SlotData, button: Button) -> void:
 	if slot.item_data == null and not SelectedItemMenu.pending_trade_data.has("slot"):
 		return
-
 	if SelectedItemMenu.pending_trade_data.has("slot"):
 		var first_data = SelectedItemMenu.pending_trade_data
-
-		# Prevent inventory-to-inventory trades
-		if first_data.source == "inventory" and selected_source == "inventory":
-			print("Cannot trade between two inventory items.")
-			SelectedItemMenu.pending_trade_data = {}
-			return
-
-		# Swap logic
 		var temp_data = first_data.slot.item_data
 		var temp_qty = first_data.slot.quantity
 		first_data.slot.item_data = slot.item_data
@@ -130,7 +121,10 @@ func _on_item_selected(slot: SlotData, button: Button, selected_source: String) 
 		slot.item_data = temp_data
 		slot.quantity = temp_qty
 
+		# Refresh this menu (held items menu)
 		populate_items()
+
+		# Refresh other menus correctly depending on their populate_items signature
 		for node in get_tree().get_root().get_children():
 			if node is CanvasLayer and node != self:
 				var script = node.get_script()
@@ -146,11 +140,11 @@ func _on_item_selected(slot: SlotData, button: Button, selected_source: String) 
 			SelectedItemMenu.active_popup.queue_free()
 		return
 
-	# Normal flow: open popup for selected item
+	# Normal item select flow (open selected item popup)
 	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
 	popup.slot = slot
 	popup.unit = unit
-	popup.source = selected_source  # Use the passed source here
+	popup.source = "held_items"
 	popup.source_button = button
 	popup.game_board = game_board
 	popup.side = side
@@ -159,14 +153,15 @@ func _on_item_selected(slot: SlotData, button: Button, selected_source: String) 
 	var button_pos = button.get_position()
 	var offset := Vector2()
 
+	# Use trade UI positioning if active
 	if game_board._current_trade_scene != null:
 		match side:
 			"A":
-				offset = Vector2(113, 75)
+				offset = Vector2(113, 75)  # Trade UI - Left side
 			"B":
-				offset = Vector2(970, 75)
+				offset = Vector2(970, 75)    # Trade UI - Right side
 			_:
-				offset = Vector2(140, 75)
+				offset = Vector2(140, 75)   # Fallback
 	else:
 		if unit and unit.is_player:
 			offset = Vector2(140, 75)
@@ -189,7 +184,6 @@ func _on_item_selected(slot: SlotData, button: Button, selected_source: String) 
 				offset = Vector2(344, 75)
 
 	popup.set_position(button_pos + offset)
-
 
 
 func _on_close_button_pressed() -> void:

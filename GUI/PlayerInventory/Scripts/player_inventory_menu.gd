@@ -29,39 +29,6 @@ func _ready():
 	tab_buttons[CATEGORY_ALL].button_pressed = true  # visually mark it
 	populate_items()
 
-func _on_item_selected(slot: SlotData, button: Button, selected_source: String = "inventory") -> void:
-	if SelectedItemMenu.pending_trade_data.has("slot"):
-		var first_data = SelectedItemMenu.pending_trade_data
-		if first_data.source == "inventory" and selected_source == "inventory":
-			print("Cannot trade between two inventory items.")
-			SelectedItemMenu.pending_trade_data = {}
-			return
-		var temp_data = first_data.slot.item_data
-		var temp_qty = first_data.slot.quantity
-		first_data.slot.item_data = slot.item_data
-		first_data.slot.quantity = slot.quantity
-		slot.item_data = temp_data
-		slot.quantity = temp_qty
-
-		populate_items()
-
-		for node in get_tree().get_root().get_children():
-			if node is CanvasLayer and node != self and node.has_method("populate_items"):
-				node.populate_items()
-
-		SelectedItemMenu.pending_trade_data = {}
-		if SelectedItemMenu.active_popup:
-			SelectedItemMenu.active_popup.queue_free()
-		return
-
-	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
-	popup.slot = slot
-	popup.unit = unit
-	popup.source = "inventory"
-	popup.source_button = button
-	add_child(popup)
-
-	popup.set_position(button.get_position() + Vector2(953, 75))
 
 func populate_items() -> void:
 	# Deep copy inventory slots to ensure unique instances
@@ -95,7 +62,7 @@ func display_items(items: Array[SlotData]) -> void:
 		button.custom_minimum_size = Vector2(400, 40)
 		button.focus_mode = Control.FOCUS_ALL
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.pressed.connect(func(b=button, s=slot): _on_item_selected(s, b, "inventory"))
+		button.pressed.connect(func(b=button, s=slot): _on_item_selected(s, b))
 
 		# HBox inside the button
 		var hbox := HBoxContainer.new()
@@ -178,3 +145,36 @@ func _on_close_button_pressed() -> void:
 
 	# Close this inventory menu
 	queue_free()
+func _on_item_selected(slot: SlotData, button: Button, selected_source: String = "inventory") -> void:
+	if SelectedItemMenu.pending_trade_data.has("slot"):
+		var first_data = SelectedItemMenu.pending_trade_data
+		if first_data.source == "inventory" and selected_source == "inventory":
+			print("Cannot trade between two inventory items.")
+			SelectedItemMenu.pending_trade_data = {}
+			return
+		var temp_data = first_data.slot.item_data
+		var temp_qty = first_data.slot.quantity
+		first_data.slot.item_data = slot.item_data
+		first_data.slot.quantity = slot.quantity
+		slot.item_data = temp_data
+		slot.quantity = temp_qty
+
+		populate_items()
+
+		for node in get_tree().get_root().get_children():
+			if node is CanvasLayer and node != self and node.has_method("populate_items"):
+				node.populate_items()
+
+		SelectedItemMenu.pending_trade_data = {}
+		if SelectedItemMenu.active_popup:
+			SelectedItemMenu.active_popup.queue_free()
+		return
+
+	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
+	popup.slot = slot
+	popup.unit = unit
+	popup.source = "inventory"
+	popup.source_button = button
+	add_child(popup)
+
+	popup.set_position(button.get_position() + Vector2(953, 75))

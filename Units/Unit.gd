@@ -6,16 +6,25 @@ class_name Unit
 extends Path2D
 
 signal walk_finished ## Emitted when the unit reached the end of a path along which it was walking.
-@export var is_enemy: bool
+@export var is_enemy: bool = false
 @export var is_player: bool = false
+@export var is_wait = false
+@export var move_speed := 600.0
 @export var grid: Resource ## Shared resource of type Grid, used to calculate map coordinates.
 
+#item stuff
 @export var inventory: InventoryData = null
 @export var held_items: HeldItemsData = null
-@export var is_wait = false
+@export var equipped_item: ItemData = null #need to implement stat bonuses
+#stat stuff
+@export var level: int = 1
+@export var unit_data: UnitData
+@export var current_stats: StatBlock
+@export var current_class: ClassData
+@export var active_abilities: Array[AbilityData]
+#need to be moved
 @export var attack_range := 0
 @export var move_range := 6
-@export var move_speed := 600.0
 
 
 ## Texture representing the unit.
