@@ -5,20 +5,18 @@
 class_name Unit
 extends Path2D
 
-enum Team {
-	ALLY,
-	ENEMY
-}
-
 signal walk_finished ## Emitted when the unit reached the end of a path along which it was walking.
 @export var is_enemy: bool
+@export var is_player: bool = false
 @export var grid: Resource ## Shared resource of type Grid, used to calculate map coordinates.
 
+@export var inventory: InventoryData = null
+@export var held_items: HeldItemsData = null
 @export var is_wait = false
 @export var attack_range := 0
 @export var move_range := 6
 @export var move_speed := 600.0
-@export var team: Team = Team.ALLY
+
 
 ## Texture representing the unit.
 @export var skin: Texture:
@@ -35,6 +33,19 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 		if not _sprite:
 			await ready
 		_sprite.position = value
+func _ready() -> void:
+	if held_items == null:
+		held_items = HeldItemsData.new()
+	set_process(false)
+	_path_follow.rotates = false
+	
+	cell = grid.calculate_grid_coordinates(position)
+	position = grid.calculate_map_position(cell)
+	
+	# We create the curve resource here because creating it in the editor prevents us from
+	# moving the unit.
+	if not Engine.is_editor_hint():
+		curve = Curve2D.new()
 
 ## Coordinates of the current cell the cursor moved to.
 var cell := Vector2.ZERO:
@@ -61,17 +72,6 @@ var _is_walking := false:
 @onready var _path_follow: PathFollow2D = $PathFollow2D
 
 
-func _ready() -> void:
-	set_process(false)
-	_path_follow.rotates = false
-	
-	cell = grid.calculate_grid_coordinates(position)
-	position = grid.calculate_map_position(cell)
-	
-	# We create the curve resource here because creating it in the editor prevents us from
-	# moving the unit.
-	if not Engine.is_editor_hint():
-		curve = Curve2D.new()
 
 
 func _process(delta: float) -> void:

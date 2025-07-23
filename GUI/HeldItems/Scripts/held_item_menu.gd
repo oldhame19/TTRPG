@@ -1,0 +1,208 @@
+#held_items_menu.gd
+extends CanvasLayer
+class_name HeldItemsMenu
+@export var unit: Unit
+@onready var item_list_container = $Panel/VBoxContainer/ScrollContainer/ItemListContainer
+var game_board: GameBoard
+const CATEGORY_ALL: int = -1
+var side: String = "A" 
+
+func _ready():
+	if not unit:
+		push_warning("No unit provided for HeldItemsMenu.")
+		queue_free()
+		return
+
+	$Panel/VBoxContainer/Label.text = "%s's Items" % unit.name
+	populate_items()
+
+func populate_items():
+	# Clear previous UI children
+	for child in item_list_container.get_children():
+		child.queue_free()
+
+	# Clone and pad the held items to always show 5 slots
+	var padded_slots: Array[SlotData] = []
+	for slot in unit.held_items.slots:
+		padded_slots.append(slot.clone())
+
+	# Pad with empty slots if needed
+	while padded_slots.size() < 5:
+		var empty_slot := SlotData.new()
+		empty_slot.item_data = null  # no item
+		empty_slot.quantity = 0
+		padded_slots.append(empty_slot)
+
+	# Populate UI using the padded slots
+	for slot in padded_slots:
+		var button := Button.new()
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size = Vector2(340, 40)
+		button.focus_mode = Control.FOCUS_ALL
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.pressed.connect(func(b=button, s=slot): _on_item_selected(s, b, "held_items"))
+
+		var hbox := HBoxContainer.new()
+		hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.custom_minimum_size = Vector2(340, 40)
+		hbox.alignment = BoxContainer.ALIGNMENT_BEGIN
+		hbox.add_theme_constant_override("separation", 0)
+
+		var left_spacer := Control.new()
+		left_spacer.custom_minimum_size = Vector2(10, 0)
+		hbox.add_child(left_spacer)
+
+		# Item icon
+		var icon := TextureRect.new()
+		icon.custom_minimum_size = Vector2(32, 32)
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		if slot.item_data:
+			icon.texture = slot.item_data.texture
+		hbox.add_child(icon)
+
+		var icon_name_spacer := Control.new()
+		icon_name_spacer.custom_minimum_size = Vector2(6, 0)
+		hbox.add_child(icon_name_spacer)
+
+		var name_durability_box := HBoxContainer.new()
+		name_durability_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_durability_box.custom_minimum_size = Vector2(0, 32)
+		name_durability_box.alignment = BoxContainer.ALIGNMENT_BEGIN
+		name_durability_box.add_theme_constant_override("separation", 4)
+
+		var name_label := Label.new()
+		if slot.item_data:
+			name_label.text = slot.item_data.name
+		else:
+			name_label.text = "(Empty)"
+		name_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		name_durability_box.add_child(name_label)
+
+		if slot.item_data and slot.item_data.max_durability > 0:
+			var durability_label := Label.new()
+			durability_label.text = "[%02d/%02d]" % [slot.item_data.durability, slot.item_data.max_durability]
+			durability_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+			durability_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			durability_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			name_durability_box.add_child(durability_label)
+
+		hbox.add_child(name_durability_box)
+
+		# Quantity label
+		var qty_label := Label.new()
+		if slot.item_data:
+			qty_label.text = "x%d" % slot.quantity
+		else:
+			qty_label.text = ""
+		qty_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		qty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		qty_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		qty_label.custom_minimum_size = Vector2(50, 32)
+		hbox.add_child(qty_label)
+
+		var right_spacer := Control.new()
+		right_spacer.custom_minimum_size = Vector2(16, 0)
+		hbox.add_child(right_spacer)
+
+		button.add_child(hbox)
+		item_list_container.add_child(button)
+
+
+func _on_item_selected(slot: SlotData, button: Button, selected_source: String) -> void:
+	if slot.item_data == null and not SelectedItemMenu.pending_trade_data.has("slot"):
+		return
+
+	if SelectedItemMenu.pending_trade_data.has("slot"):
+		var first_data = SelectedItemMenu.pending_trade_data
+
+		# Prevent inventory-to-inventory trades
+		if first_data.source == "inventory" and selected_source == "inventory":
+			print("Cannot trade between two inventory items.")
+			SelectedItemMenu.pending_trade_data = {}
+			return
+
+		# Swap logic
+		var temp_data = first_data.slot.item_data
+		var temp_qty = first_data.slot.quantity
+		first_data.slot.item_data = slot.item_data
+		first_data.slot.quantity = slot.quantity
+		slot.item_data = temp_data
+		slot.quantity = temp_qty
+
+		populate_items()
+		for node in get_tree().get_root().get_children():
+			if node is CanvasLayer and node != self:
+				var script = node.get_script()
+				if script != null:
+					var path = script.resource_path
+					if path == "res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd":
+						node.populate_items()
+					elif path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
+						node.populate_items()
+
+		SelectedItemMenu.pending_trade_data = {}
+		if SelectedItemMenu.active_popup:
+			SelectedItemMenu.active_popup.queue_free()
+		return
+
+	# Normal flow: open popup for selected item
+	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
+	popup.slot = slot
+	popup.unit = unit
+	popup.source = selected_source  # Use the passed source here
+	popup.source_button = button
+	popup.game_board = game_board
+	popup.side = side
+	add_child(popup)
+
+	var button_pos = button.get_position()
+	var offset := Vector2()
+
+	if game_board._current_trade_scene != null:
+		match side:
+			"A":
+				offset = Vector2(113, 75)
+			"B":
+				offset = Vector2(970, 75)
+			_:
+				offset = Vector2(140, 75)
+	else:
+		if unit and unit.is_player:
+			offset = Vector2(140, 75)
+		else:
+			var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+			var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
+			var adjacent_to_player := false
+
+			for dir in DIRECTIONS:
+				var neighbor_cell = unit_cell + dir
+				if game_board._units.has(neighbor_cell):
+					var neighbor = game_board._units[neighbor_cell]
+					if neighbor.is_player:
+						adjacent_to_player = true
+						break
+
+			if adjacent_to_player:
+				offset = Vector2(140, 75)
+			else:
+				offset = Vector2(344, 75)
+
+	popup.set_position(button_pos + offset)
+
+
+
+func _on_close_button_pressed() -> void:
+	if unit and unit.is_player:
+		for child in get_tree().get_root().get_children():
+			if child is CanvasLayer and child.get_script().resource_path == "res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd":
+				if child.unit == unit:
+					child.queue_free()
+					break
+
+	for child in get_children():
+		if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
+			child.queue_free()
+			break
+
+	queue_free()

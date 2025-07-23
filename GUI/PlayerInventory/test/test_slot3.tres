@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SlotData" load_steps=3 format=3 uid="uid://bcpqj7dsmhwfs"]
+
+[ext_resource type="Script" uid="uid://dmphg5nlphaa6" path="res://GUI/PlayerInventory/Scripts/slot_data.gd" id="1_7daky"]
+[ext_resource type="Resource" uid="uid://b3tkm8iaftluh" path="res://Items/ItemResources/Weapons/training_sword.tres" id="1_o3iyh"]
+
+[resource]
+script = ExtResource("1_7daky")
+item_data = ExtResource("1_o3iyh")
+quantity = 1
+metadata/_custom_type_script = "uid://dmphg5nlphaa6"

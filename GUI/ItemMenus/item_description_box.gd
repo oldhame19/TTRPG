@@ -1,0 +1,72 @@
+extends PopupPanel
+
+@onready var stat_grid := $MarginContainer/VBoxContainer/GridContainer
+@onready var description_label := $MarginContainer/VBoxContainer/Panel/DescriptionLabel
+
+# Stat value columns
+@onready var pwr := stat_grid.get_node("pwr")
+@onready var hit := stat_grid.get_node("hit")
+@onready var rng := stat_grid.get_node("rng")
+@onready var wt := stat_grid.get_node("wt")
+@onready var crit := stat_grid.get_node("crit")
+@onready var eff := stat_grid.get_node("eff")
+
+# Static label columns
+@onready var pwr_label := stat_grid.get_node("PowerLabel")
+@onready var hit_label := stat_grid.get_node("HitLabel")
+@onready var rng_label := stat_grid.get_node("RangeLabel")
+@onready var wt_label := stat_grid.get_node("WeightLabel")
+@onready var crit_label := stat_grid.get_node("CritLabel")
+@onready var eff_label := stat_grid.get_node("EffectivenessLabel")
+
+func show_item_description(item_data: ItemData) -> void:
+	# Power
+	pwr_label.visible = true
+	pwr.visible = true
+	if item_data.power > 0:
+		pwr.text = " %d" % item_data.power
+	else:
+		pwr.text = " -"
+
+	# Hit Chance
+	hit_label.visible = true
+	hit.visible = true
+	if item_data.hit_chance > 0:
+		hit.text = " %d" % item_data.hit_chance
+	else:
+		hit.text = " -"
+
+	# Range
+	rng_label.visible = true
+	rng.visible = true
+	if item_data.atk_range > 1:
+		rng.text = " %d" % item_data.atk_range
+	else:
+		rng.text = " -"
+
+	# Weight
+	wt_label.visible = true
+	wt.visible = true
+	if item_data.weight > 0:
+		wt.text = " %d" % item_data.weight
+	else:
+		wt.text = " -"
+
+	# Crit Chance
+	crit_label.visible = true
+	crit.visible = true
+	if item_data.crit_chance > 0:
+		crit.text = " %d" % item_data.crit_chance
+	else:
+		crit.text = " -"
+
+	# Effectiveness
+	eff_label.visible = true
+	eff.visible = true
+	if item_data.effective_against != ItemData.Effectiveness.NONE:
+		eff.text = " %s" % str(item_data.effective_against)
+	else:
+		eff.text = " -"
+
+	# Description (always shown)
+	description_label.text = item_data.description

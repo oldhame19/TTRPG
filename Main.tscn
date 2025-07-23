@@ -1,22 +1,26 @@
-[gd_scene load_steps=27 format=4 uid="uid://30jb4kc5kf5p"]
+[gd_scene load_steps=35 format=4 uid="uid://30jb4kc5kf5p"]
 
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://GameBoard/Cursor/Cursor.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="2"]
-[ext_resource type="Script" uid="uid://cl0nmaamglcm8" path="res://GameBoard/GameBoard.gd" id="3"]
-[ext_resource type="Texture2D" uid="uid://cocms0prufyqi" path="res://Background/grasslands.png" id="3_c2ibq"]
-[ext_resource type="Resource" uid="uid://de03eq7e7ropp" path="res://GameBoard/Grid.tres" id="4"]
+[ext_resource type="Script" uid="uid://cl0nmaamglcm8" path="res://GameBoard/Scripts/GameBoard.gd" id="3"]
+[ext_resource type="Texture2D" uid="uid://cocms0prufyqi" path="res://Background/Tileset/grasslands.png" id="3_c2ibq"]
+[ext_resource type="Resource" uid="uid://de03eq7e7ropp" path="res://GameBoard/Resources/Grid.tres" id="4"]
 [ext_resource type="Texture2D" uid="uid://cg6gyig2225di" path="res://Background/Tileset/FullTileset_80x80.png" id="4_j4qnp"]
-[ext_resource type="Script" uid="uid://cb1wyobxbtiiq" path="res://Background/Map.gd" id="4_juuvy"]
-[ext_resource type="TileSet" uid="uid://fkslvb3chbpj" path="res://UnitOverlay/unit_overlay_tileset.tres" id="5_8p6j6"]
+[ext_resource type="Script" uid="uid://cb1wyobxbtiiq" path="res://Background/Scripts/Map.gd" id="4_juuvy"]
+[ext_resource type="TileSet" uid="uid://fkslvb3chbpj" path="res://UnitOverlay/Tileset/unit_overlay_tileset.tres" id="5_8p6j6"]
 [ext_resource type="Texture2D" uid="uid://m6fbyjrxx2x7" path="res://Background/Tileset/cave_tileset_80x80_fixed.png" id="5_sc1dx"]
-[ext_resource type="Script" uid="uid://bjb6pqkd7n7ek" path="res://UnitOverlay/UnitOverlay.gd" id="6_j0467"]
+[ext_resource type="Script" uid="uid://bjb6pqkd7n7ek" path="res://UnitOverlay/Scripts/UnitOverlay.gd" id="6_j0467"]
 [ext_resource type="Texture2D" uid="uid://brf0to7jmbm48" path="res://Background/Tileset/terrain_tiled_80x80 (1).png" id="6_kjvhd"]
 [ext_resource type="Texture2D" uid="uid://ceanoo0yxcj8i" path="res://Units/squirrel.png" id="7"]
 [ext_resource type="TileSet" uid="uid://dqg14aj86so4a" path="res://GameBoard/unit_path_tileset.tres" id="7_0mtf1"]
 [ext_resource type="Texture2D" uid="uid://48n03utbap4i" path="res://Background/Tileset/sand_tileset_80x80_fixed.png" id="7_5tuhn"]
 [ext_resource type="Texture2D" uid="uid://don6rhlapjhye" path="res://Units/bear.png" id="8"]
-[ext_resource type="Script" uid="uid://deiujsdcxpcod" path="res://GameBoard/UnitPath.gd" id="8_xru6b"]
+[ext_resource type="Script" uid="uid://deiujsdcxpcod" path="res://GameBoard/Scripts/UnitPath.gd" id="8_xru6b"]
 [ext_resource type="Texture2D" uid="uid://x4kxxdinjx3r" path="res://Units/bugcat.png" id="9"]
+[ext_resource type="Resource" uid="uid://dvworp6jnpmkd" path="res://GUI/PlayerInventory/test/test_inventory.tres" id="15_kjvhd"]
+[ext_resource type="Resource" uid="uid://db4v7fqoho8p4" path="res://GUI/HeldItems/test/test_held_items.tres" id="18_5tuhn"]
+[ext_resource type="Script" uid="uid://b3bnc4m3u2lkx" path="res://GUI/HeldItems/Scripts/held_items_data.gd" id="18_devvj"]
+[ext_resource type="Script" uid="uid://dmphg5nlphaa6" path="res://GUI/PlayerInventory/Scripts/slot_data.gd" id="19_3b0ty"]
 
 [sub_resource type="GDScript" id="GDScript_d1qvb"]
 script/source = "@export var movement_data: Dictionary
@@ -238,12 +242,27 @@ movement_data = {
 3: 2
 }
 
+[sub_resource type="Resource" id="Resource_bg4s2"]
+script = ExtResource("18_devvj")
+slots = Array[ExtResource("19_3b0ty")]([])
+
+[sub_resource type="Resource" id="Resource_hhcpw"]
+script = ExtResource("18_devvj")
+slots = Array[ExtResource("19_3b0ty")]([])
+
+[sub_resource type="Resource" id="Resource_mxvw5"]
+script = ExtResource("18_devvj")
+slots = Array[ExtResource("19_3b0ty")]([])
+
+[sub_resource type="Resource" id="Resource_xrxkg"]
+script = ExtResource("18_devvj")
+slots = Array[ExtResource("19_3b0ty")]([])
+
 [node name="Main" type="Node2D"]
 rotation = -0.00195814
 
 [node name="GameBoard" type="Node2D" parent="."]
 script = ExtResource("3")
-grid = ExtResource("4")
 
 [node name="Map" type="TileMapLayer" parent="GameBoard"]
 use_parent_material = true
@@ -265,9 +284,13 @@ script = ExtResource("8_xru6b")
 grid = ExtResource("4")
 
 [node name="Cursor" parent="GameBoard" instance=ExtResource("1")]
+position = Vector2(744.918, 553.46)
 
 [node name="Bear" parent="GameBoard" instance=ExtResource("2")]
-position = Vector2(610.294, 361.196)
+position = Vector2(608.282, 367.192)
+is_player = true
+inventory = ExtResource("15_kjvhd")
+held_items = ExtResource("18_5tuhn")
 attack_range = 1
 move_range = 3
 skin = ExtResource("8")
@@ -275,12 +298,14 @@ skin_offset = Vector2(2, 9)
 
 [node name="Cat" parent="GameBoard" instance=ExtResource("2")]
 position = Vector2(543.188, 415.064)
+held_items = SubResource("Resource_bg4s2")
 attack_range = 2
 skin = ExtResource("9")
 skin_offset = Vector2(5, 12)
 
 [node name="Squirrel" parent="GameBoard" instance=ExtResource("2")]
 position = Vector2(671.294, 361.315)
+held_items = ExtResource("18_5tuhn")
 attack_range = 1
 move_range = 5
 skin = ExtResource("7")
@@ -290,6 +315,7 @@ skin_offset = Vector2(6, 17)
 modulate = Color(1, 0, 0, 1)
 position = Vector2(349.289, 363.685)
 is_enemy = true
+held_items = SubResource("Resource_hhcpw")
 is_wait = true
 attack_range = 1
 move_range = 3
@@ -300,6 +326,7 @@ skin_offset = Vector2(2, 9)
 modulate = Color(1, 0, 0, 1)
 position = Vector2(355.169, 424.696)
 is_enemy = true
+held_items = SubResource("Resource_mxvw5")
 is_wait = true
 attack_range = 1
 move_range = 3
@@ -310,6 +337,7 @@ skin_offset = Vector2(2, 9)
 modulate = Color(1, 0, 0, 1)
 position = Vector2(129.297, 359.254)
 is_enemy = true
+held_items = SubResource("Resource_xrxkg")
 attack_range = 1
 move_range = 3
 skin = ExtResource("8")

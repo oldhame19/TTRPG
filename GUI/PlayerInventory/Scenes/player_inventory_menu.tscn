@@ -1,0 +1,92 @@
+[gd_scene load_steps=2 format=3 uid="uid://cv60gne6xgeip"]
+
+[ext_resource type="Script" uid="uid://bj5t0frixr7yd" path="res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd" id="1_2kqk1"]
+
+[node name="PlayerInventory" type="CanvasLayer"]
+script = ExtResource("1_2kqk1")
+
+[node name="Panel" type="Panel" parent="."]
+custom_minimum_size = Vector2(600, 400)
+anchors_preset = -1
+anchor_left = 0.174479
+anchor_top = 0.114198
+anchor_right = 0.825521
+anchor_bottom = 0.885802
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+metadata/_edit_use_anchors_ = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = -0.00666667
+anchor_top = -0.002
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 5.0
+offset_right = -4.0
+offset_bottom = -1.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="CategoryTabs" type="HBoxContainer" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_direction = 3
+layout_mode = 2
+
+[node name="MiscButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
+layout_mode = 2
+text = "MISC."
+
+[node name="ProvisionsButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
+layout_mode = 2
+text = "PROVISIONS"
+
+[node name="EquipmentButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
+layout_mode = 2
+text = "EQUIP."
+
+[node name="RangedButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
+layout_mode = 2
+text = "RANGE"
+
+[node name="MeleeButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
+layout_mode = 2
+text = "MELEE"
+
+[node name="AllButton" type="Button" parent="Panel/VBoxContainer/CategoryTabs"]
+layout_mode = 2
+text = "ALL"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(325, 425)
+layout_direction = 2
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.0
+horizontal_scroll_mode = 0
+
+[node name="ItemListContainer" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.0
+
+[node name="CloseButton" type="Button" parent="Panel"]
+layout_mode = 0
+offset_left = 658.0
+offset_top = 440.0
+offset_right = 736.0
+offset_bottom = 486.0
+text = "CLOSE"
+
+[connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/MiscButton" to="." method="_on_misc_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/ProvisionsButton" to="." method="_on_provisions_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/EquipmentButton" to="." method="_on_key_items_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/RangedButton" to="." method="_on_ranged_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/MeleeButton" to="." method="_on_melee_button_pressed"]
+[connection signal="pressed" from="Panel/VBoxContainer/CategoryTabs/AllButton" to="." method="_on_all_button_pressed"]
+[connection signal="pressed" from="Panel/CloseButton" to="." method="_on_close_button_pressed"]
