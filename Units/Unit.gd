@@ -22,9 +22,9 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 @export var current_stats: StatBlock
 @export var current_class: ClassData
 @export var active_abilities: Array[AbilityData]
-#need to be moved
-@export var attack_range := 0
-@export var move_range := 6
+
+@export var attack_range := 0 #can be modified based on equipped weapon
+@export var move_range := 6 #can be removed and read from current class data
 
 
 ## Texture representing the unit.

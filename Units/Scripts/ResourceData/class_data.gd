@@ -6,10 +6,12 @@ extends Resource
 @export var base_stats: StatBlock #on promotion, for each stat, if the units stats are lower than the base stat, they will be raised to the base stat
 @export var move_range: int = 4
 @export var class_ability: AbilityData = null
-@export var growth_bonus: Dictionary = {
+@export var min_growth_rates: Dictionary = {
 	"hp": 0,
 	"strength": 0,
 	"defense": 0,
 	"speed": 0,
 	"dexterity": 0,
-}
+	"leadership": 0,
+	"faith": 0,
+} #like stats, growhts will be raised to the minimums on promotion

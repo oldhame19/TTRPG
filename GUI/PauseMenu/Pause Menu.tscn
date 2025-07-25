@@ -22,6 +22,10 @@ grow_vertical = 2
 layout_mode = 2
 text = "UNITS"
 
+[node name="ConditionsButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "CONDITIONS"
+
 [node name="OptionsButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "OPTIONS"

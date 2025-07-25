@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=4 format=3 uid="uid://dg3yf07bcnp7v"]
+
+[ext_resource type="Resource" uid="uid://c6440uc8irvm7" path="res://Units/Scripts/Classes/BaseStats/shepherd_bst.tres" id="1_my3gg"]
+[ext_resource type="Script" uid="uid://u3i27lovwmxw" path="res://Units/Scripts/ResourceData/unit_data.gd" id="2_aupeq"]
+[ext_resource type="Resource" uid="uid://25dtxvv1nw6o" path="res://Units/Scripts/Classes/Resources/shepherd_class.tres" id="3_gawqf"]
+
+[resource]
+script = ExtResource("2_aupeq")
+is_player = true
+unit_name = "David"
+starting_class = ExtResource("3_gawqf")
+base_stats = ExtResource("1_my3gg")
+growth_rates = {
+"defense": 50,
+"dexterity": 55,
+"faith": 35,
+"hp": 60,
+"leadership": 40,
+"speed": 45,
+"strength": 50
+}
+metadata/_custom_type_script = "uid://u3i27lovwmxw"

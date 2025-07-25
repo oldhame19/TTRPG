@@ -8,12 +8,15 @@ const OBSTACLE_ATLAS_ID = 2
 const MAX_VALUE: int = 99999
 const PauseMenu = preload("res://GUI/PauseMenu/Pause Menu.tscn")
 const ActionMenu = preload("res://GUI/ActionMenu/Action Menu.tscn")
+const UnitInfoPanelScene = preload("res://GUI/UnitInfo/UnitInfoPanel.tscn")
 var _current_action_menu: ActionMenu = null
 var _current_trade_scene = null
+var _unit_info_panel: UnitInfoPanel
+
+
 
 ## Resource of type Grid.
 @export var grid: Resource = preload("res://GameBoard/Resources/Grid.tres")
-
 
 ## Mapping of coordinates of a cell to a reference to the unit it contains.
 var _units := {}
@@ -31,9 +34,26 @@ var _active_trade_target_cell: Vector2 = Vector2(-1, -1)
 @onready var _cursor: Cursor = $Cursor
 
 
+
 func _ready() -> void:
 	_movement_costs = _map.get_movement_costs(grid)
 	_reinitialize()
+
+	var ui_root = CanvasLayer.new()
+	add_child(ui_root)
+
+	_unit_info_panel = UnitInfoPanelScene.instantiate()
+	ui_root.add_child(_unit_info_panel)
+	_unit_info_panel.visible = false
+
+	# Position UnitInfoPanel in top-left corner with offset
+	_unit_info_panel.anchor_left = 0.0
+	_unit_info_panel.anchor_top = 0.0
+	_unit_info_panel.anchor_right = 0.0
+	_unit_info_panel.anchor_bottom = 0.0
+	
+	_unit_info_panel.position = Vector2(20, 20)
+
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -260,18 +280,33 @@ func _select_unit(cell: Vector2) -> void:
 	_unit_path.initialize(_walkable_cells)
 
 
-func _hover_display(cell:Vector2) -> void:
-	if not _units.has(cell):
+func _hover_display(cell: Vector2) -> void:
+	if !_unit_info_panel:
 		return
+	if _unit_info_panel == null:
+		push_warning("Warning: _unit_info_panel is null!")
+		return
+		
+
+	if not _units.has(cell):
+		_unit_info_panel.update_info(null)
+		_unit_info_panel.visible = false
+		return
+
 	var curr_unit = _units[cell]
 	if curr_unit == null or not is_instance_valid(curr_unit):
+		_unit_info_panel.update_info(null)
+		_unit_info_panel.visible = false
 		return
+
 	_walkable_cells = get_walkable_cells(curr_unit)
 	_attackable_cells = get_attackable_cells(curr_unit)
 
 	_unit_overlay.draw_attackable_cells(_attackable_cells)
 	_unit_overlay.draw_walkable_cells(_walkable_cells)
-	
+
+	_unit_info_panel.update_info(curr_unit)
+	_unit_info_panel.visible = true
 
 func _reset_unit() -> void:
 	if _active_unit != null and _active_unit.cell != _prev_cell:
@@ -298,33 +333,27 @@ func _clear_active_unit() -> void:
 	_walkable_cells.clear()
 
 func _on_Cursor_moved(new_cell: Vector2) -> void:
+	if !_unit_info_panel:
+		return
 	if _current_trade_scene != null:
-		# If trade UI is active, forcibly lock cursor position to _active_trade_target_cell
-		if _active_trade_target_cell != Vector2(-1, -1):
-			# Directly set cursor position visually and logically to locked cell
-			cursor.position = grid.calculate_map_position(_active_trade_target_cell)  # Adjust method name to your cursor API
-			return
-		else:
-			# If somehow no active trade cell, just block movement
-			return
+		# lock cursor during trade
+		return
+
 	if _current_action_menu and _current_action_menu.trade_mode_active:
 		# Prevent clearing while trading
 		return
-	# Normal behavior when not trading
+
 	if _active_unit and _active_unit.is_selected:
 		_unit_path.draw(_active_unit.cell, new_cell)
-	elif _unit_overlay != null and _walkable_cells != []:
-		if _current_action_menu and _current_action_menu.trade_mode_active:
-			pass
-		else:
-			_walkable_cells.clear()
-			_unit_overlay.clear()
+	elif _unit_overlay != null and _walkable_cells.size() > 0:
+		_walkable_cells.clear()
+		_unit_overlay.clear()
 
 	if _units.has(new_cell) and _active_unit == null:
 		_hover_display(new_cell)
-
-
-
+	else:
+		_unit_info_panel.update_info(null)
+		_unit_info_panel.visible = false
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _current_trade_scene != null:
 		return  # Prevent accept input during trade UI

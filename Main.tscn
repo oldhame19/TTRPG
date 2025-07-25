@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=4 uid="uid://30jb4kc5kf5p"]
+[gd_scene load_steps=36 format=4 uid="uid://30jb4kc5kf5p"]
 
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://GameBoard/Cursor/Cursor.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="2"]
@@ -18,6 +18,7 @@
 [ext_resource type="Script" uid="uid://deiujsdcxpcod" path="res://GameBoard/Scripts/UnitPath.gd" id="8_xru6b"]
 [ext_resource type="Texture2D" uid="uid://x4kxxdinjx3r" path="res://Units/bugcat.png" id="9"]
 [ext_resource type="Resource" uid="uid://dvworp6jnpmkd" path="res://GUI/PlayerInventory/test/test_inventory.tres" id="15_kjvhd"]
+[ext_resource type="Resource" uid="uid://dg3yf07bcnp7v" path="res://Units/Scripts/UnitData/david_data.tres" id="18_3b0ty"]
 [ext_resource type="Resource" uid="uid://db4v7fqoho8p4" path="res://GUI/HeldItems/test/test_held_items.tres" id="18_5tuhn"]
 [ext_resource type="Script" uid="uid://b3bnc4m3u2lkx" path="res://GUI/HeldItems/Scripts/held_items_data.gd" id="18_devvj"]
 [ext_resource type="Script" uid="uid://dmphg5nlphaa6" path="res://GUI/PlayerInventory/Scripts/slot_data.gd" id="19_3b0ty"]
@@ -291,6 +292,7 @@ position = Vector2(608.282, 367.192)
 is_player = true
 inventory = ExtResource("15_kjvhd")
 held_items = ExtResource("18_5tuhn")
+unit_data = ExtResource("18_3b0ty")
 attack_range = 1
 move_range = 3
 skin = ExtResource("8")
@@ -315,8 +317,8 @@ skin_offset = Vector2(6, 17)
 modulate = Color(1, 0, 0, 1)
 position = Vector2(349.289, 363.685)
 is_enemy = true
-held_items = SubResource("Resource_hhcpw")
 is_wait = true
+held_items = SubResource("Resource_hhcpw")
 attack_range = 1
 move_range = 3
 skin = ExtResource("7")
@@ -326,8 +328,8 @@ skin_offset = Vector2(2, 9)
 modulate = Color(1, 0, 0, 1)
 position = Vector2(355.169, 424.696)
 is_enemy = true
-held_items = SubResource("Resource_mxvw5")
 is_wait = true
+held_items = SubResource("Resource_mxvw5")
 attack_range = 1
 move_range = 3
 skin = ExtResource("9")

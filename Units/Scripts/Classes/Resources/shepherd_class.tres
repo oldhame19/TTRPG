@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=3 format=3 uid="uid://25dtxvv1nw6o"]
+
+[ext_resource type="Resource" uid="uid://c6440uc8irvm7" path="res://Units/Scripts/Classes/BaseStats/shepherd_bst.tres" id="1_hccb5"]
+[ext_resource type="Script" uid="uid://cvbyjqvw2u3cn" path="res://Units/Scripts/ResourceData/class_data.gd" id="2_88vh8"]
+
+[resource]
+script = ExtResource("2_88vh8")
+name = "Shepherd"
+base_stats = ExtResource("1_hccb5")
+move_range = 4
+min_growth_rates = {
+"defense": 0,
+"dexterity": 0,
+"faith": 0,
+"hp": 0,
+"leadership": 0,
+"speed": 0,
+"strength": 0
+}
+metadata/_custom_type_script = "uid://cvbyjqvw2u3cn"

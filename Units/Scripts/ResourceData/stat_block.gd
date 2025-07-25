@@ -6,7 +6,9 @@ extends Resource
 @export var strength: int = 0
 @export var defense: int = 0
 @export var speed: int = 0
-@export var dexterity: int = 0
+@export var dexterity: int = 0 #accurcy 
+@export var leadership: int = 0 #like charm
+@export var faith: int = 0 #like luck but more on theme
 
 func copy() -> StatBlock:
 	var new_block = StatBlock.new()

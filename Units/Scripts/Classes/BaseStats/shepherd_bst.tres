@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatBlock" load_steps=2 format=3 uid="uid://c6440uc8irvm7"]
+
+[ext_resource type="Script" uid="uid://blaaacoyl7slh" path="res://Units/Scripts/ResourceData/stat_block.gd" id="1_4hls5"]
+
+[resource]
+script = ExtResource("1_4hls5")
+hp = 18
+strength = 6
+defense = 3
+speed = 3
+dexterity = 4
+leadership = 2
+faith = 7
+metadata/_custom_type_script = "uid://blaaacoyl7slh"
