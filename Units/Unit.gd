@@ -18,6 +18,7 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 @export var equipped_item: ItemData = null #need to implement stat bonuses
 #stat stuff
 @export var level: int = 1
+@export var max_hp: int = 0
 @export var unit_data: UnitData
 @export var current_stats: StatBlock
 @export var current_class: ClassData
@@ -55,6 +56,26 @@ func _ready() -> void:
 	# moving the unit.
 	if not Engine.is_editor_hint():
 		curve = Curve2D.new()
+	
+	initialize_stats()
+
+func initialize_stats() -> void:
+	if unit_data == null:
+		# No unit data assigned, skip or set defaults
+		max_hp = 0
+		current_stats = null
+		return
+
+	if current_stats == null:
+		current_stats = unit_data.base_stats.copy()
+
+	if max_hp == 0:
+		max_hp = unit_data.base_stats.hp
+
+	if current_stats.hp == 0:
+		current_stats.hp = max_hp
+func level_up() -> void:
+	level += 1
 
 ## Coordinates of the current cell the cursor moved to.
 var cell := Vector2.ZERO:

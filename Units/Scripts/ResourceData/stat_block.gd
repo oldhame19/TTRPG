@@ -17,4 +17,6 @@ func copy() -> StatBlock:
 	new_block.defense = defense
 	new_block.speed = speed
 	new_block.dexterity = dexterity
+	new_block.leadership = leadership
+	new_block.faith = faith
 	return new_block

@@ -20,9 +20,9 @@ func update_info(unit: Unit) -> void:
 	if unit == null or not is_instance_valid(unit):
 		visible = false
 		name_label.text = "Name: None"
-		level_label.text = " Level: None"
-		hp_label.text = " HP: None"
-		equipped_label.text = " Equipped: None"
+		level_label.text = "Level: None"
+		hp_label.text = "HP: None"
+		equipped_label.text = "Equipped: None"
 		return
 
 	visible = true
@@ -30,11 +30,10 @@ func update_info(unit: Unit) -> void:
 	name_label.text = "Name: %s" % (
 		unit.unit_data.unit_name if unit.unit_data != null else "None"
 	)
-
 	level_label.text = "Level: %d" % unit.level
 
 	if unit.current_stats != null:
-		hp_label.text = "HP: %d/%d" % [unit.current_stats.hp, unit.current_stats.max_hp]
+		hp_label.text = "HP: %d/%d" % [unit.current_stats.hp, unit.max_hp]
 	else:
 		hp_label.text = "HP: None"
 
