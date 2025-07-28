@@ -37,4 +37,3 @@ func remove_item(item: SlotData) -> void:
 		item.quantity = max(0, item.quantity - 1)
 		if item.quantity == 0:
 			slots.erase(item)
-			

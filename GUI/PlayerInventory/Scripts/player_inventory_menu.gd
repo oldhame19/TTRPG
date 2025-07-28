@@ -173,6 +173,7 @@ func _on_item_selected(slot: SlotData, button: Button, selected_source: String =
 	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
 	popup.slot = slot
 	popup.unit = unit
+	
 	popup.source = "inventory"
 	popup.source_button = button
 	add_child(popup)

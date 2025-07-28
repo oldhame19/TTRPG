@@ -6,27 +6,25 @@ static var pending_trade_data := {}
 
 var slot: SlotData
 var unit: Unit
+
 var source: String  # "inventory" or "held_items"
 var game_board: GameBoard       # Assigned when creating the popup
 var source_button: Button
 var side: String = "A" 
 
 func _ready():
-	# Close previous selected item menu
+	# Close any existing popups
 	if active_popup and active_popup != self:
 		active_popup.queue_free()
-
-	# Close any open store item menu popup
 	if StoreItemMenu.active_store_popup:
 		StoreItemMenu.active_store_popup.queue_free()
-
-	# Close any open hold item menu popup
 	if HoldItemMenu.active_hold_popup:
 		HoldItemMenu.active_hold_popup.queue_free()
 
 	active_popup = self
 	set_process_unhandled_input(true)
 
+	# Connect button signals
 	$VBoxContainer/EquipButton.pressed.connect(_on_equip_button_pressed)
 	$VBoxContainer/HoldButton.pressed.connect(_on_hold_button_pressed)
 	$VBoxContainer/TradeButton.pressed.connect(_on_trade_button_pressed)
@@ -35,20 +33,26 @@ func _ready():
 	$VBoxContainer/UseButton.pressed.connect(_on_use_button_pressed)
 	$VBoxContainer/DescriptionButton.pressed.connect(_on_description_button_pressed)
 
-	$VBoxContainer/HoldButton.visible = (source == "inventory")
+	# Show hold button only when source is inventory
+	# Show Hold button only if there's a HeldItemsMenu on screen AND its unit's held_items is not full
+	var show_hold := false
 
-	# Determine how many HeldItemsMenu nodes exist in the scene
+	if source == "inventory":
+		for child in get_tree().get_root().get_children():
+			if child is HeldItemsMenu and child.unit and child.unit.held_items:
+				if not child.unit.held_items.is_full():
+					show_hold = true
+					break
+
+	$VBoxContainer/HoldButton.visible = show_hold
+
+
+	# Show store button only when source is "held_items" AND there's only 1 HeldItemsMenu
 	var held_items_count := 0
 	for child in get_tree().get_root().get_children():
 		if child is HeldItemsMenu:
 			held_items_count += 1
-
-	# Store button is only visible if source is "held_items" AND only one HeldItemsMenu exists
-	var store_visible := false
-	if source == "held_items" and held_items_count == 1:
-		store_visible = true
-
-	$VBoxContainer/StoreButton.visible = store_visible
+	$VBoxContainer/StoreButton.visible = (source == "held_items" and held_items_count == 1)
 
 	# Trade button logic
 	var trade_visible := false
@@ -66,17 +70,16 @@ func _ready():
 				if not neighbor.is_enemy:
 					trade_visible = true
 					break
-
 	$VBoxContainer/TradeButton.visible = trade_visible
 
-	if slot.item_data == null or slot.item_data.category != ItemData.Category.EQUIPMENT:
-		$VBoxContainer/EquipButton.visible = false
+	# Equip button visibility
+	$VBoxContainer/EquipButton.visible = slot.item_data and slot.item_data.is_equippable()
 
+	# Use button visibility
 	$VBoxContainer/UseButton.visible = slot.item_data and slot.item_data.is_consumable()
 
 	if not unit or not game_board:
 		return
-
 
 
   

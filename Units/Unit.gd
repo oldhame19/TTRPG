@@ -15,7 +15,8 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 #item stuff
 @export var inventory: InventoryData = null
 @export var held_items: HeldItemsData = null
-@export var equipped_item: ItemData = null #need to implement stat bonuses
+@export var equipped_weapon: ItemData = null #need to implement stat bonuses
+@export var equipped_armor: ItemData = null
 #stat stuff
 @export var level: int = 1
 @export var max_hp: int = 0
@@ -43,6 +44,8 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 		if not _sprite:
 			await ready
 		_sprite.position = value
+		
+
 func _ready() -> void:
 	if held_items == null:
 		held_items = HeldItemsData.new()

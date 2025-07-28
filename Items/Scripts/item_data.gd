@@ -24,6 +24,9 @@ enum Effectiveness {NONE, GIANT, CAVALRY}
 #equipment variables
 @export var defense_bonus: int = 0
 @export var equipped: bool = false
+func is_equippable() -> bool:
+	return category in [Category.MELEE, Category.RANGED, Category.EQUIPMENT]
+
 #provisions variables
 @export var heal_amount: int = 0
 @export var consumable: bool = false

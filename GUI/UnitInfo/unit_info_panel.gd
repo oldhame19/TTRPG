@@ -41,5 +41,5 @@ func update_info(unit: Unit) -> void:
 		hp_label.text = "HP: None"
 
 	equipped_label.text = "%s" % (
-		unit.equipped_item.item_name if unit.equipped_item != null else "None"
+		unit.equipped_weapon.item_name if unit.equipped_weapon!= null else "None"
 	)
