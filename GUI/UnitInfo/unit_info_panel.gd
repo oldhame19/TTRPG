@@ -1,5 +1,7 @@
+#unit_info_panel.gd
 extends Control
 class_name UnitInfoPanel
+@onready var panel = $Panel  # ← Add this at the top with your other @onready vars
 
 @onready var name_label = $Panel/VBoxContainer/NameLabel
 @onready var level_label = $Panel/VBoxContainer/LevelLabel
@@ -8,6 +10,7 @@ class_name UnitInfoPanel
 
 
 func _ready() -> void:
+	panel.custom_minimum_size = Vector2(200, 115)
 	# Anchor top-left corner fixed position
 	anchor_left = 0.0
 	anchor_top = 0.0
@@ -27,7 +30,7 @@ func update_info(unit: Unit) -> void:
 
 	visible = true
 
-	name_label.text = "Name: %s" % (
+	name_label.text = "%s" % (
 		unit.unit_data.unit_name if unit.unit_data != null else "None"
 	)
 	level_label.text = "Level: %d" % unit.level
@@ -37,6 +40,6 @@ func update_info(unit: Unit) -> void:
 	else:
 		hp_label.text = "HP: None"
 
-	equipped_label.text = "Equipped: %s" % (
+	equipped_label.text = "%s" % (
 		unit.equipped_item.item_name if unit.equipped_item != null else "None"
 	)

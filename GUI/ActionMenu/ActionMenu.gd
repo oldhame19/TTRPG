@@ -49,10 +49,12 @@ func _ready() -> void:
 
 
 func _on_attack_button_pressed() -> void:
+	game_board._unit_info_panel.visible = false
 	pass # Replace with function body.
 
 
 func _on_trade_button_pressed() -> void:
+	game_board._unit_info_panel.visible = false
 	if unit == null or unit.grid == null:
 		game_board._reinitialize()
 
@@ -74,9 +76,12 @@ func _on_trade_button_pressed() -> void:
 
 
 func _on_action_button_pressed() -> void:
+	game_board._unit_info_panel.visible = false
+
 	pass # Replace with function body.
 
 func _on_items_button_pressed() -> void:
+	game_board._unit_info_panel.visible = false
 	var selected_unit = get_parent()._active_unit
 	if not selected_unit:
 		return

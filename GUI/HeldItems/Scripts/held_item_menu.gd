@@ -12,8 +12,8 @@ func _ready():
 		push_warning("No unit provided for HeldItemsMenu.")
 		queue_free()
 		return
-
-	$Panel/VBoxContainer/Label.text = "%s's Items" % unit.name
+	var unit_name = unit.unit_data.unit_name if unit.unit_data != null else unit.name
+	$Panel/VBoxContainer/Label.text = "%s's Items" % unit_name
 	populate_items()
 
 func populate_items():

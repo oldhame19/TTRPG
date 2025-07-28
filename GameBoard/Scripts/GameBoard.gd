@@ -278,35 +278,47 @@ func _select_unit(cell: Vector2) -> void:
 	_unit_overlay.draw_walkable_cells(_walkable_cells)
 	
 	_unit_path.initialize(_walkable_cells)
-
-
 func _hover_display(cell: Vector2) -> void:
 	if !_unit_info_panel:
 		return
-	if _unit_info_panel == null:
-		push_warning("Warning: _unit_info_panel is null!")
-		return
-		
 
-	if not _units.has(cell):
-		_unit_info_panel.update_info(null)
-		_unit_info_panel.visible = false
-		return
+	# During trade mode
+	if _current_action_menu and _current_action_menu.trade_mode_active:
+		if _active_unit and _active_unit.cell == cell:
+			_unit_info_panel.visible = false
+			return
 
-	var curr_unit = _units[cell]
-	if curr_unit == null or not is_instance_valid(curr_unit):
-		_unit_info_panel.update_info(null)
-		_unit_info_panel.visible = false
-		return
+		var valid_trade_cells = get_tradeable_cells(_active_unit)
+		if not valid_trade_cells.has(cell):
+			_unit_info_panel.visible = false
+			return
 
-	_walkable_cells = get_walkable_cells(curr_unit)
-	_attackable_cells = get_attackable_cells(curr_unit)
+	# If hovering over a unit (and not in trade mode or hovering self)
+	if _units.has(cell):
+		var target_unit = _units[cell]
+		if target_unit and is_instance_valid(target_unit):
+			_unit_info_panel.update_info(target_unit)
+			_unit_info_panel.visible = true
 
-	_unit_overlay.draw_attackable_cells(_attackable_cells)
-	_unit_overlay.draw_walkable_cells(_walkable_cells)
+			# 🟢 If no unit is selected, show walkable/attackable overlay for hover unit
+			if _active_unit == null:
+				_walkable_cells = get_walkable_cells(target_unit)
+				_attackable_cells = get_attackable_cells(target_unit)
+				_unit_overlay.clear()
+				_unit_overlay.draw_walkable_cells(_walkable_cells)
+				_unit_overlay.draw_attackable_cells(_attackable_cells)
+			return
 
-	_unit_info_panel.update_info(curr_unit)
-	_unit_info_panel.visible = true
+	# ❌ Not hovering a valid unit
+	_unit_info_panel.update_info(null)
+	_unit_info_panel.visible = false
+
+	if _active_unit == null:
+		_walkable_cells.clear()
+		_unit_overlay.clear()
+
+
+
 
 func _reset_unit() -> void:
 	if _active_unit != null and _active_unit.cell != _prev_cell:
@@ -331,18 +343,18 @@ func _deselect_active_unit() -> void:
 func _clear_active_unit() -> void:
 	_active_unit = null
 	_walkable_cells.clear()
-
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if !_unit_info_panel:
 		return
 	if _current_trade_scene != null:
-		# lock cursor during trade
-		return
+		return  # lock cursor during trade UI
 
 	if _current_action_menu and _current_action_menu.trade_mode_active:
-		# Prevent clearing while trading
+		# We DO want to show hover info during trade mode
+		_hover_display(new_cell)
 		return
 
+	# Normal (non-trade) behavior:
 	if _active_unit and _active_unit.is_selected:
 		_unit_path.draw(_active_unit.cell, new_cell)
 	elif _unit_overlay != null and _walkable_cells.size() > 0:
@@ -354,6 +366,8 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 	else:
 		_unit_info_panel.update_info(null)
 		_unit_info_panel.visible = false
+
+
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _current_trade_scene != null:
 		return  # Prevent accept input during trade UI
@@ -370,6 +384,7 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		if cell in get_tradeable_cells(_active_unit):
 			if not _units.has(cell):
 				return
+			_unit_info_panel.visible = false
 			var target_unit = _units[cell]
 			if target_unit == null or not is_instance_valid(target_unit):
 				return
