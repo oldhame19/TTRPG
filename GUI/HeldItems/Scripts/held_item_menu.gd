@@ -187,6 +187,7 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 
 
 func _on_close_button_pressed() -> void:
+	game_board._unit_info_panel.visible = true
 	if unit and unit.is_player:
 		for child in get_tree().get_root().get_children():
 			if child is CanvasLayer and child.get_script().resource_path == "res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd":

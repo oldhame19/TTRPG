@@ -13,8 +13,6 @@ var _current_action_menu: ActionMenu = null
 var _current_trade_scene = null
 var _unit_info_panel: UnitInfoPanel
 
-
-
 ## Resource of type Grid.
 @export var grid: Resource = preload("res://GameBoard/Resources/Grid.tres")
 

@@ -89,6 +89,7 @@ func _on_items_button_pressed() -> void:
 	if selected_unit.is_player:
 		# PLAYER: Show player inventory + held items
 		var inventory_menu = preload("res://GUI/PlayerInventory/Scenes/player_inventory_menu.tscn").instantiate()
+		inventory_menu.game_board = game_board
 		inventory_menu.unit = selected_unit
 		get_tree().get_root().add_child(inventory_menu)
 
@@ -129,6 +130,7 @@ func _on_items_button_pressed() -> void:
 		if adjacent_to_player and player_unit:
 			# Show both: selected unit's held items and player's inventory
 			var inventory_menu = preload("res://GUI/PlayerInventory/Scenes/player_inventory_menu.tscn").instantiate()
+			inventory_menu.game_board = game_board
 			inventory_menu.unit = player_unit
 			get_tree().get_root().add_child(inventory_menu)
 

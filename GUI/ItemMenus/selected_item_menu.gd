@@ -73,19 +73,8 @@ func _ready():
 	$VBoxContainer/TradeButton.visible = trade_visible
 
 	var is_equippable := slot.item_data is WeaponItemData or slot.item_data is EquipmentItemData
-	var show_equip := false
+	$VBoxContainer/EquipButton.visible = is_equippable and source != "inventory"
 
-	if is_equippable:
-		if source != "inventory":
-			show_equip = true
-		else:
-			for child in get_tree().get_root().get_children():
-				if child is HeldItemsMenu and child.unit and child.unit.held_items:
-					if not child.unit.held_items.is_full():
-						show_equip = true
-						break
-
-	$VBoxContainer/EquipButton.visible = show_equip
 
 	# Use button visibility
 	$VBoxContainer/UseButton.visible = slot.item_data is ProvisionItemData
@@ -162,6 +151,60 @@ func _on_hold_button_pressed() -> void:
 
 
 
+
+func _on_trade_button_pressed() -> void:
+	# Store this slot as the first half of the trade
+	pending_trade_data = {
+		"slot": slot,
+		"unit": unit,
+		"source": source,
+		"source_button": source_button,
+		"game_board": game_board
+	}
+
+	# Notify the user (you can make this a real visual hint later)
+	print("Trade started. Select another item to swap with.")
+
+	# Close this menu, wait for next item to be selected
+	for child in $VBoxContainer.get_children():
+		if child != $VBoxContainer/CloseButton:
+			child.modulate.a = 0.0
+			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+
+func _on_equip_button_pressed():
+	if unit and slot.item_data:
+		unit.equip_item(slot.item_data)
+		queue_free()
+
+func _on_use_button_pressed() -> void:
+	pass
+
+func _on_description_button_pressed() -> void:
+	var desc_box_scene = preload("res://GUI/ItemMenus/item_description_box.tscn")
+	var desc_box = desc_box_scene.instantiate()
+	get_tree().get_root().add_child(desc_box)
+
+	desc_box.show_item_description(slot.item_data)
+
+	if unit and unit.is_player:
+		if source == "inventory":
+			desc_box.set_position(Vector2(541, 365))
+		elif source == "held_items":
+			desc_box.set_position(Vector2(350, 365))
+		else:
+			desc_box.set_position(Vector2(960, 540))
+	else:
+		desc_box.set_position(Vector2(750, 75))
+
+	desc_box.popup()
+
+func _exit_tree():
+	if active_popup == self:
+		active_popup = null
+
+
 #func _on_trade_button_pressed() -> void:
 	## If there's already a pending trade
 	#if pending_trade_data.has("slot"):
@@ -203,56 +246,3 @@ func _on_hold_button_pressed() -> void:
 		#if child != $VBoxContainer/CloseButton:
 			#child.modulate.a = 0.0
 			#child.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-func _on_trade_button_pressed() -> void:
-	# Store this slot as the first half of the trade
-	pending_trade_data = {
-		"slot": slot,
-		"unit": unit,
-		"source": source,
-		"source_button": source_button,
-		"game_board": game_board
-	}
-
-	# Notify the user (you can make this a real visual hint later)
-	print("Trade started. Select another item to swap with.")
-
-	# Close this menu, wait for next item to be selected
-	for child in $VBoxContainer.get_children():
-		if child != $VBoxContainer/CloseButton:
-			child.modulate.a = 0.0
-			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-
-
-func _on_equip_button_pressed():
-	if unit and slot.item_data:
-		unit.equip_item(slot.item_data)
-		queue_free()
-
-
-func _on_use_button_pressed() -> void:
-	pass
-
-func _on_description_button_pressed() -> void:
-	var desc_box_scene = preload("res://GUI/ItemMenus/item_description_box.tscn")
-	var desc_box = desc_box_scene.instantiate()
-	get_tree().get_root().add_child(desc_box)
-
-	desc_box.show_item_description(slot.item_data)
-
-	if unit and unit.is_player:
-		if source == "inventory":
-			desc_box.set_position(Vector2(541, 365))
-		elif source == "held_items":
-			desc_box.set_position(Vector2(350, 365))
-		else:
-			desc_box.set_position(Vector2(960, 540))
-	else:
-		desc_box.set_position(Vector2(750, 75))
-
-	desc_box.popup()
-
-func _exit_tree():
-	if active_popup == self:
-		active_popup = null
