@@ -15,7 +15,7 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 #item stuff
 @export var inventory: InventoryData = null
 @export var held_items: HeldItemsData = null
-@export var equipped_weapon: ItemData = null #need to implement stat bonuses
+@export var equipped_weapon: ItemData = null 
 @export var equipped_armor: ItemData = null
 #stat stuff
 @export var level: int = 1
@@ -130,3 +130,64 @@ func walk_along(path: PackedVector2Array) -> void:
 		curve.add_point(grid.calculate_map_position(point) - position)
 	cell = path[-1]
 	_is_walking = true
+	
+
+func equip_item(item: ItemData) -> void:
+	print("=== EQUIP DEBUG ===")
+	print("Before Equip:")
+	print("Equipped Weapon:", equipped_weapon.name if equipped_weapon else "None")
+	print("Equipped Armor:", equipped_armor.name if equipped_armor else "None")
+	print("Strength:", current_stats.strength, " | Defense:", current_stats.defense, " | Speed:", current_stats.speed)
+
+	if item is WeaponItemData:
+		var weapon := item as WeaponItemData
+		if equipped_weapon and equipped_weapon is WeaponItemData:
+			var old_weapon := equipped_weapon as WeaponItemData
+			old_weapon.equipped = false
+			remove_stat_bonuses(old_weapon)
+			current_stats.speed += old_weapon.weight  # Restore old weight
+
+		equipped_weapon = weapon
+		weapon.equipped = true
+		attack_range = weapon.atk_range
+		apply_stat_bonuses(weapon)
+		current_stats.speed -= weapon.weight  # Apply new weight
+
+	elif item is EquipmentItemData:
+		var equipment := item as EquipmentItemData
+		if equipped_armor and equipped_armor is EquipmentItemData:
+			var old_equipment := equipped_armor as EquipmentItemData
+			old_equipment.equipped = false
+			remove_stat_bonuses(old_equipment)
+			current_stats.speed += old_equipment.weight  # Restore old weight
+
+		equipped_armor = equipment
+		equipment.equipped = true
+		apply_stat_bonuses(equipment)
+		current_stats.speed -= equipment.weight  # Apply new weight
+
+	print("After Equip:")
+	print("Equipped Weapon:", equipped_weapon.name if equipped_weapon else "None")
+	print("Equipped Armor:", equipped_armor.name if equipped_armor else "None")
+	print("Strength:", current_stats.strength, " | Defense:", current_stats.defense, " | Speed:", current_stats.speed)
+	print("===================")
+
+
+
+
+func apply_stat_bonuses(item: ItemData) -> void:
+	if item is EquipmentItemData:
+		var eq := item as EquipmentItemData
+		current_stats.defense += eq.defense_bonus
+	elif item is WeaponItemData:
+		var wp := item as WeaponItemData
+		# Add bonuses if any (e.g., power to strength)
+		current_stats.strength += wp.power
+
+func remove_stat_bonuses(item: ItemData) -> void:
+	if item is EquipmentItemData:
+		var eq := item as EquipmentItemData
+		current_stats.defense -= eq.defense_bonus
+	elif item is WeaponItemData:
+		var wp := item as WeaponItemData
+		current_stats.strength -= wp.power

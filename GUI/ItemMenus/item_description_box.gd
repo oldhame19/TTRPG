@@ -19,32 +19,36 @@ extends PopupPanel
 @onready var crit_label := stat_grid.get_node("CritLabel")
 @onready var eff_label := stat_grid.get_node("EffectivenessLabel")
 
+
 func show_item_description(item_data: ItemData) -> void:
+	var is_weapon := item_data is WeaponItemData
+	var weapon := item_data as WeaponItemData
+
 	# Power
 	pwr_label.visible = true
 	pwr.visible = true
-	if item_data.power > 0:
-		pwr.text = " %d" % item_data.power
+	if is_weapon and weapon.power > 0:
+		pwr.text = " %d" % weapon.power
 	else:
 		pwr.text = " -"
 
 	# Hit Chance
 	hit_label.visible = true
 	hit.visible = true
-	if item_data.hit_chance > 0:
-		hit.text = " %d" % item_data.hit_chance
+	if is_weapon and weapon.hit_chance > 0:
+		hit.text = " %d" % weapon.hit_chance
 	else:
 		hit.text = " -"
 
 	# Range
 	rng_label.visible = true
 	rng.visible = true
-	if item_data.atk_range > 1:
-		rng.text = " %d" % item_data.atk_range
+	if is_weapon and weapon.atk_range > 1:
+		rng.text = " %d" % weapon.atk_range
 	else:
 		rng.text = " -"
 
-	# Weight
+	# Weight (this one is still in ItemData)
 	wt_label.visible = true
 	wt.visible = true
 	if item_data.weight > 0:
@@ -55,18 +59,18 @@ func show_item_description(item_data: ItemData) -> void:
 	# Crit Chance
 	crit_label.visible = true
 	crit.visible = true
-	if item_data.crit_chance > 0:
-		crit.text = " %d" % item_data.crit_chance
+	if is_weapon and weapon.crit_chance > 0:
+		crit.text = " %d" % weapon.crit_chance
 	else:
 		crit.text = " -"
 
 	# Effectiveness
 	eff_label.visible = true
 	eff.visible = true
-	if item_data.effective_against != ItemData.Effectiveness.NONE:
-		eff.text = " %s" % str(item_data.effective_against)
+	if is_weapon and weapon.effective_against != WeaponItemData.Effectiveness.NONE:
+		eff.text = " %s" % str(weapon.effective_against)
 	else:
 		eff.text = " -"
 
-	# Description (always shown)
+	# Description
 	description_label.text = item_data.description

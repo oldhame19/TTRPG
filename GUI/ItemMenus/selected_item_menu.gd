@@ -72,15 +72,26 @@ func _ready():
 					break
 	$VBoxContainer/TradeButton.visible = trade_visible
 
-	# Equip button visibility
-	$VBoxContainer/EquipButton.visible = slot.item_data and slot.item_data.is_equippable()
+	var is_equippable := slot.item_data is WeaponItemData or slot.item_data is EquipmentItemData
+	var show_equip := false
+
+	if is_equippable:
+		if source != "inventory":
+			show_equip = true
+		else:
+			for child in get_tree().get_root().get_children():
+				if child is HeldItemsMenu and child.unit and child.unit.held_items:
+					if not child.unit.held_items.is_full():
+						show_equip = true
+						break
+
+	$VBoxContainer/EquipButton.visible = show_equip
 
 	# Use button visibility
-	$VBoxContainer/UseButton.visible = slot.item_data and slot.item_data.is_consumable()
+	$VBoxContainer/UseButton.visible = slot.item_data is ProvisionItemData
 
 	if not unit or not game_board:
 		return
-
 
   
 func _unhandled_input(event):
@@ -97,7 +108,6 @@ func _unhandled_input(event):
 
 				return  # Don’t close the popup anymore
 			queue_free()
-
 
 
 func _on_close_button_pressed() -> void:
@@ -215,8 +225,11 @@ func _on_trade_button_pressed() -> void:
 
 
 
-func _on_equip_button_pressed() -> void:
-	pass
+func _on_equip_button_pressed():
+	if unit and slot.item_data:
+		unit.equip_item(slot.item_data)
+		queue_free()
+
 
 func _on_use_button_pressed() -> void:
 	pass
