@@ -173,6 +173,28 @@ func equip_item(item: ItemData) -> void:
 	print("===================")
 
 
+func unequip_item(item: ItemData) -> void:
+	if item == equipped_weapon:
+		var weapon := equipped_weapon as WeaponItemData
+		weapon.equipped = false
+		remove_stat_bonuses(weapon)
+		current_stats.speed += weapon.weight
+		equipped_weapon = null
+		attack_range = 0  # Reset to default if needed
+
+	elif item == equipped_armor:
+		var armor := equipped_armor as EquipmentItemData
+		armor.equipped = false
+		remove_stat_bonuses(armor)
+		current_stats.speed += armor.weight
+		equipped_armor = null
+
+	print("=== UNEQUIP DEBUG ===")
+	print("Unequipped:", item.name)
+	print("Equipped Weapon:", equipped_weapon.name if equipped_weapon else "None")
+	print("Equipped Armor:", equipped_armor.name if equipped_armor else "None")
+	print("Strength:", current_stats.strength, " | Defense:", current_stats.defense, " | Speed:", current_stats.speed)
+	print("=====================")
 
 
 func apply_stat_bonuses(item: ItemData) -> void:

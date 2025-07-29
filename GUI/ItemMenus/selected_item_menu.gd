@@ -74,6 +74,14 @@ func _ready():
 
 	var is_equippable := slot.item_data is WeaponItemData or slot.item_data is EquipmentItemData
 	$VBoxContainer/EquipButton.visible = is_equippable and source != "inventory"
+# Change Equip button text to "Unequip" if the item is currently equipped
+	if is_equippable and source != "inventory":
+		if slot.item_data.equipped:
+			$VBoxContainer/EquipButton.text = "UNEQUIP"
+			
+		else:
+			$VBoxContainer/EquipButton.text = "EQUIP"
+
 
 
 	# Use button visibility
@@ -172,11 +180,15 @@ func _on_trade_button_pressed() -> void:
 			child.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
-
+#or unequip 
 func _on_equip_button_pressed():
 	if unit and slot.item_data:
-		unit.equip_item(slot.item_data)
+		if slot.item_data.equipped:
+			unit.unequip_item(slot.item_data)
+		else:
+			unit.equip_item(slot.item_data)
 		queue_free()
+
 
 func _on_use_button_pressed() -> void:
 	pass

@@ -183,6 +183,8 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 			else:
 				offset = Vector2(344, 75)
 
+	if slot.item_data and slot.item_data.equipped:
+		offset.x -= 22
 	popup.set_position(button_pos + offset)
 
 
