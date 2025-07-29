@@ -71,8 +71,10 @@ func populate_items():
 		name_durability_box.add_theme_constant_override("separation", 4)
 
 		var name_label := Label.new()
+
 		if slot.item_data:
-			name_label.text = slot.item_data.name
+			var equipped_indicator = " [E] " if slot.item_data.equipped else ""
+			name_label.text =  equipped_indicator + slot.item_data.name
 		else:
 			name_label.text = "(Empty)"
 		name_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN

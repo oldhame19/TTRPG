@@ -187,7 +187,16 @@ func _on_equip_button_pressed():
 			unit.unequip_item(slot.item_data)
 		else:
 			unit.equip_item(slot.item_data)
+
+		# Refresh the appropriate item menu
+		for child in get_tree().get_root().get_children():
+			if source == "inventory":
+				child.populate_items()
+			elif source == "held_items" and child is HeldItemsMenu and child.unit == unit:
+				child.populate_items()
+
 		queue_free()
+
 
 
 func _on_use_button_pressed() -> void:

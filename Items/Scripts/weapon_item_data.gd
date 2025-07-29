@@ -11,4 +11,3 @@ enum Effectiveness {NONE, GIANT, CAVALRY}
 @export var hit_chance: int = 0
 @export var crit_chance: int = 0
 @export var effective_against: Effectiveness = Effectiveness.NONE
-@export var equipped: bool = false

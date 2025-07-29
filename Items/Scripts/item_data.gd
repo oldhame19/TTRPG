@@ -12,6 +12,7 @@ enum Category {MELEE, RANGED, PROVISIONS, MISC, EQUIPMENT}
 @export var durability: int = 0 #used for both weapon durability and consumables
 @export var weight: int = 0
 @export var texture: Texture2D
+@export var equipped: bool = false
 
 func use() -> void:
 	durability -= 1
