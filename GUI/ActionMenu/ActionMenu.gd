@@ -74,7 +74,6 @@ func _on_trade_button_pressed() -> void:
 	cursor.set_pointer_visible(false)
 
 
-
 func _on_action_button_pressed() -> void:
 	game_board._unit_info_panel.visible = false
 
@@ -181,14 +180,18 @@ func _on_cancel_button_pressed() -> void:
 		for button in $VBoxContainer.get_children():
 			button.visible = true
 		$VBoxContainer/CancelButton.visible = true
-
+		
 		cursor.restricted_cells.clear()
 		cursor.reset_cursor()
 		cursor.set_pointer_visible(true)
 		cursor.hide()
 		cursor.process_mode = Node.PROCESS_MODE_DISABLED
-		return
 
+		if game_board._unit_info_panel and game_board._active_unit:
+			game_board._unit_info_panel.update_info(game_board._active_unit)
+			game_board._unit_info_panel.visible = true
+		return
+	
 	# Normal cancel
 	get_parent()._reset_unit()
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
