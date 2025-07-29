@@ -248,6 +248,9 @@ func _move_active_unit(new_cell: Vector2) -> void:
 	_deselect_active_unit()
 	_active_unit.walk_along(_unit_path.current_path)
 	await _active_unit.walk_finished
+	if _unit_info_panel and _active_unit:
+		_unit_info_panel.update_info(_active_unit)
+		_unit_info_panel.visible = true
 	#_clear_active_unit()
 
 

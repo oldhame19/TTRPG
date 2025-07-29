@@ -132,15 +132,16 @@ func _on_trade_completed() -> void:
 	queue_free()
 
 func _on_cancel_button_pressed() -> void:
-
 	emit_signal("trade_closed")
-
+	if game_board._unit_info_panel and game_board._active_unit:
+		game_board._unit_info_panel.update_info(game_board._active_unit)
+		game_board._unit_info_panel.visible = true
 	if cursor:
 		cursor.visible = true
 		cursor.process_mode = Node.PROCESS_MODE_INHERIT
 		cursor.zoom_enabled = true
 	queue_free()
-	
+
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton and event.is_pressed():
