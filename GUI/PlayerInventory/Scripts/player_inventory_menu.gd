@@ -132,7 +132,9 @@ func display_items(items: Array[SlotData]) -> void:
 		item_list_container.add_child(button)
 
 func _on_close_button_pressed() -> void:
-	game_board._unit_info_panel.visible = true
+	if game_board._unit_info_panel and game_board._active_unit:
+		game_board._unit_info_panel.update_info(game_board._active_unit)
+		game_board._unit_info_panel.visible = true
 	# Close held items menu if it's still open
 	for child in get_tree().get_root().get_children():
 		if child is CanvasLayer and child.get_script().resource_path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
@@ -146,6 +148,7 @@ func _on_close_button_pressed() -> void:
 
 	# Close this inventory menu
 	queue_free()
+
 func _on_item_selected(slot: SlotData, button: Button, selected_source: String = "inventory") -> void:
 	if SelectedItemMenu.pending_trade_data.has("slot"):
 		var first_data = SelectedItemMenu.pending_trade_data
