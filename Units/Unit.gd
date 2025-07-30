@@ -4,7 +4,7 @@
 @tool
 class_name Unit
 extends Path2D
-@onready var hp_bar: ProgressBar = $PathFollow2D/ProgressBar  
+@onready var hp_bar: ProgressBar = $PathFollow2D/HPBar  
 
 signal walk_finished ## Emitted when the unit reached the end of a path along which it was walking.
 @export var is_enemy: bool = false
@@ -20,7 +20,7 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 @export var equipped_armor: ItemData = null
 #stat stuff
 @export var level: int = 1
-@export var max_hp: int = 0
+@export var hp: int = 10
 @export var unit_data: UnitData
 @export var current_stats: StatBlock
 @export var current_class: ClassData
@@ -67,30 +67,35 @@ func _ready() -> void:
 func initialize_stats() -> void:
 	if unit_data == null:
 		# No unit data assigned, skip or set defaults
-		max_hp = 0
+		hp = 0
 		current_stats = null
 		return
 
 	if current_stats == null:
 		current_stats = unit_data.base_stats.copy()
 
-	if max_hp == 0:
-		max_hp = unit_data.base_stats.hp
+	if hp == 0:
+		hp = unit_data.base_stats.max_hp
 
-	if current_stats.hp == 0:
-		current_stats.hp = max_hp
-		
+	if current_stats.max_hp == 0:
+		current_stats.max_hp = hp
+
 func update_hp_bar() -> void:
 	if not is_instance_valid(hp_bar):
 		return
 
-	if current_stats == null:
+	var max_hp_value := 0
+
+	if current_stats != null:
+		max_hp_value = current_stats.max_hp
+	elif unit_data != null and unit_data.base_stats != null:
+		max_hp_value = unit_data.base_stats.max_hp
+	else:
 		return
 
 	hp_bar.visible = true
-	hp_bar.max_value = max_hp
-	hp_bar.value = current_stats.hp
-
+	hp_bar.max_value = max_hp_value
+	hp_bar.value = hp
 
 func level_up() -> void:
 	level += 1

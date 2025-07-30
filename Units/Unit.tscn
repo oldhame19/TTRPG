@@ -57,6 +57,7 @@ _data = {
 script = ExtResource("1")
 grid = ExtResource("2")
 held_items = SubResource("Resource_lvaes")
+hp = null
 
 [node name="PathFollow2D" type="PathFollow2D" parent="."]
 rotates = false
@@ -74,7 +75,7 @@ position = Vector2(2, 0)
 scale = Vector2(0.24, 0.24)
 offset = Vector2(-3.8147e-06, -185)
 
-[node name="ProgressBar" type="ProgressBar" parent="PathFollow2D"]
+[node name="HPBar" type="ProgressBar" parent="PathFollow2D"]
 offset_left = -37.0
 offset_top = 13.0
 offset_right = 37.0
