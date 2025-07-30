@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://d4mhjq651egt"]
+[gd_scene load_steps=12 format=3 uid="uid://d4mhjq651egt"]
 
 [ext_resource type="Script" uid="uid://pyxorjdd81vm" path="res://Units/Unit.gd" id="1"]
 [ext_resource type="Resource" uid="uid://de03eq7e7ropp" path="res://GameBoard/Resources/Grid.tres" id="2"]
@@ -9,6 +9,12 @@
 [sub_resource type="Resource" id="Resource_lvaes"]
 script = ExtResource("3_amrl3")
 slots = Array[ExtResource("4_b5nw7")]([])
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_amrl3"]
+bg_color = Color(0, 0, 0, 0.501961)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b5nw7"]
+bg_color = Color(0.127553, 0.65107, 0.999998, 1)
 
 [sub_resource type="Animation" id="1"]
 length = 0.001
@@ -58,7 +64,8 @@ loop = false
 
 [node name="Shadow" type="Sprite2D" parent="PathFollow2D"]
 modulate = Color(0.101961, 0.109804, 0.0901961, 0.329412)
-position = Vector2(0, 5.43238)
+position = Vector2(1.3113e-06, 5.43238)
+scale = Vector2(0.930233, 1)
 texture = ExtResource("3")
 
 [node name="Sprite" type="Sprite2D" parent="PathFollow2D"]
@@ -66,6 +73,16 @@ modulate = Color(1.5, 1.5, 1.5, 1)
 position = Vector2(2, 0)
 scale = Vector2(0.24, 0.24)
 offset = Vector2(-3.8147e-06, -185)
+
+[node name="ProgressBar" type="ProgressBar" parent="PathFollow2D"]
+offset_left = -37.0
+offset_top = 13.0
+offset_right = 37.0
+offset_bottom = 24.0
+theme_override_styles/background = SubResource("StyleBoxFlat_amrl3")
+theme_override_styles/fill = SubResource("StyleBoxFlat_b5nw7")
+value = 35.0
+show_percentage = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {

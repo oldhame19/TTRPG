@@ -310,15 +310,13 @@ func _hover_display(cell: Vector2) -> void:
 				_unit_overlay.draw_attackable_cells(_attackable_cells)
 			return
 
-	# ❌ Not hovering a valid unit
+	#  Not hovering a valid unit
 	_unit_info_panel.update_info(null)
 	_unit_info_panel.visible = false
 
 	if _active_unit == null:
 		_walkable_cells.clear()
 		_unit_overlay.clear()
-
-
 
 
 func _reset_unit() -> void:

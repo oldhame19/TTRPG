@@ -170,6 +170,9 @@ func _on_wait_button_pressed() -> void:
 	cursor.show()
 	queue_free()
 
+func _on_summary_button_pressed() -> void:
+	pass # Replace with function body.
+
 
 func _on_cancel_button_pressed() -> void:
 	if trade_mode_active:

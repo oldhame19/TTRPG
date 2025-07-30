@@ -4,6 +4,7 @@
 @tool
 class_name Unit
 extends Path2D
+@onready var hp_bar: ProgressBar = $PathFollow2D/ProgressBar  
 
 signal walk_finished ## Emitted when the unit reached the end of a path along which it was walking.
 @export var is_enemy: bool = false
@@ -61,6 +62,7 @@ func _ready() -> void:
 		curve = Curve2D.new()
 	
 	initialize_stats()
+	update_hp_bar() 
 
 func initialize_stats() -> void:
 	if unit_data == null:
@@ -77,6 +79,19 @@ func initialize_stats() -> void:
 
 	if current_stats.hp == 0:
 		current_stats.hp = max_hp
+		
+func update_hp_bar() -> void:
+	if not is_instance_valid(hp_bar):
+		return
+
+	if current_stats == null:
+		return
+
+	hp_bar.visible = true
+	hp_bar.max_value = max_hp
+	hp_bar.value = current_stats.hp
+
+
 func level_up() -> void:
 	level += 1
 
