@@ -218,18 +218,22 @@ func _on_description_button_pressed() -> void:
 
 	desc_box.show_item_description(slot.item_data)
 
-	if unit and unit.is_player:
-		if source == "inventory":
-			desc_box.set_position(Vector2(541, 365))
-		elif source == "held_items":
-			desc_box.set_position(Vector2(350, 365))
-		else:
-			desc_box.set_position(Vector2(960, 540))
+	if opened_from_summary:
+		# Same position regardless of unit/source when opened from summary
+		desc_box.set_position(Vector2(750, 365))
 	else:
-		desc_box.set_position(Vector2(750, 75))
+		if unit and unit.is_player:
+			if source == "inventory":
+				desc_box.set_position(Vector2(541, 365))
+			elif source == "held_items":
+				desc_box.set_position(Vector2(350, 365))
+			else:
+				desc_box.set_position(Vector2(960, 540))
+		else:
+			# Enemy or unknown unit
+			desc_box.set_position(Vector2(750, 75))
 
 	desc_box.popup()
-
 
 func _set_custom_offset(offset: Vector2) -> void:
 	position = offset

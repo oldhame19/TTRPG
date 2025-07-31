@@ -155,7 +155,6 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	
 	if opened_from_summary:
 		popup.opened_from_summary = true
-		popup._set_custom_offset(Vector2(1000, 75))  # Custom offset for summary view
 
 	add_child(popup)
 
@@ -195,7 +194,9 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	if slot.item_data and slot.item_data.equipped:
 		offset.x -= 22
 	popup.set_position(button_pos + offset)
-
+	
+	if opened_from_summary:
+		popup.set_position(button_pos + Vector2(690, 105))  # Custom offset for summary view
 
 func _on_close_button_pressed() -> void:
 	game_board._unit_info_panel.visible = true
