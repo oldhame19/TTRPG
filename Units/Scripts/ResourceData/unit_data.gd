@@ -17,6 +17,6 @@ var is_enemy: bool = false
 	"defense": 0,
 	"speed": 0,
 	"dexterity": 0,
-	"leadership": 0,
+	"charisma": 0,
 	"faith" : 0,
 }

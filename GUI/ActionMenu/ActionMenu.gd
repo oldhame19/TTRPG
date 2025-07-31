@@ -171,32 +171,40 @@ func _on_wait_button_pressed() -> void:
 	queue_free()
 
 func _on_summary_button_pressed() -> void:
-
 	var selected_unit = get_parent()._active_unit
 	if not selected_unit:
 		return
 
-	# Show held items menu on right side
+	# Show held items menu (right side)
 	var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
 	held_items_menu.unit = selected_unit
 	held_items_menu.game_board = game_board
 	held_items_menu.opened_from_summary = true
 	get_tree().get_root().add_child(held_items_menu)
-
-	# Hide close button and move to right side (example position)
 	held_items_menu.get_node("Panel/CloseButton").visible = false
-	held_items_menu.get_node("Panel").position = Vector2(750, 73)  # Adjust as needed for your screen size
+	held_items_menu.get_node("Panel").position = Vector2(750, 73)  # adjust as needed
 
-	# Hide all action buttons except Cancel
+	# Show unit stats box (left side)
+	var stat_box_scene = preload("res://GUI/UnitInfo/unit_stats_box.tscn")
+	var stat_box = stat_box_scene.instantiate()
+	get_tree().get_root().add_child(stat_box)
+	stat_box.position = Vector2(50, 400)  # Adjust to desired screen location
+	stat_box.show_unit_stats(selected_unit.current_stats)
+
+	# Hide all buttons except Cancel
 	for button in $VBoxContainer.get_children():
 		if button.name != "CancelButton":
 			button.visible = false
 
-	# Restore the action menu when the held items menu is closed
-	held_items_menu.tree_exited.connect(func():
-		for button in $VBoxContainer.get_children():
-			button.visible = true
-	)
+	# Restore action menu buttons after both menus close
+	var check_restore := func():
+		if not is_instance_valid(held_items_menu) and not is_instance_valid(stat_box):
+			for button in $VBoxContainer.get_children():
+				button.visible = true
+
+	held_items_menu.tree_exited.connect(check_restore)
+	stat_box.tree_exited.connect(check_restore)
+
 
 
 func _on_cancel_button_pressed() -> void:

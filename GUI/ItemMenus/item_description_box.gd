@@ -1,3 +1,4 @@
+#item_description_box.gd
 extends PopupPanel
 
 @onready var stat_grid := $MarginContainer/VBoxContainer/GridContainer

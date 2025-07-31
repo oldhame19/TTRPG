@@ -12,6 +12,6 @@ extends Resource
 	"defense": 0,
 	"speed": 0,
 	"dexterity": 0,
-	"leadership": 0,
+	"charisma": 0,
 	"faith": 0,
 } #like stats, growhts will be raised to the minimums on promotion
