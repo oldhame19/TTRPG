@@ -1,6 +1,6 @@
 [gd_scene load_steps=12 format=3 uid="uid://d4mhjq651egt"]
 
-[ext_resource type="Script" uid="uid://pyxorjdd81vm" path="res://Units/Unit.gd" id="1"]
+[ext_resource type="Script" uid="uid://pyxorjdd81vm" path="res://Units/unit.gd" id="1"]
 [ext_resource type="Resource" uid="uid://de03eq7e7ropp" path="res://GameBoard/Resources/Grid.tres" id="2"]
 [ext_resource type="Texture2D" uid="uid://b5ghlcxjxmmgw" path="res://Units/unit_shadow.svg" id="3"]
 [ext_resource type="Script" uid="uid://b3bnc4m3u2lkx" path="res://GUI/HeldItems/Scripts/held_items_data.gd" id="3_amrl3"]
@@ -15,6 +15,7 @@ bg_color = Color(0, 0, 0, 0.501961)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b5nw7"]
 bg_color = Color(0.127553, 0.65107, 0.999998, 1)
+corner_detail = 1
 
 [sub_resource type="Animation" id="1"]
 length = 0.001
@@ -57,7 +58,6 @@ _data = {
 script = ExtResource("1")
 grid = ExtResource("2")
 held_items = SubResource("Resource_lvaes")
-hp = null
 
 [node name="PathFollow2D" type="PathFollow2D" parent="."]
 rotates = false

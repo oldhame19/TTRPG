@@ -171,7 +171,32 @@ func _on_wait_button_pressed() -> void:
 	queue_free()
 
 func _on_summary_button_pressed() -> void:
-	pass # Replace with function body.
+
+	var selected_unit = get_parent()._active_unit
+	if not selected_unit:
+		return
+
+	# Show held items menu on right side
+	var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
+	held_items_menu.unit = selected_unit
+	held_items_menu.game_board = game_board
+	held_items_menu.opened_from_summary = true
+	get_tree().get_root().add_child(held_items_menu)
+
+	# Hide close button and move to right side (example position)
+	held_items_menu.get_node("Panel/CloseButton").visible = false
+	held_items_menu.get_node("Panel").position = Vector2(750, 73)  # Adjust as needed for your screen size
+
+	# Hide all action buttons except Cancel
+	for button in $VBoxContainer.get_children():
+		if button.name != "CancelButton":
+			button.visible = false
+
+	# Restore the action menu when the held items menu is closed
+	held_items_menu.tree_exited.connect(func():
+		for button in $VBoxContainer.get_children():
+			button.visible = true
+	)
 
 
 func _on_cancel_button_pressed() -> void:
@@ -193,13 +218,18 @@ func _on_cancel_button_pressed() -> void:
 		if game_board._unit_info_panel and game_board._active_unit:
 			game_board._unit_info_panel.update_info(game_board._active_unit)
 			game_board._unit_info_panel.visible = true
-		return
-	
-	# Normal cancel
-	get_parent()._reset_unit()
-	cursor.process_mode = Node.PROCESS_MODE_INHERIT
-	cursor.restricted_cells.clear()
-	cursor.reset_cursor()
-	cursor.set_pointer_visible(true)  # just in case
-	cursor.show()
+	else:
+		# Normal cancel
+		get_parent()._reset_unit()
+		cursor.process_mode = Node.PROCESS_MODE_INHERIT
+		cursor.restricted_cells.clear()
+		cursor.reset_cursor()
+		cursor.set_pointer_visible(true)
+		cursor.show()
+
+	# Close all active held items menus
+	for child in get_tree().get_root().get_children():
+		if child is HeldItemsMenu:
+			child.queue_free()
+
 	queue_free()

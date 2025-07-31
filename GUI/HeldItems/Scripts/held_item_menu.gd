@@ -1,9 +1,11 @@
-#held_items_menu.gd
+#held_items_menu.gd 
 extends CanvasLayer
 class_name HeldItemsMenu
 @export var unit: Unit
 @onready var item_list_container = $Panel/VBoxContainer/ScrollContainer/ItemListContainer
 var game_board: GameBoard
+var opened_from_summary: bool = false
+
 const CATEGORY_ALL: int = -1
 var side: String = "A" 
 
@@ -150,6 +152,11 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	popup.source_button = button
 	popup.game_board = game_board
 	popup.side = side
+	
+	if opened_from_summary:
+		popup.opened_from_summary = true
+		popup._set_custom_offset(Vector2(1000, 75))  # Custom offset for summary view
+
 	add_child(popup)
 
 	var button_pos = button.get_position()
@@ -204,4 +211,4 @@ func _on_close_button_pressed() -> void:
 			child.queue_free()
 			break
 
-	queue_free()
+	queue_free() 

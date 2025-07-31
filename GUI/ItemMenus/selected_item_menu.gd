@@ -3,7 +3,7 @@ extends Control  # Or PopupPanel, etc.
 class_name SelectedItemMenu
 static var active_popup: Control = null
 static var pending_trade_data := {}
-
+var opened_from_summary: bool = false
 var slot: SlotData
 var unit: Unit
 
@@ -82,7 +82,16 @@ func _ready():
 		else:
 			$VBoxContainer/EquipButton.text = "EQUIP"
 
-
+	if opened_from_summary:
+		for button in $VBoxContainer.get_children():
+			match button.name:
+				"CloseButton", "DescriptionButton":
+					button.visible = true
+				"EquipButton":
+				# Show Equip only if item is equippable and source != inventory (your existing logic)
+					button.visible = (slot.item_data is WeaponItemData or slot.item_data is EquipmentItemData) and source != "inventory"
+				_:
+					button.visible = false
 
 	# Use button visibility
 	$VBoxContainer/UseButton.visible = slot.item_data is ProvisionItemData
@@ -221,49 +230,10 @@ func _on_description_button_pressed() -> void:
 
 	desc_box.popup()
 
+
+func _set_custom_offset(offset: Vector2) -> void:
+	position = offset
+
 func _exit_tree():
 	if active_popup == self:
 		active_popup = null
-
-
-#func _on_trade_button_pressed() -> void:
-	## If there's already a pending trade
-	#if pending_trade_data.has("slot"):
-		#var previous_source = pending_trade_data["source"]
-		#var current_source = source
-#
-		## Prevent inventory-to-inventory trades
-		#if previous_source == "inventory" and current_source == "inventory":
-			#print("Cannot trade between two inventory items.")
-			#pending_trade_data.clear()
-#
-			## Restore buttons
-			#for child in $VBoxContainer.get_children():
-				#child.modulate.a = 1.0
-				#child.mouse_filter = Control.MOUSE_FILTER_STOP
-			#return
-#
-		## Valid trade; perform trade logic here (you likely have this elsewhere)
-		## e.g. swap items between slots, call a function on game_board, etc.
-#
-		## Clean up after successful trade
-		#pending_trade_data.clear()
-		#queue_free()
-		#return
-#
-	## Start trade (first selection)
-	#pending_trade_data = {
-		#"slot": slot,
-		#"unit": unit,
-		#"source": source,
-		#"source_button": source_button,
-		#"game_board": game_board
-	#}
-#
-	#print("Trade started. Select a second item to complete the trade.")
-#
-	## Hide all buttons except Close
-	#for child in $VBoxContainer.get_children():
-		#if child != $VBoxContainer/CloseButton:
-			#child.modulate.a = 0.0
-			#child.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -1,11 +1,9 @@
-## Represents a unit on the game board.
-## The board manages its position inside the game grid.
-## The unit itself holds stats and a visual representation that moves smoothly in the game world.
-@tool
+#Unit.gd
 class_name Unit
 extends Path2D
 @onready var hp_bar: ProgressBar = $PathFollow2D/HPBar  
 
+signal unit_died(unit) #singal to the gamebaord to remove unit from board, as well as anywhere else the unit may be accessible (units tab, etc)
 signal walk_finished ## Emitted when the unit reached the end of a path along which it was walking.
 @export var is_enemy: bool = false
 @export var is_player: bool = false
@@ -52,17 +50,24 @@ func _ready() -> void:
 		held_items = HeldItemsData.new()
 	set_process(false)
 	_path_follow.rotates = false
-	
+
 	cell = grid.calculate_grid_coordinates(position)
 	position = grid.calculate_map_position(cell)
-	
-	# We create the curve resource here because creating it in the editor prevents us from
-	# moving the unit.
+
+	# Override HP bar fill color for enemies
+	if is_enemy:
+		var fill_style := StyleBoxFlat.new()
+		fill_style.bg_color = Color(1.0, 0.2, 0.2)  # Red
+		hp_bar.add_theme_stylebox_override("fill", fill_style)
+
 	if not Engine.is_editor_hint():
 		curve = Curve2D.new()
-	
+
 	initialize_stats()
-	update_hp_bar() 
+	update_hp_bar()
+
+
+
 
 func initialize_stats() -> void:
 	if unit_data == null:
@@ -97,8 +102,20 @@ func update_hp_bar() -> void:
 	hp_bar.max_value = max_hp_value
 	hp_bar.value = hp
 
+
+
 func level_up() -> void:
 	level += 1
+
+func take_damage(amount: int) -> void:
+	if current_stats == null:
+		return
+
+	hp = max(hp - amount, 0)
+	update_hp_bar()
+
+	if hp == 0:
+		unit_died.emit(self)
 
 ## Coordinates of the current cell the cursor moved to.
 var cell := Vector2.ZERO:

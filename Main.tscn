@@ -317,7 +317,7 @@ skin = ExtResource("7")
 skin_offset = Vector2(6, 17)
 
 [node name="EnemySquirrel" parent="GameBoard" instance=ExtResource("2")]
-modulate = Color(1, 0, 0, 1)
+modulate = Color(1, 0.116667, 0, 1)
 position = Vector2(349.289, 363.685)
 is_enemy = true
 is_wait = true
