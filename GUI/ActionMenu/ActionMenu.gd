@@ -7,6 +7,7 @@ var unit: Unit        # assign before _ready runs
 var game_board: GameBoard  # assign before _ready runs
 var trade_mode_active: bool = false
 var _current_trade_scene: Control = null
+var opened_from_summary: bool = false
 var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")
 
 func _ready() -> void:
@@ -169,10 +170,16 @@ func _on_wait_button_pressed() -> void:
 	cursor.reset_cursor()
 	cursor.show()
 	queue_free()
+	
 
 func _on_summary_button_pressed() -> void:
 	var selected_unit = get_parent()._active_unit
 	if not selected_unit:
+		return
+
+	# Safeguard against missing stats
+	if not selected_unit.current_stats:
+		push_error("Unit has no stats assigned!")
 		return
 
 	# Show held items menu (right side)
@@ -182,21 +189,27 @@ func _on_summary_button_pressed() -> void:
 	held_items_menu.opened_from_summary = true
 	get_tree().get_root().add_child(held_items_menu)
 	held_items_menu.get_node("Panel/CloseButton").visible = false
-	held_items_menu.get_node("Panel").position = Vector2(750, 73)  # adjust as needed
+	held_items_menu.get_node("Panel").position = Vector2(750, 73)
 
 	# Show unit stats box (left side)
 	var stat_box_scene = preload("res://GUI/UnitInfo/unit_stats_box.tscn")
 	var stat_box = stat_box_scene.instantiate()
-	get_tree().get_root().add_child(stat_box)
-	stat_box.position = Vector2(50, 400)  # Adjust to desired screen location
-	stat_box.show_unit_stats(selected_unit.current_stats)
+	add_child(stat_box)
+	stat_box.position = Vector2(50, 400)
+
+	# Ensure stats are valid before showing them
+	if selected_unit.current_stats:
+		stat_box.show_unit_stats(selected_unit.current_stats)
+	else:
+		stat_box.show_none() # You'll want to add a fallback method like this
+	opened_from_summary = true
 
 	# Hide all buttons except Cancel
 	for button in $VBoxContainer.get_children():
 		if button.name != "CancelButton":
 			button.visible = false
 
-	# Restore action menu buttons after both menus close
+	# Restore buttons when menus close
 	var check_restore := func():
 		if not is_instance_valid(held_items_menu) and not is_instance_valid(stat_box):
 			for button in $VBoxContainer.get_children():
@@ -206,38 +219,73 @@ func _on_summary_button_pressed() -> void:
 	stat_box.tree_exited.connect(check_restore)
 
 
-
 func _on_cancel_button_pressed() -> void:
 	if trade_mode_active:
 		trade_mode_active = false
-
 		game_board._unit_overlay.clear_tradeable_cells()
 
+		# Restore buttons
 		for button in $VBoxContainer.get_children():
 			button.visible = true
 		$VBoxContainer/CancelButton.visible = true
-		
+
+		# Reset cursor
 		cursor.restricted_cells.clear()
 		cursor.reset_cursor()
 		cursor.set_pointer_visible(true)
 		cursor.hide()
 		cursor.process_mode = Node.PROCESS_MODE_DISABLED
 
+		# Restore unit info panel
 		if game_board._unit_info_panel and game_board._active_unit:
 			game_board._unit_info_panel.update_info(game_board._active_unit)
 			game_board._unit_info_panel.visible = true
+
+	elif opened_from_summary:
+		# Remove summary UI elements
+		for child in get_tree().get_root().get_children():
+			if child is HeldItemsMenu:
+				child.queue_free()
+		for child in get_children():
+			if child is UnitStatsBox:
+				child.queue_free()
+
+		# Restore buttons
+		for button in $VBoxContainer.get_children():
+			button.visible = true
+		$VBoxContainer/CancelButton.visible = true
+
+		# Keep action menu open, hide cursor
+		cursor.hide()
+		cursor.process_mode = Node.PROCESS_MODE_DISABLED
+		cursor.restricted_cells.clear()
+		cursor.reset_cursor()
+		cursor.set_pointer_visible(true)
+
+		# Restore unit info panel
+		if game_board._unit_info_panel and game_board._active_unit:
+			game_board._unit_info_panel.update_info(game_board._active_unit)
+			game_board._unit_info_panel.visible = true
+
+		opened_from_summary = false
+
 	else:
-		# Normal cancel
+		# Default behavior — back to board
 		get_parent()._reset_unit()
-		cursor.process_mode = Node.PROCESS_MODE_INHERIT
+
 		cursor.restricted_cells.clear()
 		cursor.reset_cursor()
 		cursor.set_pointer_visible(true)
 		cursor.show()
+		cursor.process_mode = Node.PROCESS_MODE_INHERIT
 
-	# Close all active held items menus
-	for child in get_tree().get_root().get_children():
-		if child is HeldItemsMenu:
-			child.queue_free()
+		# Clear lingering UI
+		for child in get_tree().get_root().get_children():
+			if child is HeldItemsMenu:
+				child.queue_free()
 
-	queue_free()
+		# Restore unit info panel
+		if game_board._unit_info_panel and game_board._active_unit:
+			game_board._unit_info_panel.visible = true
+
+		queue_free()

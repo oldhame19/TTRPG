@@ -1,7 +1,8 @@
-extends PopupPanel
+extends Control
 class_name UnitStatsBox
 
 @onready var stat_grid := $MarginContainer/VBoxContainer/GridContainer
+@onready var total_label := $MarginContainer/VBoxContainer/TotalsPanel/TotalLabel
 
 @onready var str_label := stat_grid.get_node("StrengthLabel")
 @onready var def_label := stat_grid.get_node("DefenseLabel")
@@ -17,7 +18,7 @@ class_name UnitStatsBox
 @onready var cha := stat_grid.get_node("cha")
 @onready var fth := stat_grid.get_node("fth")
 
-@onready var total_label := $MarginContainer/VBoxContainer/TotalsPanel/TotalLabel
+
 
 func show_unit_stats(stats: StatBlock) -> void:
 	if stats == null:
