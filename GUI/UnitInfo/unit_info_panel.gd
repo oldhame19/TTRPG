@@ -3,11 +3,11 @@ extends Control
 class_name UnitInfoPanel
 @onready var panel = $Panel  # ← Add this at the top with your other @onready vars
 
-@onready var name_label = $Panel/VBoxContainer/NameLabel
-@onready var level_label = $Panel/VBoxContainer/LevelLabel
-@onready var hp_label = $Panel/VBoxContainer/HPLabel
-@onready var equipped_label = $Panel/VBoxContainer/EquippedLabel
-
+@onready var name_label = $Panel/VBoxContainer/Panel/NameLabel
+@onready var level_label = $Panel/VBoxContainer/GridContainer/LevelLabel
+@onready var hp_label = $Panel/VBoxContainer/GridContainer/HPLabel
+@onready var equipped_label = $Panel/VBoxContainer/GridContainer/EquippedLabel
+@onready var xp_label = $Panel/VBoxContainer/GridContainer/XPLabel
 
 func _ready() -> void:
 	panel.custom_minimum_size = Vector2(200, 115)
@@ -19,6 +19,8 @@ func _ready() -> void:
 
 	# Position the entire panel with offset from top-left
 	position = Vector2(16, 16)  # Adjust pixel offset as you want
+	
+
 func update_info(unit: Unit) -> void:
 	if unit == null or not is_instance_valid(unit):
 		visible = false
@@ -33,8 +35,10 @@ func update_info(unit: Unit) -> void:
 	name_label.text = "%s" % (
 		unit.unit_data.unit_name if unit.unit_data != null else "None"
 	)
+	
 	level_label.text = "Level: %d" % unit.level
-
+	xp_label.text = "XP: %d" % unit.xp 
+	
 	if unit.current_stats != null:
 		hp_label.text = "HP: %d/%d" % [unit.hp, unit.current_stats.max_hp]
 	else:

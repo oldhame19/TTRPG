@@ -16,6 +16,7 @@ offset_bottom = 133.0
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 custom_minimum_size = Vector2(100, 0)
+layout_mode = 0
 offset_left = 4.0
 offset_top = 4.0
 offset_right = 204.0

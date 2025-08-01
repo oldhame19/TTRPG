@@ -18,6 +18,7 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 @export var equipped_armor: ItemData = null
 #stat stuff
 @export var level: int = 1
+@export var xp: int = 0
 @export var hp: int = 10
 @export var unit_data: UnitData
 @export var current_stats: StatBlock
