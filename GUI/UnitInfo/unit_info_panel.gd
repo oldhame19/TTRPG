@@ -10,40 +10,58 @@ class_name UnitInfoPanel
 @onready var xp_label = $Panel/VBoxContainer/GridContainer/XPLabel
 
 func _ready() -> void:
-	panel.custom_minimum_size = Vector2(200, 115)
+	panel.custom_minimum_size = Vector2(300, 130)
 	# Anchor top-left corner fixed position
 	anchor_left = 0.0
 	anchor_top = 0.0
 	anchor_right = 0.0
 	anchor_bottom = 0.0
-
-	# Position the entire panel with offset from top-left
-	position = Vector2(16, 16)  # Adjust pixel offset as you want
-	
-
 func update_info(unit: Unit) -> void:
 	if unit == null or not is_instance_valid(unit):
-		visible = false
-		name_label.text = "Name: None"
-		level_label.text = "Level: None"
-		hp_label.text = "HP: None"
-		equipped_label.text = "Equipped: None"
+		visible = false   # <- Hide the panel entirely
 		return
 
-	visible = true
+	visible = true  # Only show when a valid unit is present
 
 	name_label.text = "%s" % (
 		unit.unit_data.unit_name if unit.unit_data != null else "None"
 	)
-	
 	level_label.text = "Level: %d" % unit.level
-	xp_label.text = "XP: %d" % unit.xp 
-	
+	xp_label.text = "XP: %d" % unit.xp
+
 	if unit.current_stats != null:
 		hp_label.text = "HP: %d/%d" % [unit.hp, unit.current_stats.max_hp]
 	else:
 		hp_label.text = "HP: None"
 
 	equipped_label.text = "%s" % (
-		unit.equipped_weapon.name if unit.equipped_weapon!= null else "None"
+		unit.equipped_weapon.name if unit.equipped_weapon != null else "None"
 	)
+
+#
+#func update_info(unit: Unit) -> void:
+	#if unit == null or not is_instance_valid(unit):
+		#visible = false
+		#name_label.text = "Name: None"
+		#level_label.text = "Level: None"
+		#hp_label.text = "HP: None"
+		#equipped_label.text = "Equipped: None"
+		#return
+#
+	#visible = true
+#
+	#name_label.text = "%s" % (
+		#unit.unit_data.unit_name if unit.unit_data != null else "None"
+	#)
+	#
+	#level_label.text = "Level: %d" % unit.level
+	#xp_label.text = "XP: %d" % unit.xp 
+	#
+	#if unit.current_stats != null:
+		#hp_label.text = "HP: %d/%d" % [unit.hp, unit.current_stats.max_hp]
+	#else:
+		#hp_label.text = "HP: None"
+#
+	#equipped_label.text = "%s" % (
+		#unit.equipped_weapon.name if unit.equipped_weapon!= null else "None"
+	#)

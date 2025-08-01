@@ -178,9 +178,9 @@ func _on_summary_button_pressed() -> void:
 		return
 
 	# Safeguard against missing stats
-	if not selected_unit.current_stats:
-		push_error("Unit has no stats assigned!")
-		return
+	#if not selected_unit.current_stats:
+		#push_error("Unit has no stats assigned!")
+		#return
 
 	# Show held items menu (right side)
 	var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
@@ -195,13 +195,13 @@ func _on_summary_button_pressed() -> void:
 	var stat_box_scene = preload("res://GUI/UnitInfo/unit_stats_box.tscn")
 	var stat_box = stat_box_scene.instantiate()
 	add_child(stat_box)
-	stat_box.position = Vector2(50, 400)
+	stat_box.position = Vector2(45, 440)
 
 	# Ensure stats are valid before showing them
 	if selected_unit.current_stats:
 		stat_box.show_unit_stats(selected_unit.current_stats)
 	else:
-		stat_box.show_none() # You'll want to add a fallback method like this
+		stat_box.show_unit_stats(selected_unit.current_stats) 
 	opened_from_summary = true
 
 	# Hide all buttons except Cancel
@@ -239,7 +239,8 @@ func _on_cancel_button_pressed() -> void:
 		# Restore unit info panel
 		if game_board._unit_info_panel and game_board._active_unit:
 			game_board._unit_info_panel.update_info(game_board._active_unit)
-			game_board._unit_info_panel.visible = true
+			#game_board._unit_info_panel.visible = true
+			
 
 	elif opened_from_summary:
 		# Remove summary UI elements
@@ -265,7 +266,7 @@ func _on_cancel_button_pressed() -> void:
 		# Restore unit info panel
 		if game_board._unit_info_panel and game_board._active_unit:
 			game_board._unit_info_panel.update_info(game_board._active_unit)
-			game_board._unit_info_panel.visible = true
+			#game_board._unit_info_panel.visible = true
 
 		opened_from_summary = false
 
@@ -285,7 +286,7 @@ func _on_cancel_button_pressed() -> void:
 				child.queue_free()
 
 		# Restore unit info panel
-		if game_board._unit_info_panel and game_board._active_unit:
-			game_board._unit_info_panel.visible = true
+		#if game_board._unit_info_panel and game_board._active_unit:
+			#game_board._unit_info_panel.visible = true
 
 		queue_free()

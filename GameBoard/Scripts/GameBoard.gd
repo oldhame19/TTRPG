@@ -50,7 +50,7 @@ func _ready() -> void:
 	_unit_info_panel.anchor_right = 0.0
 	_unit_info_panel.anchor_bottom = 0.0
 	
-	_unit_info_panel.position = Vector2(20, 20)
+	_unit_info_panel.position = Vector2(45, 45)
 
 
 
