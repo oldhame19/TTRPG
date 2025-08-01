@@ -8,6 +8,7 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 @export var is_enemy: bool = false
 @export var is_player: bool = false
 @export var is_wait = false
+
 @export var move_speed := 600.0
 @export var grid: Resource ## Shared resource of type Grid, used to calculate map coordinates.
 

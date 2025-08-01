@@ -6,6 +6,7 @@ var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 var unit: Unit        # assign before _ready runs
 var game_board: GameBoard  # assign before _ready runs
 var trade_mode_active: bool = false
+var attack_mode_active: bool = false
 var _current_trade_scene: Control = null
 var opened_from_summary: bool = false
 var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")
@@ -51,7 +52,24 @@ func _ready() -> void:
 
 func _on_attack_button_pressed() -> void:
 	game_board._unit_info_panel.visible = false
-	pass # Replace with function body.
+	attack_mode_active = true
+	if unit == null or unit.grid == null:
+		game_board._reinitialize()
+
+	var attackable_cells = game_board.get_attackable_cells(unit)
+	game_board._unit_overlay.draw_attackable_cells(attackable_cells)
+	trade_mode_active = true
+
+	for button in $VBoxContainer.get_children():
+		if button.name != "CancelButton":
+			button.visible = false
+
+	cursor.show()
+	cursor.set_allowed_cells(attackable_cells)
+	cursor.process_mode = Node.PROCESS_MODE_INHERIT
+
+	cursor.show_sprite = true
+	cursor.set_pointer_visible(false)
 
 
 func _on_trade_button_pressed() -> void:
@@ -177,11 +195,6 @@ func _on_summary_button_pressed() -> void:
 	if not selected_unit:
 		return
 
-	# Safeguard against missing stats
-	#if not selected_unit.current_stats:
-		#push_error("Unit has no stats assigned!")
-		#return
-
 	# Show held items menu (right side)
 	var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
 	held_items_menu.unit = selected_unit
@@ -220,6 +233,9 @@ func _on_summary_button_pressed() -> void:
 
 
 func _on_cancel_button_pressed() -> void:
+	if attack_mode_active:
+		attack_mode_active = false
+	
 	if trade_mode_active:
 		trade_mode_active = false
 		game_board._unit_overlay.clear_tradeable_cells()

@@ -103,17 +103,33 @@ func get_tradeable_cells(unit: Unit) -> Array:
 	return tradeable_cells
 
 
-## Return an array of cells a given unit can attack using dijkstra's and flood fill algorithm
+
 func get_attackable_cells(unit: Unit) -> Array:
-	var attackable_cells = []
-	var real_walkable_cells = _dijkstra(unit.cell, unit.move_range, true)
-	
-	## iterate through every single cell and find their partners based on attack range
-	for curr_cell in real_walkable_cells:
+	if unit == null or unit.grid == null:
+		return []
+
+	# Attack Mode: Only show attackable enemy units from current position
+	if _current_action_menu and _current_action_menu.attack_mode_active:
+		var cells_in_range := _flood_fill(unit.cell, unit.attack_range)
+		return cells_in_range.filter(func(cell):
+			return _units.has(cell) and is_instance_valid(_units[cell]) and _units[cell].is_enemy
+		)
+
+	# Normal Mode: Get all cells attackable from any moveable tile
+	var reachable_cells := _dijkstra(unit.cell, unit.move_range, true)
+	reachable_cells.append(unit.cell) # include current tile
+
+	var attackable_cells := []
+
+	for move_cell in reachable_cells:
 		for curr_range in range(1, unit.attack_range + 1):
-			attackable_cells = attackable_cells + _flood_fill(curr_cell, unit.attack_range)
-	
-	return attackable_cells.filter(func(i): return i not in real_walkable_cells)
+			var flood_cells = _flood_fill(move_cell, curr_range)
+			for target_cell in flood_cells:
+				if not reachable_cells.has(target_cell):
+					attackable_cells.append(target_cell)
+
+	return attackable_cells
+
 
 
 ## Helper: recursively search for a Unit instance inside node subtree
@@ -248,6 +264,7 @@ func _move_active_unit(new_cell: Vector2) -> void:
 	_deselect_active_unit()
 	_active_unit.walk_along(_unit_path.current_path)
 	await _active_unit.walk_finished
+	
 	if _unit_info_panel and _active_unit:
 		_unit_info_panel.update_info(_active_unit)
 		_unit_info_panel.visible = true
@@ -279,6 +296,8 @@ func _select_unit(cell: Vector2) -> void:
 	_unit_overlay.draw_walkable_cells(_walkable_cells)
 	
 	_unit_path.initialize(_walkable_cells)
+	
+
 func _hover_display(cell: Vector2) -> void:
 	if !_unit_info_panel:
 		return
@@ -342,6 +361,8 @@ func _deselect_active_unit() -> void:
 func _clear_active_unit() -> void:
 	_active_unit = null
 	_walkable_cells.clear()
+	
+
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if !_unit_info_panel:
 		return
