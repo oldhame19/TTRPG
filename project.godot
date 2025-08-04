@@ -18,6 +18,7 @@ config/features=PackedStringArray("4.4")
 
 Inventory_Utils="*res://Globals/inventory_utils.gd"
 Globals="*res://Globals/globals.gd"
+CombatCalculator="*res://Globals/combat_calculator.gd"
 
 [display]
 

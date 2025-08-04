@@ -1,0 +1,59 @@
+[gd_scene load_steps=2 format=3 uid="uid://vudqvbk70d03"]
+
+[ext_resource type="Script" uid="uid://b4wwfyngfahgi" path="res://GUI/CombatUI/combat_forecast_panel.gd" id="1_tfl5j"]
+
+[node name="CombatForecast" type="CanvasLayer"]
+script = ExtResource("1_tfl5j")
+
+[node name="CombatForecastPanel" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MarginContainer" type="MarginContainer" parent="CombatForecastPanel"]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 45.0
+offset_right = 85.0
+offset_bottom = 203.0
+
+[node name="GridContainer" type="GridContainer" parent="CombatForecastPanel/MarginContainer"]
+layout_mode = 2
+columns = 2
+
+[node name="AllyName" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="EnemyName" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="AllyWPN" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="EnemyWPN" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="AllyHP" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="EnemyHP" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="AllyATK" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="EnemyATK" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="AllyHIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="EnemyHIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="AllyCRIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2
+
+[node name="EnemyCRIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+layout_mode = 2

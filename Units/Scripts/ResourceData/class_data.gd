@@ -2,6 +2,8 @@
 class_name ClassData
 extends Resource
 
+enum ClassType {NONE, GIANT, CAVALRY}
+
 @export var name: String
 @export var base_stats: StatBlock #on promotion, for each stat, if the units stats are lower than the base stat, they will be raised to the base stat
 @export var move_range: int = 4

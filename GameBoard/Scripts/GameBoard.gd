@@ -8,10 +8,13 @@ const OBSTACLE_ATLAS_ID = 2
 const MAX_VALUE: int = 99999
 const PauseMenu = preload("res://GUI/PauseMenu/Pause Menu.tscn")
 const ActionMenu = preload("res://GUI/ActionMenu/Action Menu.tscn")
+var CombatForecastScene = preload("res://GUI/CombatUI/CombatForecast.tscn")
 const UnitInfoPanelScene = preload("res://GUI/UnitInfo/UnitInfoPanel.tscn")
 var _current_action_menu: ActionMenu = null
 var _current_trade_scene = null
 var _unit_info_panel: UnitInfoPanel
+var combat_forecast_panel: CombatForecastPanel
+
 
 ## Resource of type Grid.
 @export var grid: Resource = preload("res://GameBoard/Resources/Grid.tres")
@@ -34,15 +37,22 @@ var _active_trade_target_cell: Vector2 = Vector2(-1, -1)
 
 
 func _ready() -> void:
+	
 	_movement_costs = _map.get_movement_costs(grid)
 	_reinitialize()
 
 	var ui_root = CanvasLayer.new()
 	add_child(ui_root)
 
+	# Instantiate UnitInfoPanel
 	_unit_info_panel = UnitInfoPanelScene.instantiate()
 	ui_root.add_child(_unit_info_panel)
 	_unit_info_panel.visible = false
+	
+	# Instantiate CombatForecastPanel
+	combat_forecast_panel = CombatForecastScene.instantiate()
+	ui_root.add_child(combat_forecast_panel)
+	combat_forecast_panel.visible = false
 
 	# Position UnitInfoPanel in top-left corner with offset
 	_unit_info_panel.anchor_left = 0.0
@@ -129,7 +139,6 @@ func get_attackable_cells(unit: Unit) -> Array:
 					attackable_cells.append(target_cell)
 
 	return attackable_cells
-
 
 
 ## Helper: recursively search for a Unit instance inside node subtree
@@ -302,40 +311,37 @@ func _hover_display(cell: Vector2) -> void:
 	if !_unit_info_panel:
 		return
 
-	# During trade mode
+	# If attack mode active and hovering an enemy unit different from active unit
+	if _current_action_menu and _current_action_menu.attack_mode_active:
+		if _units.has(cell):
+			var hovered_unit = _units[cell]
+			if hovered_unit != null and is_instance_valid(hovered_unit):
+				# Only show forecast if hovered is enemy of active unit
+				if _active_unit != null and hovered_unit.is_enemy and not hovered_unit == _active_unit:
+					var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
+					combat_forecast_panel.update_forecast(forecast)
+					combat_forecast_panel.visible = true
+					return
+		# If no valid enemy hovered, hide forecast panel
+		combat_forecast_panel.visible = false
+
+	# Existing trade mode check (keep as is)
 	if _current_action_menu and _current_action_menu.trade_mode_active:
-		if _active_unit and _active_unit.cell == cell:
-			_unit_info_panel.visible = false
-			return
+		# (existing trade hover logic here)
+		return
 
-		var valid_trade_cells = get_tradeable_cells(_active_unit)
-		if not valid_trade_cells.has(cell):
-			_unit_info_panel.visible = false
-			return
-
-	# If hovering over a unit (and not in trade mode or hovering self)
+	# Fallback: existing unit info panel hover logic
 	if _units.has(cell):
 		var target_unit = _units[cell]
 		if target_unit and is_instance_valid(target_unit):
 			_unit_info_panel.update_info(target_unit)
 			_unit_info_panel.visible = true
-
-			# 🟢 If no unit is selected, show walkable/attackable overlay for hover unit
-			if _active_unit == null:
-				_walkable_cells = get_walkable_cells(target_unit)
-				_attackable_cells = get_attackable_cells(target_unit)
-				_unit_overlay.clear()
-				_unit_overlay.draw_walkable_cells(_walkable_cells)
-				_unit_overlay.draw_attackable_cells(_attackable_cells)
+			# (existing overlay logic)
 			return
 
-	#  Not hovering a valid unit
 	_unit_info_panel.update_info(null)
 	_unit_info_panel.visible = false
-
-	if _active_unit == null:
-		_walkable_cells.clear()
-		_unit_overlay.clear()
+	combat_forecast_panel.visible = false
 
 
 func _reset_unit() -> void:
@@ -369,6 +375,9 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _current_trade_scene != null:
 		return  # lock cursor during trade UI
 
+	# Hide combat forecast if not in attack mode or hovering invalid target
+	if not (_current_action_menu and _current_action_menu.attack_mode_active):
+		combat_forecast_panel.visible = false
 	if _current_action_menu and _current_action_menu.trade_mode_active:
 		# We DO want to show hover info during trade mode
 		_hover_display(new_cell)

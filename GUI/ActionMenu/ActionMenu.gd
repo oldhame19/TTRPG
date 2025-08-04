@@ -48,8 +48,6 @@ func _ready() -> void:
 				break
 	$VBoxContainer/AttackButton.visible = enemy_in_range
 
-
-
 func _on_attack_button_pressed() -> void:
 	game_board._unit_info_panel.visible = false
 	attack_mode_active = true
@@ -71,7 +69,6 @@ func _on_attack_button_pressed() -> void:
 	cursor.show_sprite = true
 	cursor.set_pointer_visible(false)
 
-
 func _on_trade_button_pressed() -> void:
 	game_board._unit_info_panel.visible = false
 	if unit == null or unit.grid == null:
@@ -91,7 +88,6 @@ func _on_trade_button_pressed() -> void:
 
 	cursor.show_sprite = true
 	cursor.set_pointer_visible(false)
-
 
 func _on_action_button_pressed() -> void:
 	game_board._unit_info_panel.visible = false
