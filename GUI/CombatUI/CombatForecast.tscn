@@ -8,52 +8,129 @@ script = ExtResource("1_tfl5j")
 [node name="CombatForecastPanel" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 385.0
+offset_bottom = 272.0
+
+[node name="Panel" type="Panel" parent="CombatForecastPanel"]
+layout_mode = 2
+offset_left = 15.0
+offset_top = 15.0
+offset_right = 465.0
+offset_bottom = 265.0
+
+[node name="Label" type="Label" parent="CombatForecastPanel/Panel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -37.0
+offset_right = 31.0
+offset_bottom = 60.0
+grow_horizontal = 2
+scale = Vector2(1.1, 1.1)
+text = "PREVIEW"
+vertical_alignment = 1
 
 [node name="MarginContainer" type="MarginContainer" parent="CombatForecastPanel"]
-layout_mode = 0
-offset_left = 45.0
-offset_top = 45.0
-offset_right = 85.0
-offset_bottom = 203.0
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -176.5
+offset_top = -198.0
+offset_right = 230.5
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(1.1, 1.1)
 
 [node name="GridContainer" type="GridContainer" parent="CombatForecastPanel/MarginContainer"]
 layout_mode = 2
-columns = 2
+columns = 3
 
 [node name="AllyName" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+horizontal_alignment = 2
+
+[node name="UnitLabel" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(75, 20)
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 1
+size_flags_stretch_ratio = 0.0
+text = "UNIT"
+horizontal_alignment = 1
 
 [node name="EnemyName" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="AllyWPN" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
+horizontal_alignment = 2
+
+[node name="WeaponLabel" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "WPN"
+horizontal_alignment = 1
 
 [node name="EnemyWPN" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 
 [node name="AllyHP" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
+horizontal_alignment = 2
+
+[node name="HPLabel" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "HP"
+horizontal_alignment = 1
 
 [node name="EnemyHP" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 
 [node name="AllyATK" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
+horizontal_alignment = 2
+
+[node name="ATKLabel" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+text = "ATK"
+horizontal_alignment = 1
 
 [node name="EnemyATK" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 
 [node name="AllyHIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
+horizontal_alignment = 2
+
+[node name="HITLabel" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+text = "HIT"
+horizontal_alignment = 1
 
 [node name="EnemyHIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 
 [node name="AllyCRIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
+horizontal_alignment = 2
+
+[node name="CRITLabel" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+custom_minimum_size = Vector2(0, 25)
+layout_mode = 2
+text = "CRIT"
+horizontal_alignment = 1
 
 [node name="EnemyCRIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
