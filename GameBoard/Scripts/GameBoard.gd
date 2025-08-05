@@ -56,6 +56,7 @@ func _ready() -> void:
 	
 	# Instantiate CombatForecastPanel
 	combat_forecast_panel = CombatForecastScene.instantiate()
+
 	ui_root.add_child(combat_forecast_panel)
 	combat_forecast_panel.visible = false
 
@@ -346,6 +347,7 @@ func _hover_display(cell: Vector2) -> void:
 					var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
 					combat_forecast_panel.update_forecast(forecast)
 					combat_forecast_panel.visible = true
+					_unit_info_panel.visible = false
 					return
 		# If no valid enemy hovered, hide forecast panel
 		combat_forecast_panel.visible = false

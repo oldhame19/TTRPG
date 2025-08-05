@@ -1,6 +1,7 @@
 #combat_forecast_panel.gd
 extends CanvasLayer
 class_name CombatForecastPanel
+
 @onready var ally_name_label = $CombatForecastPanel/MarginContainer/GridContainer/AllyName
 @onready var ally_weapon_label = $CombatForecastPanel/MarginContainer/GridContainer/AllyWPN
 @onready var ally_hp_label = $CombatForecastPanel/MarginContainer/GridContainer/AllyHP
@@ -15,6 +16,8 @@ class_name CombatForecastPanel
 @onready var enemy_hit_label = $CombatForecastPanel/MarginContainer/GridContainer/EnemyHIT
 @onready var enemy_crit_label = $CombatForecastPanel/MarginContainer/GridContainer/EnemyCRIT
 
+
+	
 func update_forecast(forecast: CombatCalculator.CombatForecast) -> void:
 	# Ally side
 	ally_name_label.text = forecast.ally_name

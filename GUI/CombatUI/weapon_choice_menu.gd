@@ -14,7 +14,9 @@ func _ready():
 	close_button.pressed.connect(func():
 		close_active_modes.emit()
 		game_board._unit_overlay.clear_attackable_cells()
+		game_board._unit_info_panel.visible = false
 		game_board.combat_forecast_panel.visible = false
+
 		queue_free()
 	)
 
@@ -48,18 +50,24 @@ func populate_weapons():
 
 		button.pressed.connect(func():
 			unit.equip_item(weapon)
-
+			
+			game_board.combat_forecast_panel.visible = false
 			game_board._unit_info_panel.visible = false
+
 			unit.attack_range = weapon.atk_range
 			game_board._unit_overlay.clear_attackable_cells()
 			attackable_cells = game_board.get_attackable_cells(unit)
 			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
 
-			game_board.cursor.show()
+
 			game_board.cursor.set_allowed_cells(attackable_cells)
+			game_board.cursor.hide()
+			
 			game_board.cursor.process_mode = Node.PROCESS_MODE_INHERIT
 			game_board.cursor.show_sprite = true
 			game_board.cursor.set_pointer_visible(false)
+			
+			game_board.cursor.center_on_unit(unit)
 		)
 
 		vbox.add_child(button)

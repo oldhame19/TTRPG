@@ -69,6 +69,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Navigating cells with the mouse.
 	if event is InputEventMouseMotion:
 		is_mouse = true
+		show()
 	# Trying to select something in a cell.
 	elif event.is_action_pressed("click") or event.is_action_pressed("ui_accept"):
 		emit_signal("accept_pressed", cell)
@@ -98,10 +99,27 @@ func _draw() -> void:
 	if show_sprite:
 		draw_rect(Rect2(-grid.cell_size / 2, grid.cell_size), Color.ALICE_BLUE, false, 2.0)
 
+func center_on_unit(unit: Unit) -> void:
+	if unit and unit.grid:
+		var before = cell
+		var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+
+		# Temporarily disable restriction check
+		var prev_restricted = restricted_cells.duplicate()
+		restricted_cells.clear()
+
+		cell = unit_cell  # this triggers the setter without restriction
+
+		restricted_cells = prev_restricted  # restore
+		print("Cursor moved from ", before, " to ", cell, " (centered on unit)")
+
+
+
 func reset_cursor() -> void:
 	if(is_mouse):
 		var grid_coords = grid.calculate_grid_coordinates(get_global_mouse_position())
 		cell = grid_coords
+	
 func set_pointer_visible(visible: bool) -> void:
 	if $PointerTexture:
 		$PointerTexture.visible = visible
