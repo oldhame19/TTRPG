@@ -400,8 +400,9 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 		return
 	if _current_trade_scene != null:
 		return  # lock cursor during trade UI
-		
-
+	if _current_action_menu and _current_action_menu.in_an_active_mode():
+		_hover_display(new_cell)
+		return
 	# Hide combat forecast if not in attack mode or hovering invalid target
 	if not (_current_action_menu and _current_action_menu.attack_mode_active):
 		combat_forecast_panel.visible = false
@@ -416,6 +417,8 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 	elif _unit_overlay != null and _walkable_cells.size() > 0:
 		if not (_current_action_menu and _current_action_menu.assist_mode_active):
 			_walkable_cells.clear()
+			_unit_overlay.clear()
+		if  not (_current_action_menu and _current_action_menu.attack_mode_active):
 			_unit_overlay.clear()
 
 	if _units.has(new_cell) and _active_unit == null:

@@ -32,7 +32,9 @@ func clear_tradeable_cells() -> void:
 	
 func clear_assistable_cells() -> void:
 	clear()
-
+func clear_attackable_cells() -> void:
+	clear()
+	
 func draw_highlight_cell(cell: Vector2, tile_id: int = 2) -> void:
 	# Draw a single cell with the given tile_id (default 2 = trade highlight)
 	set_cell(cell, tile_id, Vector2i(0,0))

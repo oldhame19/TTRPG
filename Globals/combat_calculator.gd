@@ -39,12 +39,11 @@ class CombatForecast:
 		self.enemy_attack = enemy_attack
 		self.enemy_hit = enemy_hit
 		self.enemy_crit = enemy_crit
-
-static func calculate_stats(ally: Unit, enemy: Unit) -> Dictionary:
+static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData = null) -> Dictionary:
 	if ally == null or ally.current_stats == null:
 		return {"attack": "--", "hit": "--", "crit": "--"}
 
-	var weapon := ally.equipped_weapon as WeaponItemData
+	var weapon := temp_weapon if temp_weapon != null else ally.equipped_weapon as WeaponItemData
 	var str := ally.current_stats.strength
 	var dex := ally.current_stats.dexterity
 	var faith := ally.current_stats.faith
@@ -56,13 +55,11 @@ static func calculate_stats(ally: Unit, enemy: Unit) -> Dictionary:
 
 	# ========== ATTACK ==========
 	if weapon != null:
-		# Check effectiveness only if weapon and enemy class exist
 		if weapon.effective_against != WeaponItemData.Effectiveness.NONE and enemy != null and enemy.current_class != null:
 			if weapon.Effectiveness == enemy.current_class.ClassType:
 				effectiveness = 2
 		attack = str + int(weapon.power * effectiveness)
 	else:
-		# No weapon equipped: just base STR
 		attack = str
 
 	# ========== HIT ==========
@@ -85,7 +82,7 @@ static func calculate_stats(ally: Unit, enemy: Unit) -> Dictionary:
 	}
 
 
-static func get_combat_forecast(ally: Unit, enemy: Unit) -> CombatForecast:
+static func get_combat_forecast(ally: Unit, enemy: Unit, override_weapon: WeaponItemData = null) -> CombatForecast:
 	var ally_name = "--"
 	var enemy_name = "--"
 	var ally_weapon_name = "--"
@@ -103,12 +100,12 @@ static func get_combat_forecast(ally: Unit, enemy: Unit) -> CombatForecast:
 
 	if ally != null and ally.unit_data != null:
 		ally_name = ally.unit_data.unit_name
-		ally_weapon_name = ally.equipped_weapon.name if ally.equipped_weapon != null else "--"
+		ally_weapon_name = override_weapon.name if override_weapon != null else (ally.equipped_weapon.name if ally.equipped_weapon != null else "--")
 		ally_hp_current = ally.hp
 		ally_hp_max = ally.current_stats.max_hp if ally.current_stats != null else "--"
 
 		if ally.current_stats != null:
-			var ally_stats = calculate_stats(ally, enemy)
+			var ally_stats = calculate_stats(ally, enemy, override_weapon)
 			ally_attack = ally_stats["attack"]
 			ally_hit = ally_stats["hit"]
 			ally_crit = ally_stats["crit"]

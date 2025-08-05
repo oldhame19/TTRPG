@@ -37,3 +37,8 @@ func remove_item(item: SlotData) -> void:
 		item.quantity = max(0, item.quantity - 1)
 		if item.quantity == 0:
 			slots.erase(item)
+
+func get_all_weapon_items() -> Array[SlotData]:
+	return slots.filter(func(slot):
+		return slot.item_data is WeaponItemData
+	)

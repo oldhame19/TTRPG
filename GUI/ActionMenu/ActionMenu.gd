@@ -58,27 +58,48 @@ func _ready() -> void:
 	$VBoxContainer/AttackButton.visible = enemy_in_range
 
 
+#func _on_attack_button_pressed() -> void:
+	#game_board._unit_info_panel.visible = false
+	#attack_mode_active = true
+	#if unit == null or unit.grid == null:
+		#game_board._reinitialize()
+#
+	#var attackable_cells = game_board.get_attackable_cells(unit)
+	#game_board._unit_overlay.draw_attackable_cells(attackable_cells)
+	#trade_mode_active = true
+#
+	#for button in $VBoxContainer.get_children():
+		#if button.name != "CancelButton":
+			#button.visible = false
+#
+	#cursor.show()
+	#cursor.set_allowed_cells(attackable_cells)
+	#cursor.process_mode = Node.PROCESS_MODE_INHERIT
+#
+	#cursor.show_sprite = true
+	#cursor.set_pointer_visible(false)
 func _on_attack_button_pressed() -> void:
-	game_board._unit_info_panel.visible = false
 	attack_mode_active = true
-	if unit == null or unit.grid == null:
-		game_board._reinitialize()
-
-	var attackable_cells = game_board.get_attackable_cells(unit)
-	game_board._unit_overlay.draw_attackable_cells(attackable_cells)
-	trade_mode_active = true
-
-	for button in $VBoxContainer.get_children():
-		if button.name != "CancelButton":
-			button.visible = false
-
-	cursor.show()
-	cursor.set_allowed_cells(attackable_cells)
-	cursor.process_mode = Node.PROCESS_MODE_INHERIT
-
-	cursor.show_sprite = true
-	cursor.set_pointer_visible(false)
+	if not unit or not game_board:
+		return
 	
+	var menu = preload("res://GUI/CombatUI/weapon_choice_menu.tscn").instantiate()
+	menu.unit = unit
+	menu.game_board = game_board
+	menu.get_node("Panel").position = Vector2(750, 50)
+	get_tree().get_root().add_child(menu)
+	hide()
+	
+	menu.close_active_modes.connect(func():
+		# Close all active modes
+		attack_mode_active = false
+		trade_mode_active = false
+		assist_mode_active = false)
+	
+	menu.tree_exited.connect(func():
+		show()
+	)
+
 func _on_assist_button_pressed() -> void:
 
 	game_board._unit_info_panel.visible = false
@@ -263,6 +284,7 @@ func _on_summary_button_pressed() -> void:
 func _on_cancel_button_pressed() -> void:
 	if attack_mode_active:
 		attack_mode_active = false
+		game_board._unit_overlay.clear_attackable_cells()
 	if assist_mode_active:
 		assist_mode_active = false
 		game_board._unit_overlay.clear_assistable_cells()
@@ -336,3 +358,6 @@ func _on_cancel_button_pressed() -> void:
 			#game_board._unit_info_panel.visible = true
 
 		queue_free()
+
+func in_an_active_mode() -> bool:
+	return attack_mode_active or assist_mode_active or trade_mode_active
