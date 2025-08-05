@@ -77,7 +77,10 @@ func initialize_stats() -> void:
 		hp = 0
 		current_stats = null
 		return
-
+	# Assign starting class if not already set
+	if current_class == null:
+		current_class = unit_data.starting_class
+		
 	if current_stats == null:
 		current_stats = unit_data.base_stats.copy()
 
@@ -180,6 +183,11 @@ func equip_item(item: ItemData) -> void:
 
 	if item is WeaponItemData:
 		var weapon := item as WeaponItemData
+		
+		if weapon.weapon_type not in current_class.allowed_weapon_types:
+			print("⚠ Cannot equip", weapon.name, "- Not allowed for class:", current_class.name)
+			return  # Don't equip
+
 		if equipped_weapon and equipped_weapon is WeaponItemData:
 			var old_weapon := equipped_weapon as WeaponItemData
 			old_weapon.equipped = false
@@ -252,3 +260,28 @@ func remove_stat_bonuses(item: ItemData) -> void:
 	elif item is WeaponItemData:
 		var wp := item as WeaponItemData
 		current_stats.strength -= wp.power
+
+func get_slot_for_item(item: ItemData) -> SlotData:
+	for slot in held_items.slots:
+		if slot.item_data == item:
+			return slot
+	return null
+
+func use_item(item: ItemData) -> void:
+	if item == null:
+		return
+
+	var should_destroy := false
+
+	if item is ProvisionItemData:
+		should_destroy = item.use(self)
+	elif item is WeaponItemData:
+		should_destroy = item.use(self)
+	elif item is ItemData:
+		should_destroy = item.use(self)
+
+	if should_destroy:
+		print("Item", item.name, "broke!")
+		held_items.remove_item(get_slot_for_item(item))
+
+	update_hp_bar()

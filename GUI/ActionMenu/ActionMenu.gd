@@ -7,6 +7,7 @@ var unit: Unit        # assign before _ready runs
 var game_board: GameBoard  # assign before _ready runs
 var trade_mode_active: bool = false
 var attack_mode_active: bool = false
+var assist_mode_active: bool = false
 var _current_trade_scene: Control = null
 var opened_from_summary: bool = false
 var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")
@@ -23,7 +24,8 @@ func _ready() -> void:
 		return
 		
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
-	# Check for adjacent allies (existing code)
+	
+	# Check for adjacent allies
 	var has_adjacent_ally = false
 
 	for dir in DIRECTIONS:
@@ -35,9 +37,16 @@ func _ready() -> void:
 				break
 	$VBoxContainer/TradeButton.visible = has_adjacent_ally
 
-	# NEW: Check if enemy is within attack range
+	# Assist button visible only if:
+	# - there is an adjacent ally
+	# - and unit's current class can_assist == true
+	var can_assist := false
+	if has_adjacent_ally and unit.current_class and unit.current_class.can_assist:
+		can_assist = true
+	$VBoxContainer/AssistButton.visible = can_assist
+
+	# Check if enemy is within attack range
 	var enemy_in_range = false
-	# Use flood fill to get cells within attack range ignoring obstacles for simplicity
 	var attack_range_cells = game_board._flood_fill(unit_cell, unit.attack_range)
 
 	for cell_pos in attack_range_cells:
@@ -47,6 +56,7 @@ func _ready() -> void:
 				enemy_in_range = true
 				break
 	$VBoxContainer/AttackButton.visible = enemy_in_range
+
 
 func _on_attack_button_pressed() -> void:
 	game_board._unit_info_panel.visible = false
@@ -68,6 +78,28 @@ func _on_attack_button_pressed() -> void:
 
 	cursor.show_sprite = true
 	cursor.set_pointer_visible(false)
+	
+func _on_assist_button_pressed() -> void:
+
+	game_board._unit_info_panel.visible = false
+	if unit == null or unit.grid == null:
+		game_board._reinitialize()
+
+	var assistable_cells = game_board.get_assistable_cells(unit)
+	game_board._unit_overlay.draw_assistable_cells(assistable_cells)
+	assist_mode_active = true
+
+	for button in $VBoxContainer.get_children():
+		if button.name != "CancelButton":
+			button.visible = false
+
+	cursor.show()
+	cursor.set_allowed_cells(assistable_cells)
+	cursor.process_mode = Node.PROCESS_MODE_INHERIT
+
+	cursor.show_sprite = true
+	cursor.set_pointer_visible(false)
+	pass # Replace with function body.
 
 func _on_trade_button_pressed() -> void:
 	game_board._unit_info_panel.visible = false
@@ -231,7 +263,9 @@ func _on_summary_button_pressed() -> void:
 func _on_cancel_button_pressed() -> void:
 	if attack_mode_active:
 		attack_mode_active = false
-	
+	if assist_mode_active:
+		assist_mode_active = false
+		game_board._unit_overlay.clear_assistable_cells()
 	if trade_mode_active:
 		trade_mode_active = false
 		game_board._unit_overlay.clear_tradeable_cells()

@@ -22,6 +22,11 @@ grow_vertical = 2
 layout_mode = 2
 text = "ATTACK"
 
+[node name="AssistButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "ASSIST
+"
+
 [node name="TradeButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "TRADE"
@@ -52,6 +57,7 @@ layout_mode = 2
 text = "CLOSE"
 
 [connection signal="pressed" from="VBoxContainer/AttackButton" to="." method="_on_attack_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/AssistButton" to="." method="_on_assist_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/TradeButton" to="." method="_on_trade_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/ItemsButton" to="." method="_on_items_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/SummaryButton" to="." method="_on_summary_button_pressed"]

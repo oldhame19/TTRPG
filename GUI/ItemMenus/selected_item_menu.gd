@@ -46,7 +46,6 @@ func _ready():
 
 	$VBoxContainer/HoldButton.visible = show_hold
 
-
 	# Show store button only when source is "held_items" AND there's only 1 HeldItemsMenu
 	var held_items_count := 0
 	for child in get_tree().get_root().get_children():
@@ -72,13 +71,21 @@ func _ready():
 					break
 	$VBoxContainer/TradeButton.visible = trade_visible
 
-	var is_equippable := slot.item_data is WeaponItemData or slot.item_data is EquipmentItemData
+	# Determine if item is equippable and compatible
+	var is_equippable := false
+
+	if slot.item_data is WeaponItemData:
+		var weapon := slot.item_data as WeaponItemData
+		if unit and unit.current_class and weapon.weapon_type in unit.current_class.allowed_weapon_types:
+			is_equippable = true
+	elif slot.item_data is EquipmentItemData:
+		is_equippable = true
+
 	$VBoxContainer/EquipButton.visible = is_equippable and source != "inventory"
-# Change Equip button text to "Unequip" if the item is currently equipped
+
 	if is_equippable and source != "inventory":
 		if slot.item_data.equipped:
 			$VBoxContainer/EquipButton.text = "UNEQUIP"
-			
 		else:
 			$VBoxContainer/EquipButton.text = "EQUIP"
 
@@ -88,8 +95,7 @@ func _ready():
 				"CloseButton", "DescriptionButton":
 					button.visible = true
 				"EquipButton":
-				# Show Equip only if item is equippable and source != inventory (your existing logic)
-					button.visible = (slot.item_data is WeaponItemData or slot.item_data is EquipmentItemData) and source != "inventory"
+					button.visible = is_equippable and source != "inventory"
 				_:
 					button.visible = false
 
@@ -98,6 +104,7 @@ func _ready():
 
 	if not unit or not game_board:
 		return
+
 
   
 func _unhandled_input(event):

@@ -5,9 +5,11 @@
 
 [resource]
 script = ExtResource("2_88vh8")
+allowed_weapon_types = Array[int]([1, 6, 7])
 name = "Shepherd"
 base_stats = ExtResource("1_hccb5")
 move_range = 4
+can_assist = true
 min_growth_rates = {
 "defense": 0,
 "dexterity": 0,

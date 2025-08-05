@@ -14,8 +14,10 @@ enum Category {MELEE, RANGED, PROVISIONS, MISC, EQUIPMENT}
 @export var texture: Texture2D
 @export var equipped: bool = false
 
-func use() -> void:
+func use(user: Unit) -> bool:
 	durability -= 1
+	return durability <= 0  # Return true if item should be destroyed
+
 
 func clone() -> ItemData:
 	var new_item = ItemData.new()

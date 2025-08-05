@@ -6,10 +6,12 @@ extends Node2D
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 const OBSTACLE_ATLAS_ID = 2
 const MAX_VALUE: int = 99999
+
 const PauseMenu = preload("res://GUI/PauseMenu/Pause Menu.tscn")
 const ActionMenu = preload("res://GUI/ActionMenu/Action Menu.tscn")
 var CombatForecastScene = preload("res://GUI/CombatUI/CombatForecast.tscn")
 const UnitInfoPanelScene = preload("res://GUI/UnitInfo/UnitInfoPanel.tscn")
+
 var _current_action_menu: ActionMenu = null
 var _current_trade_scene = null
 var _unit_info_panel: UnitInfoPanel
@@ -24,10 +26,13 @@ var _units := {}
 var _active_unit: Unit
 var _walkable_cells := []
 var _attackable_cells := []
+var _assistable_cells := []
 var _movement_costs
 var _prev_cell
 var _prev_position
+
 var _active_trade_target_cell: Vector2 = Vector2(-1, -1)
+var _active_assist_target_cell: Vector2 = Vector2(-1, -1)
 
 @onready var _unit_overlay: UnitOverlay = $UnitOverlay
 @onready var _unit_path: UnitPath = $UnitPath
@@ -112,6 +117,26 @@ func get_tradeable_cells(unit: Unit) -> Array:
 
 	return tradeable_cells
 
+func get_assistable_cells(unit: Unit) -> Array:
+	if unit == null or unit.grid == null:
+		return []
+	
+	# If assist mode active, only highlight locked assist target cell
+	if _current_action_menu and _current_action_menu.assist_mode_active:
+		if _active_assist_target_cell != Vector2(-1, -1):
+			return [_active_assist_target_cell]
+	
+	var assistable_cells := []
+	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+
+	for direction in DIRECTIONS:
+		var neighbor_cell = unit_cell + direction
+		if _units.has(neighbor_cell):
+			var neighbor = _units[neighbor_cell]
+			if neighbor != null and is_instance_valid(neighbor) and not neighbor.is_enemy:
+				assistable_cells.append(neighbor_cell)
+
+	return assistable_cells
 
 
 func get_attackable_cells(unit: Unit) -> Array:
@@ -329,7 +354,8 @@ func _hover_display(cell: Vector2) -> void:
 	if _current_action_menu and _current_action_menu.trade_mode_active:
 		# (existing trade hover logic here)
 		return
-
+	if _current_action_menu and _current_action_menu.assist_mode_active:
+		return
 	# Fallback: existing unit info panel hover logic
 	if _units.has(cell):
 		var target_unit = _units[cell]
@@ -374,6 +400,7 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 		return
 	if _current_trade_scene != null:
 		return  # lock cursor during trade UI
+		
 
 	# Hide combat forecast if not in attack mode or hovering invalid target
 	if not (_current_action_menu and _current_action_menu.attack_mode_active):
@@ -387,8 +414,9 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _active_unit and _active_unit.is_selected:
 		_unit_path.draw(_active_unit.cell, new_cell)
 	elif _unit_overlay != null and _walkable_cells.size() > 0:
-		_walkable_cells.clear()
-		_unit_overlay.clear()
+		if not (_current_action_menu and _current_action_menu.assist_mode_active):
+			_walkable_cells.clear()
+			_unit_overlay.clear()
 
 	if _units.has(new_cell) and _active_unit == null:
 		_hover_display(new_cell)

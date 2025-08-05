@@ -23,9 +23,16 @@ func draw_tradeable_cells(cells: Array) -> void:
 	for cell in cells:
 		set_cell(cell, 2, Vector2i(0,0))
 
+func draw_assistable_cells(cells: Array) -> void:
+	for cell in cells:
+		set_cell(cell, 3, Vector2i(0,0))
+		
 func clear_tradeable_cells() -> void:
 	clear()
 	
+func clear_assistable_cells() -> void:
+	clear()
+
 func draw_highlight_cell(cell: Vector2, tile_id: int = 2) -> void:
 	# Draw a single cell with the given tile_id (default 2 = trade highlight)
 	set_cell(cell, tile_id, Vector2i(0,0))
