@@ -307,8 +307,8 @@ func _on_cancel_button_pressed() -> void:
 
 		# Restore unit info panel
 		if game_board._unit_info_panel and game_board._active_unit:
-			game_board._unit_info_panel.update_info(game_board._active_unit)
-			#game_board._unit_info_panel.visible = true
+			#game_board._unit_info_panel.update_info(game_board._active_unit)
+			game_board._unit_info_panel.visible = true
 			
 
 	elif opened_from_summary:
@@ -334,8 +334,8 @@ func _on_cancel_button_pressed() -> void:
 
 		# Restore unit info panel
 		if game_board._unit_info_panel and game_board._active_unit:
-			game_board._unit_info_panel.update_info(game_board._active_unit)
-			#game_board._unit_info_panel.visible = true
+			#game_board._unit_info_panel.update_info(game_board._active_unit)
+			game_board._unit_info_panel.visible = true
 
 		opened_from_summary = false
 

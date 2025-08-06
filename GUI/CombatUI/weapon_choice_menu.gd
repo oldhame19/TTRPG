@@ -10,25 +10,24 @@ signal close_active_modes
 var unit: Unit
 var game_board: GameBoard
 var attackable_cells := []
-var position_on_screen: Vector2 = Vector2(100, 100)
+var position_on_screen: Vector2 = Vector2(100, 100)  # Default position (can be set before adding to tree)
 
-var initial_weapon_slots: Array = []
+var original_weapon: WeaponItemData
+var has_selected_weapon := false
 
 func _ready():
 	forecast_label.text = "ATK:   --     HIT:   --     CRIT:   -- "
+	original_weapon = unit.equipped_weapon
+
 	close_button.pressed.connect(func():
 		close_active_modes.emit()
+		unit.equip_item(original_weapon)
+		if original_weapon:
+			unit.attack_range = original_weapon.atk_range
 		game_board._unit_overlay.clear_attackable_cells()
 		game_board._unit_info_panel.visible = true
 		game_board.combat_forecast_panel.visible = false
 		queue_free()
-	)
-
-	# Get and sort once on first open
-	initial_weapon_slots = unit.held_items.get_all_weapon_items()
-
-	initial_weapon_slots.sort_custom(func(a, b):
-		return (a.item_data == unit.equipped_weapon) > (b.item_data == unit.equipped_weapon)
 	)
 
 	populate_weapons()
@@ -38,7 +37,15 @@ func populate_weapons():
 	for child in vbox.get_children():
 		child.queue_free()
 
-	for slot in initial_weapon_slots:
+	var weapon_slots = unit.held_items.get_all_weapon_items()
+
+	# Sort with equipped weapon first only on first open
+	if not has_selected_weapon:
+		weapon_slots.sort_custom(func(a, b):
+			return (a.item_data == unit.equipped_weapon) > (b.item_data == unit.equipped_weapon)
+		)
+
+	for slot in weapon_slots:
 		var weapon := slot.item_data as WeaponItemData
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(0, 40)
@@ -63,10 +70,11 @@ func populate_weapons():
 			]
 		)
 
-		# Handle weapon selection
+		# Handle weapon selection (preview purpose only)
 		button.pressed.connect(func():
-			unit.equip_item(weapon)
-
+			if weapon != unit.equipped_weapon:
+				has_selected_weapon = true
+				unit.equip_item(weapon)
 			unit.attack_range = weapon.atk_range
 			game_board._unit_overlay.clear_attackable_cells()
 			attackable_cells = game_board.get_attackable_cells(unit)
@@ -82,7 +90,7 @@ func populate_weapons():
 			game_board._unit_info_panel.visible = false
 			game_board.combat_forecast_panel.visible = false
 
-			# Refresh without re-sorting
+			# Refresh text on buttons (but don't re-sort after initial open)
 			populate_weapons()
 		)
 
