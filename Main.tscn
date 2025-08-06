@@ -1,4 +1,4 @@
-[gd_scene load_steps=40 format=4 uid="uid://30jb4kc5kf5p"]
+[gd_scene load_steps=41 format=4 uid="uid://30jb4kc5kf5p"]
 
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://GameBoard/Cursor/Cursor.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="2"]
@@ -23,6 +23,7 @@
 [ext_resource type="Script" uid="uid://b3bnc4m3u2lkx" path="res://GUI/HeldItems/Scripts/held_items_data.gd" id="18_devvj"]
 [ext_resource type="Script" uid="uid://dmphg5nlphaa6" path="res://GUI/PlayerInventory/Scripts/slot_data.gd" id="19_3b0ty"]
 [ext_resource type="Script" uid="uid://blaaacoyl7slh" path="res://Units/Scripts/ResourceData/stat_block.gd" id="23_hhcpw"]
+[ext_resource type="Resource" uid="uid://basa4txhxdb7k" path="res://Items/ItemResources/Weapons/training_sword.tres" id="23_mxvw5"]
 [ext_resource type="Script" uid="uid://u3i27lovwmxw" path="res://Units/Scripts/ResourceData/unit_data.gd" id="24_mxvw5"]
 
 [sub_resource type="GDScript" id="GDScript_d1qvb"]
@@ -351,6 +352,7 @@ position = Vector2(349.289, 363.685)
 is_enemy = true
 is_wait = true
 held_items = SubResource("Resource_hhcpw")
+equipped_weapon = ExtResource("23_mxvw5")
 hp = 0
 unit_data = SubResource("Resource_hri7i")
 attack_range = 1

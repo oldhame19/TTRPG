@@ -1,33 +1,32 @@
-#ActionMenu.gd
 extends CanvasLayer
 class_name ActionMenu
+
 @onready var cursor: Cursor = get_parent()._cursor
+
 var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 var unit: Unit        # assign before _ready runs
 var game_board: GameBoard  # assign before _ready runs
 var trade_mode_active: bool = false
 var attack_mode_active: bool = false
 var assist_mode_active: bool = false
+var weapon_choice_active: bool = false  # NEW FLAG
 var _current_trade_scene: Control = null
 var opened_from_summary: bool = false
 var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")
 
 func _ready() -> void:
 	$VBoxContainer/AttackButton.grab_focus()
-	
+
 	cursor.hide()
 	cursor.process_mode = Node.PROCESS_MODE_DISABLED
 
-	if not unit:
+	if not unit or not game_board:
 		return
-	if not game_board:
-		return
-		
+
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
-	
+
 	# Check for adjacent allies
 	var has_adjacent_ally = false
-
 	for dir in DIRECTIONS:
 		var neighbor_cell = unit_cell + dir
 		if game_board._units.has(neighbor_cell):
@@ -37,9 +36,7 @@ func _ready() -> void:
 				break
 	$VBoxContainer/TradeButton.visible = has_adjacent_ally
 
-	# Assist button visible only if:
-	# - there is an adjacent ally
-	# - and unit's current class can_assist == true
+	# Assist button visible only if adjacent ally + class can_assist
 	var can_assist := false
 	if has_adjacent_ally and unit.current_class and unit.current_class.can_assist:
 		can_assist = true
@@ -48,7 +45,6 @@ func _ready() -> void:
 	# Check if enemy is within attack range
 	var enemy_in_range = false
 	var attack_range_cells = game_board._flood_fill(unit_cell, unit.attack_range)
-
 	for cell_pos in attack_range_cells:
 		if game_board._units.has(cell_pos):
 			var target_unit = game_board._units[cell_pos]
@@ -57,49 +53,32 @@ func _ready() -> void:
 				break
 	$VBoxContainer/AttackButton.visible = enemy_in_range
 
-
-#func _on_attack_button_pressed() -> void:
-	#game_board._unit_info_panel.visible = false
-	#attack_mode_active = true
-	#if unit == null or unit.grid == null:
-		#game_board._reinitialize()
-#
-	#var attackable_cells = game_board.get_attackable_cells(unit)
-	#game_board._unit_overlay.draw_attackable_cells(attackable_cells)
-	#trade_mode_active = true
-#
-	#for button in $VBoxContainer.get_children():
-		#if button.name != "CancelButton":
-			#button.visible = false
-#
-	#cursor.show()
-	#cursor.set_allowed_cells(attackable_cells)
-	#cursor.process_mode = Node.PROCESS_MODE_INHERIT
-#
-	#cursor.show_sprite = true
-	#cursor.set_pointer_visible(false)
 func _on_attack_button_pressed() -> void:
 	attack_mode_active = true
+	weapon_choice_active = true  # NEW FLAG
 	game_board._unit_info_panel.visible = false
+
 	if not unit or not game_board:
 		return
-	
+
 	var menu = preload("res://GUI/CombatUI/weapon_choice_menu.tscn").instantiate()
 	menu.unit = unit
 	menu.game_board = game_board
 	menu.get_node("Panel").position = Vector2(750, 50)
 	get_tree().get_root().add_child(menu)
 	hide()
-	
+
 	menu.close_active_modes.connect(func():
-		# Close all active modes
 		attack_mode_active = false
+		weapon_choice_active = false  # reset flag
 		trade_mode_active = false
-		assist_mode_active = false)
-	
+		assist_mode_active = false
+	)
+
 	menu.tree_exited.connect(func():
 		show()
 	)
+
 
 func _on_assist_button_pressed() -> void:
 

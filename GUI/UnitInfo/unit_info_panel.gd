@@ -26,17 +26,23 @@ func update_info(unit: Unit) -> void:
 	name_label.text = "%s" % (
 		unit.unit_data.unit_name if unit.unit_data != null else "None"
 	)
-	level_label.text = "Level: %d" % unit.level
-	xp_label.text = "XP: %d" % unit.xp
+	level_label.text = "Level:       %d" % unit.level
+	xp_label.text = "XP:         %02d" % unit.xp
+
 
 	if unit.current_stats != null:
 		hp_label.text = "HP: %d/%d" % [unit.hp, unit.current_stats.max_hp]
 	else:
 		hp_label.text = "HP: None"
 
-	equipped_label.text = "%s" % (
-		unit.equipped_weapon.name if unit.equipped_weapon != null else "None"
-	)
+	if unit.equipped_weapon != null:
+		equipped_label.text = "%s  [%d/%d]" % [
+		unit.equipped_weapon.name,
+		unit.equipped_weapon.durability,
+		unit.equipped_weapon.max_durability]
+	else:
+		equipped_label.text = " -- "
+
 
 #
 #func update_info(unit: Unit) -> void:

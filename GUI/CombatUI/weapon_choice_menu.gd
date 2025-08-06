@@ -10,20 +10,32 @@ signal close_active_modes
 var unit: Unit
 var game_board: GameBoard
 var attackable_cells := []
-var position_on_screen: Vector2 = Vector2(100, 100)  # Default position (can be set before adding to tree)
+var position_on_screen: Vector2 = Vector2(100, 100)
 
 var original_weapon: WeaponItemData
+var original_attack_range: int
 var has_selected_weapon := false
 
 func _ready():
-	forecast_label.text = "ATK:   --     HIT:   --     CRIT:   -- "
+	panel.add_to_group("ui_weapon_choice")
+
+	# Save original weapon & attack range
 	original_weapon = unit.equipped_weapon
+	original_attack_range = unit.attack_range
+
+	forecast_label.text = "ATK:   --     HIT:   --     CRIT:   -- "
 
 	close_button.pressed.connect(func():
 		close_active_modes.emit()
-		unit.equip_item(original_weapon)
-		if original_weapon:
-			unit.attack_range = original_weapon.atk_range
+
+		if has_selected_weapon:
+			# Restore original weapon and attack range
+			if original_weapon:
+				unit.equip_item(original_weapon)
+			else:
+				unit.unequip_item(unit.equipped_weapon)
+				unit.attack_range = original_attack_range
+
 		game_board._unit_overlay.clear_attackable_cells()
 		game_board._unit_info_panel.visible = true
 		game_board.combat_forecast_panel.visible = false
@@ -39,7 +51,6 @@ func populate_weapons():
 
 	var weapon_slots = unit.held_items.get_all_weapon_items()
 
-	# Sort with equipped weapon first only on first open
 	if not has_selected_weapon:
 		weapon_slots.sort_custom(func(a, b):
 			return (a.item_data == unit.equipped_weapon) > (b.item_data == unit.equipped_weapon)
@@ -51,35 +62,37 @@ func populate_weapons():
 		button.custom_minimum_size = Vector2(0, 40)
 
 		var equipped_indicator = " [E] " if weapon == unit.equipped_weapon else ""
-		button.text = "%s%s   %s/%s" % [
+		button.text = "%s%s   %d/%d" % [
 			equipped_indicator,
 			weapon.name,
 			weapon.durability,
 			weapon.max_durability
 		]
 
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-		# Show forecast when hovered
 		button.mouse_entered.connect(func():
 			var forecast := CombatCalculator.get_combat_forecast(unit, null, weapon)
-			forecast_label.text = "ATK: %02d    HIT: %02d    CRIT: %02d" % [
-				int(forecast.attack),
-				int(forecast.hit),
-				int(forecast.crit)
+
+			game_board.combat_forecast_panel.update_forecast(forecast)
+			game_board.combat_forecast_panel.visible = false
+
+			forecast_label.text = "ATK: %s     HIT: %s     CRIT: %s" % [
+				str(forecast.attack),
+				str(forecast.hit),
+				str(forecast.crit)
 			]
 		)
+		button.mouse_exited.connect(func():
+			pass)
 
-		# Handle weapon selection (preview purpose only)
 		button.pressed.connect(func():
 			if weapon != unit.equipped_weapon:
 				has_selected_weapon = true
 				unit.equip_item(weapon)
 			unit.attack_range = weapon.atk_range
-			game_board._unit_overlay.clear_attackable_cells()
+
+			game_board._unit_overlay.clear()
 			attackable_cells = game_board.get_attackable_cells(unit)
 			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
-
 			game_board.cursor.set_allowed_cells(attackable_cells)
 			game_board.cursor.hide()
 			game_board.cursor.process_mode = Node.PROCESS_MODE_INHERIT
@@ -90,7 +103,6 @@ func populate_weapons():
 			game_board._unit_info_panel.visible = false
 			game_board.combat_forecast_panel.visible = false
 
-			# Refresh text on buttons (but don't re-sort after initial open)
 			populate_weapons()
 		)
 

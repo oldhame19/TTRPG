@@ -1,6 +1,8 @@
-#combat_calculator.gd
 extends Node
 
+# =========================
+# Combat Forecast Container
+# =========================
 class CombatForecast:
 	var attack: Variant
 	var hit: Variant
@@ -39,7 +41,11 @@ class CombatForecast:
 		self.enemy_attack = enemy_attack
 		self.enemy_hit = enemy_hit
 		self.enemy_crit = enemy_crit
-		
+
+
+# =========================
+# Stat Calculations
+# =========================
 static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData = null) -> Dictionary:
 	if ally == null or ally.current_stats == null:
 		return {"attack": "--", "hit": "--", "crit": "--"}
@@ -56,7 +62,6 @@ static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData
 	var effectiveness := 1
 
 	# ========== ATTACK ==========
-
 	if weapon != null:
 		if weapon.effective_against != WeaponItemData.Effectiveness.NONE and enemy != null and enemy.current_class != null:
 			if weapon.Effectiveness == enemy.current_class.ClassType:
@@ -66,26 +71,18 @@ static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData
 		attack = str
 
 	# ========== HIT ==========
-
 	var distance_penalty := 0
-	if weapon != null:
-		# Apply distance penalty only if enemy is not adjacent
-		if enemy != null:
-			var ally_pos: Vector2i = ally.grid.calculate_grid_coordinates(ally.position)
-			var enemy_pos: Vector2i = enemy.grid.calculate_grid_coordinates(enemy.position)
-			var manhattan_distance: int = abs(ally_pos.x - enemy_pos.x) + abs(ally_pos.y - enemy_pos.y)
-
-			if manhattan_distance > 1:
-				distance_penalty = weapon.distance_hit_penalty
-		else:
-			distance_penalty = weapon.distance_hit_penalty  # fallback if enemy is null
-
+	if weapon != null and enemy != null:
+		var ally_pos: Vector2i = ally.grid.calculate_grid_coordinates(ally.position)
+		var enemy_pos: Vector2i = enemy.grid.calculate_grid_coordinates(enemy.position)
+		var manhattan_distance: int = abs(ally_pos.x - enemy_pos.x) + abs(ally_pos.y - enemy_pos.y)
+		if manhattan_distance > 1:
+			distance_penalty = weapon.distance_hit_penalty
 		hit = weapon.hit_chance + ((dex * 2) + int(faith / 2)) - distance_penalty
 	else:
 		hit = (dex * 2) + int(faith / 2)
 
 	# ========== CRIT ==========
-
 	if weapon != null:
 		crit = weapon.crit_chance + int((dex + faith) / 2)
 	else:
@@ -98,12 +95,19 @@ static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData
 	}
 
 
+# =========================
+# Combat Forecast Generation
+# =========================
+static func get_combat_forecast(
+	ally: Unit,
+	enemy: Unit,
+	override_weapon: WeaponItemData = null
+) -> CombatForecast:
 
-static func get_combat_forecast(ally: Unit, enemy: Unit, override_weapon: WeaponItemData = null) -> CombatForecast:
 	var ally_name = "--"
 	var enemy_name = "--"
-	var ally_weapon_name = "--"
-	var enemy_weapon_name = "--"
+	var ally_weapon_ref = "--"
+	var enemy_weapon_ref = "--"
 	var ally_hp_current = "--"
 	var ally_hp_max = "--"
 	var enemy_hp_current = "--"
@@ -115,9 +119,10 @@ static func get_combat_forecast(ally: Unit, enemy: Unit, override_weapon: Weapon
 	var enemy_hit = "--"
 	var enemy_crit = "--"
 
+	# ========== ALLY ==========
 	if ally != null and ally.unit_data != null:
 		ally_name = ally.unit_data.unit_name
-		ally_weapon_name = override_weapon.name if override_weapon != null else (ally.equipped_weapon.name if ally.equipped_weapon != null else "--")
+		ally_weapon_ref = override_weapon if override_weapon != null else ally.equipped_weapon
 		ally_hp_current = ally.hp
 		ally_hp_max = ally.current_stats.max_hp if ally.current_stats != null else "--"
 
@@ -127,9 +132,10 @@ static func get_combat_forecast(ally: Unit, enemy: Unit, override_weapon: Weapon
 			ally_hit = ally_stats["hit"]
 			ally_crit = ally_stats["crit"]
 
+	# ========== ENEMY ==========
 	if enemy != null and enemy.unit_data != null:
 		enemy_name = enemy.unit_data.unit_name
-		enemy_weapon_name = enemy.equipped_weapon.name if enemy.equipped_weapon != null else "--"
+		enemy_weapon_ref = enemy.equipped_weapon
 		enemy_hp_current = enemy.hp
 		enemy_hp_max = enemy.current_stats.max_hp if enemy.current_stats != null else "--"
 
@@ -145,8 +151,8 @@ static func get_combat_forecast(ally: Unit, enemy: Unit, override_weapon: Weapon
 		ally_crit,
 		ally_name,
 		enemy_name,
-		ally_weapon_name,
-		enemy_weapon_name,
+		ally_weapon_ref,
+		enemy_weapon_ref,
 		ally_hp_current,
 		ally_hp_max,
 		enemy_hp_current,

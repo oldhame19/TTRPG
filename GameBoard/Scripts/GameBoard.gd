@@ -334,42 +334,62 @@ func _select_unit(cell: Vector2) -> void:
 	
 
 func _hover_display(cell: Vector2) -> void:
-	if !_unit_info_panel:
+	if not _unit_info_panel:
 		return
 
-	# If attack mode active and hovering an enemy unit different from active unit
+	# Attack mode hover
 	if _current_action_menu and _current_action_menu.attack_mode_active:
 		if _units.has(cell):
 			var hovered_unit = _units[cell]
 			if hovered_unit != null and is_instance_valid(hovered_unit):
-				# Only show forecast if hovered is enemy of active unit
-				if _active_unit != null and hovered_unit.is_enemy and not hovered_unit == _active_unit:
+				if _active_unit != null and hovered_unit.is_enemy and hovered_unit != _active_unit:
+					# Always show combat forecast even during weapon choice
 					var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
 					combat_forecast_panel.update_forecast(forecast)
 					combat_forecast_panel.visible = true
 					_unit_info_panel.visible = false
-					return
-		# If no valid enemy hovered, hide forecast panel
-		combat_forecast_panel.visible = false
+					# Skip board overlay redraw if weapon choice menu is open
+					if _current_action_menu.weapon_choice_active:
+						return
+		else:
+			# No valid enemy hovered
+			combat_forecast_panel.visible = false
 
-	# Existing trade mode check (keep as is)
+	# Trade mode hover
 	if _current_action_menu and _current_action_menu.trade_mode_active:
-		# (existing trade hover logic here)
 		return
+
+	# Assist mode hover
 	if _current_action_menu and _current_action_menu.assist_mode_active:
 		return
-	# Fallback: existing unit info panel hover logic
-	if _units.has(cell):
-		var target_unit = _units[cell]
-		if target_unit and is_instance_valid(target_unit):
-			_unit_info_panel.update_info(target_unit)
-			_unit_info_panel.visible = true
-			# (existing overlay logic)
-			return
 
-	_unit_info_panel.update_info(null)
-	_unit_info_panel.visible = false
-	combat_forecast_panel.visible = false
+	# Hovering over a unit (normal case)
+	if _units.has(cell):
+		var hovered_unit = _units[cell]
+		if hovered_unit and is_instance_valid(hovered_unit):
+			_unit_info_panel.update_info(hovered_unit)
+			_unit_info_panel.visible = true
+
+			# Skip overlay redraw if weapon choice menu is active
+			if _current_action_menu and _current_action_menu.weapon_choice_active:
+				return
+
+			# Draw movement and attack range
+			var walkable_cells = get_walkable_cells(hovered_unit)
+			var attackable_cells = get_attackable_cells(hovered_unit)
+
+			_unit_overlay.clear()
+			_unit_overlay.draw_walkable_cells(walkable_cells)
+			_unit_overlay.draw_attackable_cells(attackable_cells)
+		return
+
+	# Hovering over empty cell: clear overlays and panels
+	else:
+		_unit_overlay.clear()
+		_unit_info_panel.update_info(null)
+		_unit_info_panel.visible = false
+		combat_forecast_panel.visible = false
+
 
 
 func _reset_unit() -> void:
@@ -396,8 +416,10 @@ func _clear_active_unit() -> void:
 	_active_unit = null
 	_walkable_cells.clear()
 	
+	
 
 func _on_Cursor_moved(new_cell: Vector2) -> void:
+	
 	if !_unit_info_panel:
 		return
 	if _current_trade_scene != null:
@@ -428,6 +450,8 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 	else:
 		_unit_info_panel.update_info(null)
 		_unit_info_panel.visible = false
+
+
 
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:

@@ -15,7 +15,7 @@ offset_bottom = 272.0
 layout_mode = 2
 offset_left = 15.0
 offset_top = 15.0
-offset_right = 415.0
+offset_right = 537.0
 offset_bottom = 255.0
 
 [node name="Label" type="Label" parent="CombatForecastPanel/Panel"]
@@ -40,7 +40,7 @@ anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -176.5
 offset_top = -205.0
-offset_right = 184.5
+offset_right = 296.5
 offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 0
