@@ -44,9 +44,10 @@ static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData
 		return {"attack": "--", "hit": "--", "crit": "--"}
 
 	var weapon := temp_weapon if temp_weapon != null else ally.equipped_weapon as WeaponItemData
-	var str := ally.current_stats.strength
-	var dex := ally.current_stats.dexterity
-	var faith := ally.current_stats.faith
+	var raw_stats := ally.get_raw_stats()
+	var str := raw_stats.strength
+	var dex := raw_stats.dexterity
+	var faith := raw_stats.faith
 
 	var attack := 0
 	var hit := 0

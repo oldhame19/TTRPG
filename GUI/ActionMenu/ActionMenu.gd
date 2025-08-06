@@ -80,6 +80,7 @@ func _ready() -> void:
 	#cursor.set_pointer_visible(false)
 func _on_attack_button_pressed() -> void:
 	attack_mode_active = true
+	game_board._unit_info_panel.visible = false
 	if not unit or not game_board:
 		return
 	

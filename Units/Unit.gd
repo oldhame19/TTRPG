@@ -285,3 +285,17 @@ func use_item(item: ItemData) -> void:
 		held_items.remove_item(get_slot_for_item(item))
 
 	update_hp_bar()
+	
+
+func get_raw_stats() -> StatBlock:
+	var raw := current_stats.copy()
+	
+	if equipped_weapon and equipped_weapon is WeaponItemData:
+		raw.strength -= (equipped_weapon as WeaponItemData).power
+		raw.speed += (equipped_weapon as WeaponItemData).weight
+	
+	if equipped_armor and equipped_armor is EquipmentItemData:
+		raw.defense -= (equipped_armor as EquipmentItemData).defense_bonus
+		raw.speed += (equipped_armor as EquipmentItemData).weight
+	
+	return raw

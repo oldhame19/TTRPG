@@ -17,7 +17,7 @@ class_name CombatForecastPanel
 @onready var enemy_crit_label = $CombatForecastPanel/MarginContainer/GridContainer/EnemyCRIT
 
 
-	
+
 func update_forecast(forecast: CombatCalculator.CombatForecast) -> void:
 	# Ally side
 	ally_name_label.text = forecast.ally_name
