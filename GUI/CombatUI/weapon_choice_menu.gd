@@ -25,6 +25,7 @@ func _ready():
 
 	forecast_label.text = "ATK:   --     HIT:   --     CRIT:   -- "
 
+	# Close button pressed
 	close_button.pressed.connect(func():
 		close_active_modes.emit()
 
@@ -40,6 +41,15 @@ func _ready():
 		game_board._unit_info_panel.visible = true
 		game_board.combat_forecast_panel.visible = false
 		queue_free()
+	)
+
+	# Close button hover hides panels
+	close_button.mouse_entered.connect(func():
+		game_board.cursor.center_on_unit(unit)
+		if game_board._unit_info_panel:
+			game_board._unit_info_panel.visible = false
+		if game_board.combat_forecast_panel:
+			game_board.combat_forecast_panel.visible = false
 	)
 
 	populate_weapons()

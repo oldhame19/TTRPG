@@ -111,7 +111,6 @@ func center_on_unit(unit: Unit) -> void:
 		cell = unit_cell  # this triggers the setter without restriction
 
 		restricted_cells = prev_restricted  # restore
-		print("Cursor moved from ", before, " to ", cell, " (centered on unit)")
 
 
 
