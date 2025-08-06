@@ -39,6 +39,7 @@ class CombatForecast:
 		self.enemy_attack = enemy_attack
 		self.enemy_hit = enemy_hit
 		self.enemy_crit = enemy_crit
+		
 static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData = null) -> Dictionary:
 	if ally == null or ally.current_stats == null:
 		return {"attack": "--", "hit": "--", "crit": "--"}
@@ -55,6 +56,7 @@ static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData
 	var effectiveness := 1
 
 	# ========== ATTACK ==========
+
 	if weapon != null:
 		if weapon.effective_against != WeaponItemData.Effectiveness.NONE and enemy != null and enemy.current_class != null:
 			if weapon.Effectiveness == enemy.current_class.ClassType:
@@ -64,13 +66,26 @@ static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData
 		attack = str
 
 	# ========== HIT ==========
+
+	var distance_penalty := 0
 	if weapon != null:
-		var distance_penalty := weapon.distance_hit_penalty
+		# Apply distance penalty only if enemy is not adjacent
+		if enemy != null:
+			var ally_pos: Vector2i = ally.grid.calculate_grid_coordinates(ally.position)
+			var enemy_pos: Vector2i = enemy.grid.calculate_grid_coordinates(enemy.position)
+			var manhattan_distance: int = abs(ally_pos.x - enemy_pos.x) + abs(ally_pos.y - enemy_pos.y)
+
+			if manhattan_distance > 1:
+				distance_penalty = weapon.distance_hit_penalty
+		else:
+			distance_penalty = weapon.distance_hit_penalty  # fallback if enemy is null
+
 		hit = weapon.hit_chance + ((dex * 2) + int(faith / 2)) - distance_penalty
 	else:
 		hit = (dex * 2) + int(faith / 2)
 
 	# ========== CRIT ==========
+
 	if weapon != null:
 		crit = weapon.crit_chance + int((dex + faith) / 2)
 	else:
@@ -81,6 +96,7 @@ static func calculate_stats(ally: Unit, enemy: Unit, temp_weapon: WeaponItemData
 		"hit": str(hit),
 		"crit": str(crit)
 	}
+
 
 
 static func get_combat_forecast(ally: Unit, enemy: Unit, override_weapon: WeaponItemData = null) -> CombatForecast:
