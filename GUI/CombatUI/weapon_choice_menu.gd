@@ -29,7 +29,7 @@ func _ready():
 		close_active_modes.emit()
 
 		if has_selected_weapon:
-			# Restore original weapon and attack range
+			# Restore original weapon and attack range if no weapon selected
 			if original_weapon:
 				unit.equip_item(original_weapon)
 			else:
@@ -51,6 +51,7 @@ func populate_weapons():
 
 	var weapon_slots = unit.held_items.get_all_weapon_items()
 
+	# Sort so equipped weapon is at the top
 	if not has_selected_weapon:
 		weapon_slots.sort_custom(func(a, b):
 			return (a.item_data == unit.equipped_weapon) > (b.item_data == unit.equipped_weapon)
@@ -69,21 +70,34 @@ func populate_weapons():
 			weapon.max_durability
 		]
 
+		# Hovering over the weapon updates only the small label
 		button.mouse_entered.connect(func():
-			var forecast := CombatCalculator.get_combat_forecast(unit, null, weapon)
-
-			game_board.combat_forecast_panel.update_forecast(forecast)
-			game_board.combat_forecast_panel.visible = false
-
+			var hover_forecast := CombatCalculator.get_combat_forecast(unit, null, weapon)
 			forecast_label.text = "ATK: %s     HIT: %s     CRIT: %s" % [
-				str(forecast.attack),
-				str(forecast.hit),
-				str(forecast.crit)
+				str(hover_forecast.attack),
+				str(hover_forecast.hit),
+				str(hover_forecast.crit)
 			]
+			game_board.cursor.center_on_unit(unit)
+			# Main forecast panel stays hidden until hovering a unit
+			game_board.combat_forecast_panel.visible = false
+			game_board._unit_info_panel.visible = false
 		)
-		button.mouse_exited.connect(func():
-			pass)
 
+		button.mouse_exited.connect(func():
+			# Restore label to currently equipped weapon
+			if unit.equipped_weapon:
+				var equipped_forecast := CombatCalculator.get_combat_forecast(unit, null, unit.equipped_weapon)
+				forecast_label.text = "ATK: %s     HIT: %s     CRIT: %s" % [
+					str(equipped_forecast.attack),
+					str(equipped_forecast.hit),
+					str(equipped_forecast.crit)
+				]
+			else:
+				forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+		)
+
+		# Pressing a weapon equips it and updates overlay
 		button.pressed.connect(func():
 			if weapon != unit.equipped_weapon:
 				has_selected_weapon = true
@@ -101,6 +115,7 @@ func populate_weapons():
 			game_board.cursor.center_on_unit(unit)
 
 			game_board._unit_info_panel.visible = false
+			# Main forecast panel still hidden
 			game_board.combat_forecast_panel.visible = false
 
 			populate_weapons()
