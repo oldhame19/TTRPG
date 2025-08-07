@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatBlock" load_steps=2 format=3 uid="uid://dsgsre828qi7"]
+
+[ext_resource type="Script" uid="uid://blaaacoyl7slh" path="res://Units/Scripts/ResourceData/stat_block.gd" id="1_38vy7"]
+
+[resource]
+script = ExtResource("1_38vy7")
+max_hp = 66
+strength = 48
+defense = 36
+speed = 18
+dexterity = 24
+charisma = 12
+faith = 0
+metadata/_custom_type_script = "uid://blaaacoyl7slh"

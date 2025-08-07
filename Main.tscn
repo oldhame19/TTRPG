@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=4 uid="uid://30jb4kc5kf5p"]
+[gd_scene load_steps=44 format=4 uid="uid://30jb4kc5kf5p"]
 
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://GameBoard/Cursor/Cursor.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="2"]
@@ -25,6 +25,7 @@
 [ext_resource type="Script" uid="uid://blaaacoyl7slh" path="res://Units/Scripts/ResourceData/stat_block.gd" id="23_hhcpw"]
 [ext_resource type="Resource" uid="uid://basa4txhxdb7k" path="res://Items/ItemResources/Weapons/training_sword.tres" id="23_mxvw5"]
 [ext_resource type="Script" uid="uid://u3i27lovwmxw" path="res://Units/Scripts/ResourceData/unit_data.gd" id="24_mxvw5"]
+[ext_resource type="Resource" uid="uid://dsgsre828qi7" path="res://Units/goliath_stats.tres" id="24_xrxkg"]
 
 [sub_resource type="GDScript" id="GDScript_d1qvb"]
 script/source = "@export var movement_data: Dictionary
@@ -254,22 +255,11 @@ slots = Array[ExtResource("19_3b0ty")]([])
 script = ExtResource("18_devvj")
 slots = Array[ExtResource("19_3b0ty")]([])
 
-[sub_resource type="Resource" id="Resource_sqvbp"]
-script = ExtResource("23_hhcpw")
-max_hp = 66
-strength = 48
-defense = 36
-speed = 18
-dexterity = 24
-charisma = 12
-faith = 0
-metadata/_custom_type_script = "uid://blaaacoyl7slh"
-
 [sub_resource type="Resource" id="Resource_hri7i"]
 script = ExtResource("24_mxvw5")
 is_player = false
 unit_name = "Goliath"
-base_stats = SubResource("Resource_sqvbp")
+base_stats = ExtResource("24_xrxkg")
 growth_rates = {
 "charisma": 0,
 "defense": 0,
@@ -285,9 +275,52 @@ metadata/_custom_type_script = "uid://u3i27lovwmxw"
 script = ExtResource("18_devvj")
 slots = Array[ExtResource("19_3b0ty")]([])
 
+[sub_resource type="Resource" id="Resource_5mvff"]
+script = ExtResource("23_hhcpw")
+max_hp = 20
+strength = 7
+defense = 4
+speed = 4
+dexterity = 5
+charisma = 2
+faith = 2
+metadata/_custom_type_script = "uid://blaaacoyl7slh"
+
+[sub_resource type="Resource" id="Resource_sqvbp"]
+script = ExtResource("24_mxvw5")
+is_player = false
+unit_name = ""
+base_stats = SubResource("Resource_5mvff")
+growth_rates = {
+"charisma": 0,
+"defense": 0,
+"dexterity": 0,
+"faith": 0,
+"hp": 0,
+"speed": 0,
+"strength": 0
+}
+metadata/_custom_type_script = "uid://u3i27lovwmxw"
+
 [sub_resource type="Resource" id="Resource_xrxkg"]
 script = ExtResource("18_devvj")
 slots = Array[ExtResource("19_3b0ty")]([])
+
+[sub_resource type="Resource" id="Resource_w3rk5"]
+script = ExtResource("24_mxvw5")
+is_player = false
+unit_name = ""
+base_stats = ExtResource("24_xrxkg")
+growth_rates = {
+"charisma": 0,
+"defense": 0,
+"dexterity": 0,
+"faith": 0,
+"hp": 0,
+"speed": 0,
+"strength": 0
+}
+metadata/_custom_type_script = "uid://u3i27lovwmxw"
 
 [node name="Main" type="Node2D"]
 rotation = -0.00195814
@@ -367,6 +400,7 @@ is_enemy = true
 is_wait = true
 held_items = SubResource("Resource_mxvw5")
 hp = 0
+unit_data = SubResource("Resource_sqvbp")
 attack_range = 1
 move_range = 3
 skin = ExtResource("9")
@@ -378,6 +412,8 @@ position = Vector2(129.297, 359.254)
 is_enemy = true
 held_items = SubResource("Resource_xrxkg")
 hp = 0
+unit_data = SubResource("Resource_w3rk5")
+current_stats = ExtResource("24_xrxkg")
 attack_range = 1
 move_range = 3
 skin = ExtResource("8")

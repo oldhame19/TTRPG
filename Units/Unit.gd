@@ -299,3 +299,37 @@ func get_raw_stats() -> StatBlock:
 		raw.speed += (equipped_armor as EquipmentItemData).weight
 	
 	return raw
+
+func get_stats_with_abilities() -> StatBlock:
+	var stats := get_raw_stats()
+
+	for ability in active_abilities:
+		if ability == null:
+			continue
+
+		var bonus: Dictionary = ability.get_stat_bonus(self)
+		for key in bonus.keys():
+			if stats.has(key):
+				stats.set(key, stats.get(key) + bonus[key])
+
+	return stats
+
+func get_combat_stat_bonuses() -> Dictionary:
+	var bonuses := {
+		"hit": 0,
+		"crit": 0,
+		"avo": 0
+	}
+
+	for ability in active_abilities:
+		if ability == null:
+			continue
+
+		var bonus := ability.get_stat_bonus(self)
+
+		# Only apply bonuses to combat stats, not base ones
+		for key in ["hit", "crit", "avo"]:
+			if bonus.has(key):
+				bonuses[key] += bonus[key]
+
+	return bonuses

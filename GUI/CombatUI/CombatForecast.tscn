@@ -50,7 +50,7 @@ scale = Vector2(1.1, 1.1)
 layout_mode = 2
 columns = 3
 
-[node name="AllyName" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="AttackerName" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_alignment = 2
@@ -64,11 +64,11 @@ size_flags_stretch_ratio = 0.0
 text = "UNIT"
 horizontal_alignment = 1
 
-[node name="EnemyName" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="DefenderName" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="AllyWPN" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="AttackerWPN" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 horizontal_alignment = 2
 
@@ -79,10 +79,10 @@ size_flags_horizontal = 4
 text = "WPN"
 horizontal_alignment = 1
 
-[node name="EnemyWPN" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="DefenderWPN" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 
-[node name="AllyHP" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="AttackerHP" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 horizontal_alignment = 2
 
@@ -93,10 +93,10 @@ size_flags_horizontal = 4
 text = "HP"
 horizontal_alignment = 1
 
-[node name="EnemyHP" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="DefenderHP" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 
-[node name="AllyATK" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="AttackerATK" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 horizontal_alignment = 2
 
@@ -106,10 +106,10 @@ layout_mode = 2
 text = "ATK"
 horizontal_alignment = 1
 
-[node name="EnemyATK" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="DefenderATK" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 
-[node name="AllyHIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="AttackerHIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 horizontal_alignment = 2
 
@@ -119,10 +119,10 @@ layout_mode = 2
 text = "HIT"
 horizontal_alignment = 1
 
-[node name="EnemyHIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="DefenderHIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 
-[node name="AllyCRIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="AttackerCRIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
 horizontal_alignment = 2
 
@@ -132,5 +132,5 @@ layout_mode = 2
 text = "CRIT"
 horizontal_alignment = 1
 
-[node name="EnemyCRIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
+[node name="DefenderCRIT" type="Label" parent="CombatForecastPanel/MarginContainer/GridContainer"]
 layout_mode = 2
