@@ -16,6 +16,7 @@ var original_weapon: WeaponItemData
 var original_attack_range: int
 var has_selected_weapon := false
 
+
 func _ready():
 	panel.add_to_group("ui_weapon_choice")
 
@@ -55,6 +56,7 @@ func _ready():
 	populate_weapons()
 
 func populate_weapons():
+
 	# Clear existing buttons
 	for child in vbox.get_children():
 		child.queue_free()
@@ -80,7 +82,6 @@ func populate_weapons():
 			weapon.max_durability
 		]
 
-		# Hovering over the weapon updates only the small label
 		button.mouse_entered.connect(func():
 			var hover_forecast := CombatCalculator.get_combat_forecast(unit, null, weapon)
 			forecast_label.text = "ATK: %s     HIT: %s     CRIT: %s" % [
@@ -88,11 +89,23 @@ func populate_weapons():
 				str(hover_forecast.hit),
 				str(hover_forecast.crit)
 			]
+
 			game_board.cursor.center_on_unit(unit)
-			# Main forecast panel stays hidden until hovering a unit
 			game_board.combat_forecast_panel.visible = false
 			game_board._unit_info_panel.visible = false
+
+	# === Draw temporary attackable cells using hovered weapon range ===
+			var old_attack_range = unit.attack_range
+			unit.attack_range = weapon.atk_range
+			attackable_cells = game_board.get_attackable_cells(unit)
+			unit.attack_range = old_attack_range
+
+			game_board._unit_overlay.clear()
+			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
 		)
+
+
+
 
 		button.mouse_exited.connect(func():
 			# Restore label to currently equipped weapon
@@ -103,8 +116,15 @@ func populate_weapons():
 					str(equipped_forecast.hit),
 					str(equipped_forecast.crit)
 				]
+				unit.attack_range = unit.equipped_weapon.atk_range
+				attackable_cells = game_board.get_attackable_cells(unit)
+				game_board._unit_overlay.clear()
+				game_board._unit_overlay.draw_attackable_cells(attackable_cells)
 			else:
 				forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+				attackable_cells = []
+				game_board._unit_overlay.clear()
+			
 		)
 
 		# Pressing a weapon equips it and updates overlay
@@ -113,6 +133,7 @@ func populate_weapons():
 				has_selected_weapon = true
 				unit.equip_item(weapon)
 			unit.attack_range = weapon.atk_range
+			
 
 			game_board._unit_overlay.clear()
 			attackable_cells = game_board.get_attackable_cells(unit)
@@ -129,6 +150,9 @@ func populate_weapons():
 			game_board.combat_forecast_panel.visible = false
 
 			populate_weapons()
+			
+			await get_tree().create_timer(0.05).timeout
+			
 		)
 
 		vbox.add_child(button)
