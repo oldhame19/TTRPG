@@ -167,9 +167,22 @@ func get_attackable_cells(unit: Unit) -> Array:
 	if unit == null or unit.grid == null:
 		return []
 
+	# Determine the highest atk_range among allowed weapons the unit holds
+	var max_attack_range := 0
+	var weapon_slots = unit.held_items.get_all_weapon_items()
+	for slot in weapon_slots:
+		var weapon = slot.item_data as WeaponItemData
+		if weapon.weapon_type in unit.current_class.allowed_weapon_types:
+			if weapon.atk_range > max_attack_range:
+				max_attack_range = weapon.atk_range
+
+	# Fallback if no allowed weapon found, use current attack_range (should rarely happen)
+	if max_attack_range == 0:
+		max_attack_range = unit.attack_range
+
 	# Attack Mode: Only show attackable enemy units from current position
 	if _current_action_menu and _current_action_menu.attack_mode_active:
-		var cells_in_range := _flood_fill(unit.cell, unit.attack_range)
+		var cells_in_range := _flood_fill(unit.cell, max_attack_range)
 		return cells_in_range.filter(func(cell):
 			return _units.has(cell) and is_instance_valid(_units[cell]) and (_units[cell].is_enemy != unit.is_enemy)  # Only opposing faction units
 		)
@@ -181,7 +194,7 @@ func get_attackable_cells(unit: Unit) -> Array:
 	var attackable_cells := []
 
 	for move_cell in reachable_cells:
-		for curr_range in range(1, unit.attack_range + 1):
+		for curr_range in range(1, max_attack_range + 1):
 			var flood_cells = _flood_fill(move_cell, curr_range)
 			for target_cell in flood_cells:
 				# Add if:
@@ -198,6 +211,23 @@ func get_attackable_cells(unit: Unit) -> Array:
 							attackable_cells.append(target_cell)
 
 	return attackable_cells
+
+
+func get_attackable_cells_for_weapon(unit: Unit, weapon: WeaponItemData) -> Array:
+	if unit == null or unit.grid == null:
+		return []
+
+	if weapon == null:
+		return []
+
+	# Use the weapon's atk_range directly
+	var attack_range = weapon.atk_range
+
+	# Similar logic to the attack mode (you can adapt as needed)
+	var cells_in_range := _flood_fill(unit.cell, attack_range)
+	return cells_in_range.filter(func(cell):
+		return _units.has(cell) and is_instance_valid(_units[cell]) and (_units[cell].is_enemy != unit.is_enemy)
+	)
 
 
 
