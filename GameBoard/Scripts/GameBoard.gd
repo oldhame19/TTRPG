@@ -139,6 +139,29 @@ func get_assistable_cells(unit: Unit) -> Array:
 
 	return assistable_cells
 
+func get_reachable_assistable_cells(unit: Unit) -> Array:
+	if unit == null or unit.grid == null:
+		return []
+	
+	# Get all cells the unit can walk to (including current position)
+	var reachable_cells := _dijkstra(unit.cell, unit.move_range, false)
+	reachable_cells.append(unit.cell)
+	
+	var assistable_cells := []
+	
+	for move_cell in reachable_cells:
+		# For each reachable cell, check the 4 neighbors
+		for direction in DIRECTIONS:
+			var neighbor_cell = move_cell + direction
+			if _units.has(neighbor_cell):
+				var neighbor = _units[neighbor_cell]
+				# Valid ally (not self, not enemy)
+				if neighbor != null and is_instance_valid(neighbor) and neighbor!= unit and not neighbor.is_enemy:
+					if not assistable_cells.has(neighbor_cell):
+						assistable_cells.append(neighbor_cell)
+	
+	return assistable_cells
+
 
 func get_attackable_cells(unit: Unit) -> Array:
 	if unit == null or unit.grid == null:
@@ -148,10 +171,10 @@ func get_attackable_cells(unit: Unit) -> Array:
 	if _current_action_menu and _current_action_menu.attack_mode_active:
 		var cells_in_range := _flood_fill(unit.cell, unit.attack_range)
 		return cells_in_range.filter(func(cell):
-			return _units.has(cell) and is_instance_valid(_units[cell]) and _units[cell].is_enemy
+			return _units.has(cell) and is_instance_valid(_units[cell]) and (_units[cell].is_enemy != unit.is_enemy)  # Only opposing faction units
 		)
 
-	# Normal Mode: Get all cells attackable from any moveable tile
+	# Normal Mode: Get all cells attackable from any moveable tile (including empty cells within attack range beyond movement)
 	var reachable_cells := _dijkstra(unit.cell, unit.move_range, true)
 	reachable_cells.append(unit.cell) # include current tile
 
@@ -161,10 +184,22 @@ func get_attackable_cells(unit: Unit) -> Array:
 		for curr_range in range(1, unit.attack_range + 1):
 			var flood_cells = _flood_fill(move_cell, curr_range)
 			for target_cell in flood_cells:
+				# Add if:
+				# - not in reachable_cells (outside movement range, so highlighted as attackable)
+				# - AND EITHER
+				#    * cell empty (no unit)
+				#    * OR cell has an enemy unit (not same allegiance)
 				if not reachable_cells.has(target_cell):
-					attackable_cells.append(target_cell)
+					if not _units.has(target_cell):
+						attackable_cells.append(target_cell)
+					else:
+						var target_unit = _units[target_cell]
+						if is_instance_valid(target_unit) and (target_unit.is_enemy != unit.is_enemy):
+							attackable_cells.append(target_cell)
 
 	return attackable_cells
+
+
 
 
 ## Helper: recursively search for a Unit instance inside node subtree
@@ -290,6 +325,8 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 	return movable_cells.filter(func(i): return i not in occupied_cells)
 
 
+
+
 func _move_active_unit(new_cell: Vector2) -> void:
 	if is_occupied(new_cell) or not new_cell in _walkable_cells:
 		return
@@ -378,10 +415,17 @@ func _hover_display(cell: Vector2) -> void:
 			# Draw movement and attack range
 			var walkable_cells = get_walkable_cells(hovered_unit)
 			var attackable_cells = get_attackable_cells(hovered_unit)
+			
 
 			_unit_overlay.clear()
 			_unit_overlay.draw_walkable_cells(walkable_cells)
 			_unit_overlay.draw_attackable_cells(attackable_cells)
+			
+			if hovered_unit.current_class and hovered_unit.current_class.can_assist:
+				var assistable_cells = get_reachable_assistable_cells(hovered_unit)
+				_unit_overlay.draw_assistable_cells(assistable_cells)
+			else:
+				return
 		return
 
 	# Hovering over empty cell: clear overlays and panels

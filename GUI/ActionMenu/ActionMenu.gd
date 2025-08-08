@@ -56,7 +56,7 @@ func _ready() -> void:
 			var weapon := slot.item_data as WeaponItemData
 
 			# Skip unusable weapons for this unit's class
-			if weapon.weapon_type not in unit.current_class.allowed_weapon_types:
+			if unit.current_class and weapon.weapon_type not in unit.current_class.allowed_weapon_types:
 				continue
 
 			# (Optional) Ammo check — skip sling with no stones
