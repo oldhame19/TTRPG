@@ -56,7 +56,6 @@ func _ready():
 	populate_weapons()
 
 func populate_weapons():
-
 	# Clear existing buttons
 	for child in vbox.get_children():
 		child.queue_free()
@@ -82,6 +81,26 @@ func populate_weapons():
 			weapon.max_durability
 		]
 
+		# --- Check if this weapon can hit any enemies ---
+		var can_hit_enemy := false
+
+		# Skip unusable weapons for this unit's class
+		if weapon.weapon_type in unit.current_class.allowed_weapon_types:
+			# Optional: Ammo check for sling
+			if weapon.weapon_type != WeaponItemData.WeaponType.SLING or _has_sling_ammo():
+				var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+				var weapon_range_cells = game_board._flood_fill(unit_cell, weapon.atk_range)
+
+				for cell_pos in weapon_range_cells:
+					if game_board._units.has(cell_pos):
+						var target_unit = game_board._units[cell_pos]
+						if target_unit.is_enemy:
+							can_hit_enemy = true
+							break
+
+		button.disabled = not can_hit_enemy
+
+		# === Hover forecast logic ===
 		button.mouse_entered.connect(func():
 			var hover_forecast := CombatCalculator.get_combat_forecast(unit, null, weapon)
 			forecast_label.text = "ATK: %s     HIT: %s     CRIT: %s" % [
@@ -94,7 +113,7 @@ func populate_weapons():
 			game_board.combat_forecast_panel.visible = false
 			game_board._unit_info_panel.visible = false
 
-	# === Draw temporary attackable cells using hovered weapon range ===
+			# Draw temporary attackable cells using hovered weapon range
 			var old_attack_range = unit.attack_range
 			unit.attack_range = weapon.atk_range
 			attackable_cells = game_board.get_attackable_cells(unit)
@@ -103,9 +122,6 @@ func populate_weapons():
 			game_board._unit_overlay.clear()
 			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
 		)
-
-
-
 
 		button.mouse_exited.connect(func():
 			# Restore label to currently equipped weapon
@@ -124,7 +140,6 @@ func populate_weapons():
 				forecast_label.text = "ATK: --     HIT: --     CRIT: --"
 				attackable_cells = []
 				game_board._unit_overlay.clear()
-			
 		)
 
 		# Pressing a weapon equips it and updates overlay
@@ -133,7 +148,6 @@ func populate_weapons():
 				has_selected_weapon = true
 				unit.equip_item(weapon)
 			unit.attack_range = weapon.atk_range
-			
 
 			game_board._unit_overlay.clear()
 			attackable_cells = game_board.get_attackable_cells(unit)
@@ -146,13 +160,17 @@ func populate_weapons():
 			game_board.cursor.center_on_unit(unit)
 
 			game_board._unit_info_panel.visible = false
-			# Main forecast panel still hidden
 			game_board.combat_forecast_panel.visible = false
 
 			populate_weapons()
-			
 			await get_tree().create_timer(0.05).timeout
-			
 		)
 
 		vbox.add_child(button)
+
+
+func _has_sling_ammo() -> bool:
+	for ammo_slot in unit.held_items.slots:
+		if ammo_slot.item_data.name == "Stone" and ammo_slot.quantity > 0:
+			return true
+	return false
