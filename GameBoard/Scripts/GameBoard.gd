@@ -407,11 +407,11 @@ func _select_unit(cell: Vector2) -> void:
 func _hover_display(cell: Vector2) -> void:
 	if not _unit_info_panel:
 		return
-
+	var hovered_unit = _units[cell]
 	# Attack mode hover
 	if _current_action_menu and _current_action_menu.attack_mode_active:
 		if _units.has(cell):
-			var hovered_unit = _units[cell]
+			
 			if hovered_unit != null and is_instance_valid(hovered_unit):
 				if _active_unit != null and hovered_unit.is_enemy and hovered_unit != _active_unit:
 					# Always show combat forecast even during weapon choice
@@ -429,15 +429,16 @@ func _hover_display(cell: Vector2) -> void:
 
 	# Trade mode hover
 	if _current_action_menu and _current_action_menu.trade_mode_active:
+		_unit_info_panel.update_info(hovered_unit)
 		return
 
 	# Assist mode hover
 	if _current_action_menu and _current_action_menu.assist_mode_active:
 		return
-
+	
 	# Hovering over a unit (normal case)
 	if _units.has(cell):
-		var hovered_unit = _units[cell]
+		
 		if hovered_unit and is_instance_valid(hovered_unit):
 			_unit_info_panel.update_info(hovered_unit)
 			_unit_info_panel.visible = true
@@ -460,6 +461,7 @@ func _hover_display(cell: Vector2) -> void:
 				_unit_overlay.draw_assistable_cells(assistable_cells)
 			else:
 				return
+			
 		return
 
 	# Hovering over empty cell: clear overlays and panels

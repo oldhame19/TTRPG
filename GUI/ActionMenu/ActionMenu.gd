@@ -132,7 +132,7 @@ func _on_assist_button_pressed() -> void:
 	pass # Replace with function body.
 
 func _on_trade_button_pressed() -> void:
-	game_board._unit_info_panel.visible = false
+	#game_board._unit_info_panel.visible = false
 	if unit == null or unit.grid == null:
 		game_board._reinitialize()
 
@@ -315,7 +315,7 @@ func _on_cancel_button_pressed() -> void:
 
 		# Restore unit info panel
 		if game_board._unit_info_panel and game_board._active_unit:
-			#game_board._unit_info_panel.update_info(game_board._active_unit)
+			game_board._unit_info_panel.update_info(game_board._active_unit)
 			game_board._unit_info_panel.visible = true
 			
 
