@@ -66,7 +66,7 @@ func _ready() -> void:
 	_unit_info_panel.anchor_right = 0.0
 	_unit_info_panel.anchor_bottom = 0.0
 	
-	_unit_info_panel.position = Vector2(45, 45)
+	_unit_info_panel.position = Vector2(15, 15)
 
 
 
@@ -172,7 +172,7 @@ func get_attackable_cells(unit: Unit) -> Array:
 	var weapon_slots = unit.held_items.get_all_weapon_items()
 	for slot in weapon_slots:
 		var weapon = slot.item_data as WeaponItemData
-		if weapon.weapon_type in unit.current_class.allowed_weapon_types:
+		if unit.current_class and weapon.weapon_type in unit.current_class.allowed_weapon_types:
 			if weapon.atk_range > max_attack_range:
 				max_attack_range = weapon.atk_range
 

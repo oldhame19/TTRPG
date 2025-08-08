@@ -85,7 +85,7 @@ func _ready() -> void:
 func _on_attack_button_pressed() -> void:
 	attack_mode_active = true
 	weapon_choice_active = true  # NEW FLAG
-	game_board._unit_info_panel.visible = false
+	#game_board._unit_info_panel.visible = false
 
 	if not unit or not game_board:
 		return
