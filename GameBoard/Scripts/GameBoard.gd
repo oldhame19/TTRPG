@@ -370,6 +370,7 @@ func _select_unit(cell: Vector2) -> void:
 	if _active_unit.current_class and _active_unit.current_class.can_assist:
 		var assistable_cells = get_reachable_assistable_cells(_active_unit)
 		_unit_overlay.draw_assistable_cells(assistable_cells)
+		
 	_unit_path.initialize(_walkable_cells)
 	
 

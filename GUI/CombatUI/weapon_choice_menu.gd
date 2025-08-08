@@ -55,6 +55,74 @@ func _ready():
 
 	populate_weapons()
 
+	# Immediately draw attackable cells for equipped weapon if usable, else first usable weapon
+	var weapon_to_show = original_weapon if _can_weapon_hit_enemies(original_weapon) else _get_first_usable_weapon()
+	if weapon_to_show:
+		_draw_weapon_attack_cells(weapon_to_show)
+		_update_forecast_label(weapon_to_show)
+	else:
+		forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+		game_board._unit_overlay.clear_attackable_cells()
+
+# Helper: Check if weapon can hit enemies from current position
+func _can_weapon_hit_enemies(weapon: WeaponItemData) -> bool:
+	if not weapon:
+		return false
+	if not weapon.weapon_type in unit.current_class.allowed_weapon_types:
+		return false
+	if weapon.weapon_type == WeaponItemData.WeaponType.SLING and not _has_sling_ammo():
+		return false
+
+	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+	var weapon_range_cells = game_board._flood_fill(unit_cell, weapon.atk_range)
+	for cell_pos in weapon_range_cells:
+		if game_board._units.has(cell_pos):
+			var target_unit = game_board._units[cell_pos]
+			if target_unit.is_enemy:
+				return true
+	return false
+
+# Helper: Return first usable weapon that can hit enemies, or null if none
+func _get_first_usable_weapon() -> WeaponItemData:
+	var weapon_slots = unit.held_items.get_all_weapon_items()
+	for slot in weapon_slots:
+		var weapon = slot.item_data as WeaponItemData
+		if _can_weapon_hit_enemies(weapon):
+			return weapon
+	return null
+
+# Helper: Draw attackable cells for given weapon
+func _draw_weapon_attack_cells(weapon: WeaponItemData) -> void:
+	var old_attack_range = unit.attack_range
+	unit.attack_range = weapon.atk_range
+	attackable_cells = game_board.get_attackable_cells(unit)
+	unit.attack_range = old_attack_range
+
+	game_board._unit_overlay.clear()
+	game_board._unit_overlay.draw_attackable_cells(attackable_cells)
+
+# Helper: Update forecast label for given weapon
+func _update_forecast_label(weapon: WeaponItemData) -> void:
+	var forecast = CombatCalculator.get_combat_forecast(unit, null, weapon)
+	forecast_label.text = "ATK: %s     HIT: %s     CRIT: %s" % [
+		str(forecast.attack),
+		str(forecast.hit),
+		str(forecast.crit)
+	]
+
+func _reset_to_initial_weapon():
+	var weapon_to_show = unit.equipped_weapon if _can_weapon_hit_enemies(unit.equipped_weapon) else _get_first_usable_weapon()
+	if weapon_to_show:
+		_update_forecast_label(weapon_to_show)
+		_draw_weapon_attack_cells(weapon_to_show)
+		unit.attack_range = weapon_to_show.atk_range
+	else:
+		forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+		attackable_cells = []
+		game_board._unit_overlay.clear()
+
+
+
 func populate_weapons():
 	# Clear existing buttons
 	for child in vbox.get_children():
@@ -125,21 +193,7 @@ func populate_weapons():
 
 		button.mouse_exited.connect(func():
 			# Restore label to currently equipped weapon
-			if unit.equipped_weapon:
-				var equipped_forecast := CombatCalculator.get_combat_forecast(unit, null, unit.equipped_weapon)
-				forecast_label.text = "ATK: %s     HIT: %s     CRIT: %s" % [
-					str(equipped_forecast.attack),
-					str(equipped_forecast.hit),
-					str(equipped_forecast.crit)
-				]
-				unit.attack_range = unit.equipped_weapon.atk_range
-				attackable_cells = game_board.get_attackable_cells(unit)
-				game_board._unit_overlay.clear()
-				game_board._unit_overlay.draw_attackable_cells(attackable_cells)
-			else:
-				forecast_label.text = "ATK: --     HIT: --     CRIT: --"
-				attackable_cells = []
-				game_board._unit_overlay.clear()
+			_reset_to_initial_weapon()
 		)
 
 		# Pressing a weapon equips it and updates overlay
