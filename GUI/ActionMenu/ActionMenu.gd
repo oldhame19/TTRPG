@@ -25,7 +25,9 @@ func _ready() -> void:
 
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
 
-	# Check for adjacent allies
+	# ---------------------
+	# Trade button logic
+	# ---------------------
 	var has_adjacent_ally = false
 	for dir in DIRECTIONS:
 		var neighbor_cell = unit_cell + dir
@@ -36,21 +38,48 @@ func _ready() -> void:
 				break
 	$VBoxContainer/TradeButton.visible = has_adjacent_ally
 
-	# Assist button visible only if adjacent ally + class can_assist
+	# ---------------------
+	# Assist button logic
+	# ---------------------
 	var can_assist := false
 	if has_adjacent_ally and unit.current_class and unit.current_class.can_assist:
 		can_assist = true
 	$VBoxContainer/AssistButton.visible = can_assist
 
-	# Check if enemy is within attack range
+	# ---------------------
+	# Attack button logic — now checks ALL weapons in held items
+	# ---------------------
 	var enemy_in_range = false
-	var attack_range_cells = game_board._flood_fill(unit_cell, unit.attack_range)
-	for cell_pos in attack_range_cells:
-		if game_board._units.has(cell_pos):
-			var target_unit = game_board._units[cell_pos]
-			if target_unit.is_enemy:
-				enemy_in_range = true
+
+	for slot in unit.held_items.slots:
+		if slot.item_data is WeaponItemData:
+			var weapon := slot.item_data as WeaponItemData
+
+			# Skip unusable weapons for this unit's class
+			if weapon.weapon_type not in unit.current_class.allowed_weapon_types:
+				continue
+
+			# (Optional) Ammo check — skip sling with no stones
+			if weapon.weapon_type == WeaponItemData.WeaponType.SLING:
+				var has_stone := false
+				for ammo_slot in unit.held_items.slots:
+					if ammo_slot.item_data.name == "Stone" and ammo_slot.quantity > 0:
+						has_stone = true
+						break
+				if not has_stone:
+					continue
+
+			# Check weapon's attack range
+			var weapon_range_cells = game_board._flood_fill(unit_cell, weapon.atk_range)
+			for cell_pos in weapon_range_cells:
+				if game_board._units.has(cell_pos):
+					var target_unit = game_board._units[cell_pos]
+					if target_unit.is_enemy:
+						enemy_in_range = true
+						break
+			if enemy_in_range:
 				break
+
 	$VBoxContainer/AttackButton.visible = enemy_in_range
 
 func _on_attack_button_pressed() -> void:
