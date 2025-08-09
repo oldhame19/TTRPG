@@ -1,3 +1,4 @@
+
 class_name GameBoard 
 extends Node2D
 
@@ -407,70 +408,68 @@ func _select_unit(cell: Vector2) -> void:
 func _hover_display(cell: Vector2) -> void:
 	if not _unit_info_panel:
 		return
-	var hovered_unit = _units[cell]
-	# Attack mode hover
-	if _current_action_menu and _current_action_menu.attack_mode_active:
-		if _units.has(cell):
-			
-			if hovered_unit != null and is_instance_valid(hovered_unit):
-				if _active_unit != null and hovered_unit.is_enemy and hovered_unit != _active_unit:
-					# Always show combat forecast even during weapon choice
-					var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
-					var combat_stats = CombatCalculator.calculate_full_combat_stats(_active_unit, hovered_unit)
-					combat_forecast_panel.update_forecast(forecast, combat_stats)
-					combat_forecast_panel.visible = true
-					_unit_info_panel.visible = false
-					# Skip board overlay redraw if weapon choice menu is open
-					if _current_action_menu.weapon_choice_active:
-						return
-		else:
-			# No valid enemy hovered
-			combat_forecast_panel.visible = false
 
-	# Trade mode hover
-	if _current_action_menu and _current_action_menu.trade_mode_active:
-		_unit_info_panel.update_info(hovered_unit)
-		return
+	var hovered_unit = _units.get(cell, null)
 
-	# Assist mode hover
-	if _current_action_menu and _current_action_menu.assist_mode_active:
-		_unit_info_panel.update_info(hovered_unit)
-		return
-	
-	# Hovering over a unit (normal case)
-	if _units.has(cell):
-		
-		if hovered_unit and is_instance_valid(hovered_unit):
+	if _current_action_menu:
+		if _current_action_menu.attack_mode_active:
+			_handle_attack_mode_hover(cell, hovered_unit)
+			return
+
+		if _current_action_menu.trade_mode_active:
 			_unit_info_panel.update_info(hovered_unit)
-			_unit_info_panel.visible = true
+			return
 
-			# Skip overlay redraw if weapon choice menu is active
-			if _current_action_menu and _current_action_menu.weapon_choice_active:
+		if _current_action_menu.assist_mode_active:
+			_unit_info_panel.update_info(hovered_unit)
+			return
+	
+	_handle_normal_hover(cell, hovered_unit)
+
+
+func _handle_attack_mode_hover(cell: Vector2, hovered_unit) -> void:
+	if hovered_unit != null and is_instance_valid(hovered_unit):
+		if _active_unit != null and hovered_unit.is_enemy and hovered_unit != _active_unit:
+			var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
+			var combat_stats = CombatCalculator.calculate_full_combat_stats(_active_unit, hovered_unit)
+			combat_forecast_panel.update_forecast(forecast, combat_stats)
+			combat_forecast_panel.visible = true
+			_unit_info_panel.visible = false
+
+			if _current_action_menu.weapon_choice_active:
 				return
-
-			# Draw movement and attack range
-			var walkable_cells = get_walkable_cells(hovered_unit)
-			var attackable_cells = get_attackable_cells(hovered_unit)
-			
-
-			_unit_overlay.clear()
-			_unit_overlay.draw_walkable_cells(walkable_cells)
-			_unit_overlay.draw_attackable_cells(attackable_cells)
-			
-			if hovered_unit.current_class and hovered_unit.current_class.can_assist:
-				var assistable_cells = get_reachable_assistable_cells(hovered_unit)
-				_unit_overlay.draw_assistable_cells(assistable_cells)
-			else:
-				return
-			
-		return
-
-	# Hovering over empty cell: clear overlays and panels
 	else:
-		_unit_overlay.clear()
-		_unit_info_panel.update_info(null)
-		_unit_info_panel.visible = false
 		combat_forecast_panel.visible = false
+
+
+func _handle_normal_hover(cell: Vector2, hovered_unit) -> void:
+	if hovered_unit and is_instance_valid(hovered_unit):
+		_unit_info_panel.update_info(hovered_unit)
+		_unit_info_panel.visible = true
+
+		if _current_action_menu and _current_action_menu.weapon_choice_active:
+			return
+
+		var walkable_cells = get_walkable_cells(hovered_unit)
+		var attackable_cells = get_attackable_cells(hovered_unit)
+
+		_unit_overlay.clear()
+		_unit_overlay.draw_walkable_cells(walkable_cells)
+		_unit_overlay.draw_attackable_cells(attackable_cells)
+
+		if hovered_unit.current_class and hovered_unit.current_class.can_assist:
+			var assistable_cells = get_reachable_assistable_cells(hovered_unit)
+			_unit_overlay.draw_assistable_cells(assistable_cells)
+	else:
+		_clear_hover_display()
+
+
+func _clear_hover_display() -> void:
+	_unit_overlay.clear()
+	_unit_info_panel.update_info(null)
+	_unit_info_panel.visible = false
+	combat_forecast_panel.visible = false
+
 
 
 
@@ -533,116 +532,129 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 		_unit_info_panel.update_info(null)
 		_unit_info_panel.visible = false
 
-
-
-
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _current_trade_scene != null:
 		return  # Prevent accept input during trade UI
+	
 	if _current_action_menu and _current_action_menu.trade_mode_active:
-		if _active_unit == null:
-			return  # Prevent crash due to missing active unit
-
-		var active_cell = _active_unit.cell
-		cursor.show()
-		cursor.process_mode = Node.PROCESS_MODE_INHERIT
-		
-		_reinitialize()
-
-		if cell in get_tradeable_cells(_active_unit):
-			if not _units.has(cell):
-				return
-			_unit_info_panel.visible = false
-			var target_unit = _units[cell]
-			if target_unit == null or not is_instance_valid(target_unit):
-				return
-			if target_unit != _active_unit:
-				_current_action_menu.queue_free()
-
-				_current_trade_scene = preload("res://GUI/ActionMenu/trade_ui.tscn").instantiate()
-				_current_trade_scene.game_board = self
-
-				_current_trade_scene.set_units(_active_unit, target_unit)
-				add_child(_current_trade_scene)
-
-				_active_trade_target_cell = cell  # <-- Lock trade target cell here
-				var tradeable_cells = get_tradeable_cells(_active_unit)
-
-				_unit_overlay.draw_tradeable_cells(tradeable_cells)
-
-				_unit_overlay.draw_highlight_cell(_active_trade_target_cell, 2)
-				var retained_unit = _active_unit 
-				
-				_current_trade_scene.trade_closed.connect(func():
-					_current_trade_scene.queue_free()
-					_current_trade_scene = null
-
-					_active_trade_target_cell = Vector2(-1, -1)  # <-- Reset when trade UI closes
-					_unit_overlay.clear_tradeable_cells()
-					_active_unit = retained_unit
-					
-					var action_menu = ActionMenu.instantiate()
-					action_menu.unit = retained_unit
-					action_menu.game_board = self
-					add_child(action_menu)
-					_current_action_menu = action_menu
-					action_menu.tree_exited.connect(func():
-						if not action_menu.trade_mode_active:
-							_clear_active_unit()
-						_current_action_menu = null))
-				
-				
-				_current_trade_scene.trade_completed.connect(func():
-					_clear_active_unit()
-					_current_action_menu = null
-				)
-				
-				_current_action_menu.trade_mode_active = false
-				_unit_overlay.clear_tradeable_cells()
-				return
-		else:
-			return
-
-		_current_action_menu.trade_mode_active = false
-		_unit_overlay.clear_tradeable_cells()
-		cursor.reset_cursor()
-		cursor.show()
-
+		_handle_trade_mode(cell)
 		return
-
+	
 	if not _active_unit and _units.has(cell):
 		_select_unit(cell)
 	elif _active_unit != null:
-		if is_occupied(cell) and _units[cell] == _active_unit:
-			_units.erase(_active_unit.cell)
-			_units[cell] = _active_unit
-
-			_deselect_active_unit()
-
-			var action_menu = ActionMenu.instantiate()
-			action_menu.unit = _active_unit
-			action_menu.game_board = self
-			add_child(action_menu)
-
-			_current_action_menu = action_menu
-
-			action_menu.tree_exited.connect(func():
-				_clear_active_unit()
-				_current_action_menu = null)
-
-		elif not is_occupied(cell) and cell in _walkable_cells:
-			await _move_active_unit(cell)
-
-			var action_menu = ActionMenu.instantiate()
-			action_menu.unit = _active_unit
-			action_menu.game_board = self
-			add_child(action_menu)
-			
-			_current_action_menu = action_menu
-			action_menu.tree_exited.connect(func():
-				_clear_active_unit()
-				_current_action_menu = null)
-
+		_handle_active_unit_click(cell)
 	else:
-		var pause_menu = PauseMenu.instantiate()
-		add_child(pause_menu)
+		_show_pause_menu()
+
+
+func _handle_trade_mode(cell: Vector2) -> void:
+	if _active_unit == null:
+		return
+	
+	var active_cell = _active_unit.cell
+	cursor.show()
+	cursor.process_mode = Node.PROCESS_MODE_INHERIT
+	
+	_reinitialize()
+	
+	if cell in get_tradeable_cells(_active_unit):
+		if not _units.has(cell):
+			return
+		
+		_unit_info_panel.visible = false
+		var target_unit = _units[cell]
+		if target_unit == null or not is_instance_valid(target_unit):
+			return
+		
+		if target_unit != _active_unit:
+			_start_trade_with(target_unit, cell)
+	else:
+		return
+	
+	_current_action_menu.trade_mode_active = false
+	_unit_overlay.clear_tradeable_cells()
+	cursor.reset_cursor()
+	cursor.show()
+
+
+func _start_trade_with(target_unit: Unit, cell: Vector2) -> void:
+	_current_action_menu.queue_free()
+	_current_trade_scene = preload("res://GUI/ActionMenu/trade_ui.tscn").instantiate()
+	_current_trade_scene.game_board = self
+	
+	_current_trade_scene.set_units(_active_unit, target_unit)
+	add_child(_current_trade_scene)
+	
+	_active_trade_target_cell = cell
+	var tradeable_cells = get_tradeable_cells(_active_unit)
+	
+	_unit_overlay.draw_tradeable_cells(tradeable_cells)
+	_unit_overlay.draw_highlight_cell(_active_trade_target_cell, 2)
+	
+	var retained_unit = _active_unit
+	
+	_current_trade_scene.trade_closed.connect(func():
+		_cleanup_after_trade(retained_unit)
+	)
+	
+	_current_trade_scene.trade_completed.connect(func():
+		_clear_active_unit()
+		_current_action_menu = null
+	)
+	
+	_current_action_menu.trade_mode_active = false
+	_unit_overlay.clear_tradeable_cells()
+
+
+func _cleanup_after_trade(retained_unit: Unit) -> void:
+	_current_trade_scene.queue_free()
+	_current_trade_scene = null
+	_active_trade_target_cell = Vector2(-1, -1)
+	_unit_overlay.clear_tradeable_cells()
+	_active_unit = retained_unit
+	
+	var action_menu = ActionMenu.instantiate()
+	action_menu.unit = retained_unit
+	action_menu.game_board = self
+	add_child(action_menu)
+	_current_action_menu = action_menu
+	
+	action_menu.tree_exited.connect(func():
+		if not action_menu.trade_mode_active:
+			_clear_active_unit()
+		_current_action_menu = null
+	)
+
+
+func _handle_active_unit_click(cell: Vector2) -> void:
+	if is_occupied(cell) and _units[cell] == _active_unit:
+		_update_unit_position(cell)
+		_show_action_menu()
+	elif not is_occupied(cell) and cell in _walkable_cells:
+		await _move_active_unit(cell)
+		_show_action_menu()
+
+
+func _update_unit_position(cell: Vector2) -> void:
+	_units.erase(_active_unit.cell)
+	_units[cell] = _active_unit
+	_deselect_active_unit()
+
+
+func _show_action_menu() -> void:
+	var action_menu = ActionMenu.instantiate()
+	action_menu.unit = _active_unit
+	action_menu.game_board = self
+	add_child(action_menu)
+	_current_action_menu = action_menu
+	
+	action_menu.tree_exited.connect(func():
+		_clear_active_unit()
+		_current_action_menu = null
+	)
+
+
+func _show_pause_menu() -> void:
+	var pause_menu = PauseMenu.instantiate()
+	add_child(pause_menu)

@@ -87,7 +87,7 @@ func populate_weapons():
 
 		var can_hit_enemy := false
 
-		if weapon.weapon_type in unit.current_class.allowed_weapon_types:
+		if unit.current_class and weapon.weapon_type in unit.current_class.allowed_weapon_types:
 			if weapon.weapon_type != WeaponItemData.WeaponType.SLING or _has_sling_ammo():
 				var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
 				var weapon_range_cells = game_board._flood_fill(unit_cell, weapon.atk_range)
