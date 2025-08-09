@@ -434,6 +434,7 @@ func _hover_display(cell: Vector2) -> void:
 
 	# Assist mode hover
 	if _current_action_menu and _current_action_menu.assist_mode_active:
+		_unit_info_panel.update_info(hovered_unit)
 		return
 	
 	# Hovering over a unit (normal case)
