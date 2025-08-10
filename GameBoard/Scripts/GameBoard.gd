@@ -436,6 +436,8 @@ func _handle_attack_mode_hover(cell: Vector2, hovered_unit) -> void:
 		if _active_unit != null and hovered_unit.is_enemy and hovered_unit != _active_unit:
 			var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
 			var combat_stats = CombatCalculator.calculate_full_combat_stats(_active_unit, hovered_unit)
+			combat_forecast_panel.attacker_unit = _active_unit
+			combat_forecast_panel.defender_unit = hovered_unit
 			combat_forecast_panel.update_forecast(forecast, combat_stats)
 			combat_forecast_panel.visible = true
 			_unit_info_panel.visible = false

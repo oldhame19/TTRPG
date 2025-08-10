@@ -1,5 +1,7 @@
 extends CanvasLayer
 class_name CombatForecastPanel
+var attacker_unit: Unit = null
+var defender_unit: Unit = null
 
 @onready var attacker_name_label = $CombatForecastPanel/MarginContainer/GridContainer/AttackerName
 @onready var attacker_weapon_label = $CombatForecastPanel/MarginContainer/GridContainer/AttackerWPN
@@ -28,10 +30,12 @@ func update_forecast(forecast: CombatCalculator.CombatForecast, combat_stats: Di
 
 	attacker_hp_label.text = "%s/%s" % [str(forecast.attacker_hp_current), str(forecast.attacker_hp_max)]
 
-	# Use dpa for attack, ah for hit, ac for crit
 	if combat_stats.has("attacker"):
 		var atk_stats = combat_stats["attacker"]
-		attacker_atk_label.text = str(atk_stats.get("dpa", "--"))
+		var atk_text = str(atk_stats.get("dpa", "--"))
+		if atk_stats.get("double", false):
+			atk_text += " x 2"
+		attacker_atk_label.text = atk_text
 		attacker_hit_label.text = str(atk_stats.get("ah", "--"))
 		attacker_crit_label.text = str(atk_stats.get("ac", "--"))
 	else:
@@ -51,12 +55,47 @@ func update_forecast(forecast: CombatCalculator.CombatForecast, combat_stats: Di
 
 	defender_hp_label.text = "%s/%s" % [str(forecast.defender_hp_current), str(forecast.defender_hp_max)]
 
-	# Use dpa for attack, ah for hit, ac for crit for defender as well
 	if combat_stats.has("defender"):
 		var def_stats = combat_stats["defender"]
-		defender_atk_label.text = str(def_stats.get("dpa", "--"))
-		defender_hit_label.text = str(def_stats.get("ah", "--"))
-		defender_crit_label.text = str(def_stats.get("ac", "--"))
+
+		var can_hit_back := true
+
+		# Attempt to get the units by name — you must implement this function or supply the units in another way
+		var defender_unit = defender_unit
+		var attacker_unit = attacker_unit
+
+		if forecast.defender_weapon is WeaponItemData and defender_unit != null and attacker_unit != null:
+			var defender_pos: Vector2i = defender_unit.grid.calculate_grid_coordinates(defender_unit.position)
+			var attacker_pos: Vector2i = attacker_unit.grid.calculate_grid_coordinates(attacker_unit.position)
+			var manhattan_distance = abs(defender_pos.x - attacker_pos.x) + abs(defender_pos.y - attacker_pos.y)
+
+			# Get weapon_range as an array safely
+			var weapon_range = []
+			if defender_unit.equipped_weapon != null:
+				var raw_range = defender_unit.equipped_weapon.atk_range
+				if typeof(raw_range) == TYPE_INT:
+					weapon_range = [raw_range]
+				elif typeof(raw_range) == TYPE_ARRAY:
+					weapon_range = raw_range
+
+			if manhattan_distance not in weapon_range:
+				can_hit_back = false
+		else:
+			can_hit_back = false
+
+		var def_text = str(def_stats.get("dpa", "--"))
+		if def_stats.get("double", false):
+			def_text += " x2"
+
+		defender_atk_label.text = def_text
+
+		if can_hit_back:
+			defender_hit_label.text = str(def_stats.get("ah", "--"))
+			defender_crit_label.text = str(def_stats.get("ac", "--"))
+		else:
+			defender_hit_label.text = "--"
+			defender_crit_label.text = "--"
+			defender_atk_label.text = "--"
 	else:
 		defender_atk_label.text = str(forecast.defender_attack)
 		defender_hit_label.text = str(forecast.defender_hit)
