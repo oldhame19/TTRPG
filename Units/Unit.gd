@@ -38,7 +38,7 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 			# This will resume execution after this node's _ready()
 			await ready
 		_sprite.texture = value
-## Offset to apply to the `skin` sprite in pixels.
+## Offset to apply to the skin sprite in pixels.
 @export var skin_offset := Vector2.ZERO:
 	set(value):
 		skin_offset = value
@@ -161,8 +161,8 @@ func _process(delta: float) -> void:
 		emit_signal("walk_finished")
 
 
-## Starts walking along the `path`.
-## `path` is an array of grid coordinates that the function converts to map coordinates.
+## Starts walking along the path.
+## path is an array of grid coordinates that the function converts to map coordinates.
 func walk_along(path: PackedVector2Array) -> void:
 	if path.is_empty():
 		return

@@ -16,14 +16,17 @@ var original_weapon: WeaponItemData
 var original_attack_range: int
 var has_selected_weapon := false
 
-
 func _ready():
 	panel.add_to_group("ui_weapon_choice")
 
 	original_weapon = unit.equipped_weapon
 	original_attack_range = unit.attack_range
 
-	forecast_label.text = "ATK:   --     HIT:   --     CRIT:   -- "
+	# Show equipped weapon forecast if one is equipped, otherwise dashes
+	if unit.equipped_weapon:
+		_update_forecast_label(unit.equipped_weapon)
+	else:
+		forecast_label.text = "ATK: --     HIT: --     CRIT: --"
 
 	close_button.pressed.connect(func():
 		close_active_modes.emit()
@@ -37,29 +40,23 @@ func _ready():
 
 		game_board.cursor.center_on_unit(unit)
 		game_board._unit_overlay.clear_attackable_cells()
-		game_board._unit_info_panel.visible = true
-		game_board.combat_forecast_panel.visible = false
+		if game_board._unit_info_panel:
+			game_board._unit_info_panel.visible = true
+		if game_board.combat_forecast_panel:
+			game_board.combat_forecast_panel.visible = false
 		
 		queue_free()
 	)
 
-	#close_button.mouse_entered.connect(func():
-		#game_board.cursor.center_on_unit(unit)
-		#if game_board._unit_info_panel:
-			#game_board._unit_info_panel.visible = false
-		#if game_board.combat_forecast_panel:
-			#game_board.combat_forecast_panel.visible = false
-	#)
-
 	populate_weapons()
 
-	var weapon_to_show = original_weapon if _can_weapon_hit_enemies(original_weapon) else _get_first_usable_weapon()
+	# Show attack cells for equipped or longest range usable weapon
+	var weapon_to_show = original_weapon if _can_weapon_hit_enemies(original_weapon) else _get_longest_range_weapon()
 	if weapon_to_show:
 		_draw_weapon_attack_cells(weapon_to_show)
-		_update_forecast_label(weapon_to_show)
 	else:
-		forecast_label.text = "ATK: --     HIT: --     CRIT: --"
 		game_board._unit_overlay.clear_attackable_cells()
+
 
 func populate_weapons():
 	for child in vbox.get_children():
@@ -101,36 +98,53 @@ func populate_weapons():
 
 		button.disabled = not can_hit_enemy
 
+		var w := weapon
+
 		button.mouse_entered.connect(func():
-			var hover_forecast := CombatCalculator.get_combat_forecast(unit, null, weapon)
-			forecast_label.text = "ATK: %s     HIT: %s     CRIT: %s" % [
-				str(hover_forecast.attack),
-				str(hover_forecast.hit),
-				str(hover_forecast.crit)
-			]
+			# Show hovered weapon forecast
+			_update_forecast_label(w)
 
 			game_board.cursor.center_on_unit(unit)
-			game_board.combat_forecast_panel.visible = false
-			#game_board._unit_info_panel.visible = false
+			if game_board.combat_forecast_panel:
+				game_board.combat_forecast_panel.visible = false
 
-			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, weapon)
-
-			game_board._unit_overlay.clear()
+			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, w)
+			game_board._unit_overlay.clear_attackable_cells()
 			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
 		)
 
 		button.mouse_exited.connect(func():
-			_reset_to_initial_weapon()
+			# Return to showing equipped weapon forecast if available
+			if unit.equipped_weapon:
+				_update_forecast_label(unit.equipped_weapon)
+				if _can_weapon_hit_enemies(unit.equipped_weapon):
+					_draw_weapon_attack_cells(unit.equipped_weapon)
+				else:
+					var longest_weapon = _get_longest_range_weapon()
+					if longest_weapon:
+						_draw_weapon_attack_cells(longest_weapon)
+					else:
+						game_board._unit_overlay.clear_attackable_cells()
+			else:
+				var longest_weapon = _get_longest_range_weapon()
+				if longest_weapon:
+					forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+					_draw_weapon_attack_cells(longest_weapon)
+				else:
+					forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+					game_board._unit_overlay.clear_attackable_cells()
 		)
 
 		button.pressed.connect(func():
-			if weapon != unit.equipped_weapon:
+			if w != unit.equipped_weapon:
 				has_selected_weapon = true
-				unit.equip_item(weapon)
-			unit.attack_range = weapon.atk_range
+				unit.equip_item(w)
+			unit.attack_range = w.atk_range
 
-			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, weapon)
-			game_board._unit_overlay.clear()
+			_update_forecast_label(w)
+
+			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, w)
+			game_board._unit_overlay.clear_attackable_cells()
 			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
 
 			game_board.cursor.set_allowed_cells(attackable_cells)
@@ -140,14 +154,15 @@ func populate_weapons():
 			game_board.cursor.set_pointer_visible(false)
 			game_board.cursor.center_on_unit(unit)
 
-			#game_board._unit_info_panel.visible = false
-			game_board.combat_forecast_panel.visible = false
+			if game_board.combat_forecast_panel:
+				game_board.combat_forecast_panel.visible = false
 
 			populate_weapons()
 			await get_tree().create_timer(0.05).timeout
 		)
 
 		vbox.add_child(button)
+
 
 func _can_weapon_hit_enemies(weapon: WeaponItemData) -> bool:
 	if not weapon:
@@ -176,14 +191,33 @@ func _get_first_usable_weapon() -> WeaponItemData:
 	return null
 
 
-func _draw_weapon_attack_cells(weapon: WeaponItemData) -> void:
-	attackable_cells = game_board.get_attackable_cells_for_weapon(unit, weapon)
+func _get_longest_range_weapon() -> WeaponItemData:
+	var weapon_slots = unit.held_items.get_all_weapon_items()
+	var best_weapon: WeaponItemData = null
+	var best_range := -1
+	for slot in weapon_slots:
+		var weapon = slot.item_data as WeaponItemData
+		if _can_weapon_hit_enemies(weapon):
+			if weapon.atk_range > best_range:
+				best_range = weapon.atk_range
+				best_weapon = weapon
+	return best_weapon
 
-	game_board._unit_overlay.clear()
+
+func _draw_weapon_attack_cells(weapon: WeaponItemData) -> void:
+	if not weapon:
+		game_board._unit_overlay.clear_attackable_cells()
+		return
+
+	attackable_cells = game_board.get_attackable_cells_for_weapon(unit, weapon)
+	game_board._unit_overlay.clear_attackable_cells()
 	game_board._unit_overlay.draw_attackable_cells(attackable_cells)
 
 
 func _update_forecast_label(weapon: WeaponItemData) -> void:
+	if not weapon:
+		forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+		return
 	var forecast = CombatCalculator.get_combat_forecast(unit, null, weapon)
 	forecast_label.text = "ATK: %s     HIT: %s     CRIT: %s" % [
 		str(forecast.attack),
@@ -193,17 +227,18 @@ func _update_forecast_label(weapon: WeaponItemData) -> void:
 
 
 func _reset_to_initial_weapon():
-	var weapon_to_show = unit.equipped_weapon if _can_weapon_hit_enemies(unit.equipped_weapon) else _get_first_usable_weapon()
-	if weapon_to_show:
-		_update_forecast_label(weapon_to_show)
-		_draw_weapon_attack_cells(weapon_to_show)
+	if unit.equipped_weapon:
+		_update_forecast_label(unit.equipped_weapon)
+		_draw_weapon_attack_cells(unit.equipped_weapon)
 	else:
-		forecast_label.text = "ATK: --     HIT: --     CRIT: --"
-		attackable_cells = []
-		game_board._unit_overlay.clear()
-
-
-
+		var longest_weapon = _get_longest_range_weapon()
+		if longest_weapon:
+			_update_forecast_label(longest_weapon)
+			_draw_weapon_attack_cells(longest_weapon)
+		else:
+			forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+			attackable_cells = []
+			game_board._unit_overlay.clear_attackable_cells()
 
 
 func _has_sling_ammo() -> bool:

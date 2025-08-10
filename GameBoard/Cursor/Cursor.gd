@@ -24,7 +24,7 @@ var zoom_speed = Vector2(.100001,.100001)
 var is_mouse = false
 
 @onready var _timer: Timer = $Timer
-@onready var camera = $Camera2D
+@onready var camera: Camera2D = $Camera2D
 ## Coordinates of the current cell the cursor is hovering.
 var cell := Vector2.ZERO:
 	set(value):

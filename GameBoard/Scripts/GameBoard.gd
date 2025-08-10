@@ -361,17 +361,19 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 func _move_active_unit(new_cell: Vector2) -> void:
 	if is_occupied(new_cell) or not new_cell in _walkable_cells:
 		return
+	
 	_units.erase(_active_unit.cell)
 	_active_unit.cell = new_cell
 	_units[new_cell] = _active_unit
 	_deselect_active_unit()
 	_active_unit.walk_along(_unit_path.current_path)
 	await _active_unit.walk_finished
-	
+
+		
 	if _unit_info_panel and _active_unit:
 		_unit_info_panel.update_info(_active_unit)
 		_unit_info_panel.visible = true
-	#_clear_active_unit()
+
 
 
 func _select_unit(cell: Vector2) -> void:
@@ -541,7 +543,9 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 		return
 	
 	if not _active_unit and _units.has(cell):
+		
 		_select_unit(cell)
+		_cursor.center_on_unit(_active_unit)
 	elif _active_unit != null:
 		_handle_active_unit_click(cell)
 	else:
@@ -626,7 +630,6 @@ func _cleanup_after_trade(retained_unit: Unit) -> void:
 		_current_action_menu = null
 	)
 
-
 func _handle_active_unit_click(cell: Vector2) -> void:
 	if is_occupied(cell) and _units[cell] == _active_unit:
 		_update_unit_position(cell)
@@ -635,12 +638,10 @@ func _handle_active_unit_click(cell: Vector2) -> void:
 		await _move_active_unit(cell)
 		_show_action_menu()
 
-
 func _update_unit_position(cell: Vector2) -> void:
 	_units.erase(_active_unit.cell)
 	_units[cell] = _active_unit
 	_deselect_active_unit()
-
 
 func _show_action_menu() -> void:
 	var action_menu = ActionMenu.instantiate()
@@ -653,7 +654,6 @@ func _show_action_menu() -> void:
 		_clear_active_unit()
 		_current_action_menu = null
 	)
-
 
 func _show_pause_menu() -> void:
 	var pause_menu = PauseMenu.instantiate()
