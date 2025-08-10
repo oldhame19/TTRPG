@@ -48,28 +48,59 @@ func _run_combat() -> void:
 	emit_signal("combat_finished", attacker, defender, {"status": "finished"})
 
 func _perform_attack(attacker: Unit, defender: Unit) -> bool:
-	# Calculate damage, hit chance, crit chance using combat calculator
+	var weapon = attacker.equipped_weapon
+	if weapon == null:
+		print("No weapon equipped for attack")
+		return false
+
+	if weapon.weapon_type == WeaponItemData.WeaponType.SLING:
+		var has_stones = false
+		for slot in attacker.held_items.slots:
+			if slot.item_data.name == "Stone" and slot.quantity > 0:
+				has_stones = true
+				break
+		if not has_stones:
+			print("⚠ Cannot attack with sling — no stones!")
+			return false  # cancel attack
+
+		# If sling, consume one stone per attack
+		for slot in attacker.held_items.slots:
+			if slot.item_data.name == "Stone" and slot.quantity > 0:
+				slot.quantity -= 1
+				if slot.quantity == 0:
+					attacker.held_items.slots.erase(slot)
+				break
+
+	# Now proceed with attack damage, hit, crit, etc.
 	var stats = combat_calc.calculate_combat_stats(attacker, defender)
 	var hit_chance = stats.get("ah", 0)
 	var crit_chance = stats.get("ac", 0)
 	var damage = stats.get("dpa", 0)
 	
-	# Roll to hit
-	if _roll_chance(hit_chance):
-		var did_crit = _roll_chance(crit_chance)
+	var did_hit = _roll_chance(hit_chance)
+	var did_crit = false
+	if did_hit:
+		did_crit = _roll_chance(crit_chance)
 		if did_crit:
-			damage *= 3  # Crit multiplier, adjust as needed
+			damage *= 3
 		defender.take_damage(damage)
 		print(attacker.unit_data.unit_name, "hits", defender.unit_data.unit_name, "for", damage, ( "(CRIT)" if did_crit else "") )
 	else:
 		print(attacker.unit_data.unit_name, "misses", defender.unit_data.unit_name)
-	
-	# Check if defender died
+
+	# Decrement durability once per attack
+	var broken = weapon.decrement_durability()
+	if broken:
+		print(weapon.name, "broke!")
+		attacker.equipped_weapon = null
+		# Optionally remove from inventory here
+
 	if defender.hp <= 0:
 		_emit_unit_death(defender)
-		return false  # Combat should end
-	
+		return false
+
 	return true
+
 
 
 func _can_retaliate(defender: Unit, attacker: Unit) -> bool:

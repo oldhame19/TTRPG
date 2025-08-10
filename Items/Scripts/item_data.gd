@@ -18,7 +18,6 @@ func use(user: Unit) -> bool:
 	durability -= 1
 	return durability <= 0  # Return true if item should be destroyed
 
-
 func clone() -> ItemData:
 	var new_item = ItemData.new()
 	# Copy all necessary fields, including durability
