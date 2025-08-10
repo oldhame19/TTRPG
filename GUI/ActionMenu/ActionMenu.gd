@@ -11,10 +11,12 @@ var attack_mode_active: bool = false
 var assist_mode_active: bool = false
 var weapon_choice_active: bool = false  # NEW FLAG
 var _current_trade_scene: Control = null
+var _weapon_choice_instance: Node = null
+
 var opened_from_summary: bool = false
 
 var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")
-
+var weapon_choice_menu = preload("res://GUI/CombatUI/weapon_choice_menu.tscn")
 func _ready() -> void:
 	$VBoxContainer/AttackButton.grab_focus()
 	cursor.hide()
@@ -80,27 +82,27 @@ func _update_buttons_visibility() -> void:
 
 func _on_attack_button_pressed() -> void:
 	attack_mode_active = true
-	weapon_choice_active = true  # NEW FLAG
-	#game_board._unit_info_panel.visible = false
+	weapon_choice_active = true
 
 	if not unit or not game_board:
 		return
 
-	var menu = preload("res://GUI/CombatUI/weapon_choice_menu.tscn").instantiate()
-	menu.unit = unit
-	menu.game_board = game_board
-	menu.get_node("Panel").position = Vector2(750, 50)
-	get_tree().get_root().add_child(menu)
+	_weapon_choice_instance = weapon_choice_menu.instantiate()
+	_weapon_choice_instance.unit = unit
+	_weapon_choice_instance.game_board = game_board
+	_weapon_choice_instance.get_node("Panel").position = Vector2(750, 50)
+	get_tree().get_root().add_child(_weapon_choice_instance)
 	hide()
 
-	menu.close_active_modes.connect(func():
+	_weapon_choice_instance.close_active_modes.connect(func():
 		attack_mode_active = false
-		weapon_choice_active = false  # reset flag
+		weapon_choice_active = false
 		trade_mode_active = false
 		assist_mode_active = false
+		_weapon_choice_instance = null
 	)
 
-	menu.tree_exited.connect(func():
+	_weapon_choice_instance.tree_exited.connect(func():
 		show()
 	)
 
@@ -304,11 +306,7 @@ func _on_cancel_button_pressed() -> void:
 	
 	if in_an_active_mode() or opened_from_summary:
 	# Clear all active mode flags
-		attack_mode_active = false
-		assist_mode_active = false
-		trade_mode_active = false
-		weapon_choice_active = false
-		opened_from_summary = false
+		_clear_active_modes()
 
 	# Clear all overlays
 		game_board._unit_overlay.clear_attackable_cells()
@@ -353,7 +351,12 @@ func _on_cancel_button_pressed() -> void:
 				
 		queue_free()
 
-
+func _clear_active_modes() -> void:
+	attack_mode_active = false
+	assist_mode_active = false
+	trade_mode_active = false
+	weapon_choice_active = false
+	opened_from_summary = false
 
 #func _on_cancel_button_pressed() -> void:
 	#

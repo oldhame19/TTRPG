@@ -1,3 +1,4 @@
+#combat_calculator.gd
 extends Node
 
 # =========================

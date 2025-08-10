@@ -399,6 +399,7 @@ position = Vector2(355.169, 424.696)
 is_enemy = true
 is_wait = true
 held_items = SubResource("Resource_mxvw5")
+equipped_weapon = ExtResource("23_mxvw5")
 hp = 0
 unit_data = SubResource("Resource_sqvbp")
 attack_range = 1

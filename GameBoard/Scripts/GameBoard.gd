@@ -12,6 +12,8 @@ const PauseMenu = preload("res://GUI/PauseMenu/Pause Menu.tscn")
 const ActionMenu = preload("res://GUI/ActionMenu/Action Menu.tscn")
 var CombatForecastScene = preload("res://GUI/CombatUI/CombatForecast.tscn")
 const UnitInfoPanelScene = preload("res://GUI/UnitInfo/UnitInfoPanel.tscn")
+var combat_manager_scene = preload("res://Combat/Scenes/CombatManager.tscn")
+var combat_manager_instance = null
 
 var _current_action_menu: ActionMenu = null
 var _current_trade_scene = null
@@ -497,9 +499,9 @@ func _deselect_active_unit() -> void:
 
 func _clear_active_unit() -> void:
 	_active_unit = null
-	_walkable_cells.clear()
-	
-	
+	_unit_overlay.clear()
+	_cursor.restricted_cells.clear()
+
 
 func _on_Cursor_moved(new_cell: Vector2) -> void:
 	
@@ -535,22 +537,63 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 		_unit_info_panel.visible = false
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
+
 	if _current_trade_scene != null:
-		return  # Prevent accept input during trade UI
-	
+		return
+
 	if _current_action_menu and _current_action_menu.trade_mode_active:
 		_handle_trade_mode(cell)
 		return
-	
-	if not _active_unit and _units.has(cell):
+
+	# Attack mode combat start
+	if _current_action_menu and _current_action_menu.attack_mode_active:
+		if _active_unit == null:
+			return
+		if _units.has(cell):
+			var target_unit = _units[cell]
+			if target_unit == null or not is_instance_valid(target_unit):
+				return
+			if target_unit.is_enemy != _active_unit.is_enemy and cell in get_attackable_cells(_active_unit):
+				combat_forecast_panel.visible = false
+				#hide weapon choice menu here 
+				if _current_action_menu and _current_action_menu._weapon_choice_instance != null:
+					_current_action_menu._clear_active_modes()
+					_current_action_menu._weapon_choice_instance.queue_free()
+					_current_action_menu.queue_free()
+				
+				print("Starting combat between ", _active_unit.name, " and ", target_unit.name)
+				if combat_manager_instance:
+					combat_manager_instance.queue_free()
+				combat_manager_instance = combat_manager_scene.instantiate()
+				get_tree().root.add_child(combat_manager_instance)
+				combat_manager_instance.start_combat(_active_unit, target_unit)
+				combat_manager_instance.combat_finished.connect(_on_combat_finished)
+				_clear_active_unit()
+				return
+			else:
+				print("Target unit not enemy or cell not attackable.")
+		else:
+			print("No unit at cell during attack mode.")
 		
+	
+	# If no active unit, select unit at cell if possible
+	if _active_unit == null and _units.has(cell):
 		_select_unit(cell)
-		_cursor.center_on_unit(_active_unit)
+	# If there is an active unit, handle clicks for move or deselect
 	elif _active_unit != null:
 		_handle_active_unit_click(cell)
 	else:
 		_show_pause_menu()
 
+func _on_combat_finished():
+	# Your code to handle what happens after combat ends
+	print("Combat finished!")
+	# For example, refresh units, clear menus, etc.
+	_clear_active_unit()
+	_current_action_menu = null
+	if combat_manager_instance:
+		combat_manager_instance.queue_free()
+		combat_manager_instance = null
 
 func _handle_trade_mode(cell: Vector2) -> void:
 	if _active_unit == null:

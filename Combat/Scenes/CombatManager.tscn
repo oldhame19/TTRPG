@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c0p8js0g5yl8q"]
+
+[ext_resource type="Script" uid="uid://c8intcok66q72" path="res://Combat/Scripts/combat_manager.gd" id="1_224kw"]
+
+[node name="CombatManager" type="CanvasLayer"]
+script = ExtResource("1_224kw")
