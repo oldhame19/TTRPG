@@ -280,7 +280,7 @@ script = ExtResource("23_hhcpw")
 max_hp = 20
 strength = 7
 defense = 4
-speed = 10
+speed = 3
 dexterity = 5
 charisma = 2
 faith = 2
@@ -355,10 +355,9 @@ position = Vector2(608.282, 367.192)
 is_player = true
 inventory = ExtResource("15_kjvhd")
 held_items = ExtResource("18_5tuhn")
-hp = 15
+hp = 18
 unit_data = ExtResource("18_3b0ty")
 attack_range = 1
-move_range = 3
 skin = ExtResource("8")
 skin_offset = Vector2(2, 9)
 
@@ -375,7 +374,6 @@ position = Vector2(671.294, 361.315)
 held_items = ExtResource("18_5tuhn")
 hp = 0
 attack_range = 1
-move_range = 5
 skin = ExtResource("7")
 skin_offset = Vector2(6, 17)
 
@@ -389,7 +387,6 @@ equipped_weapon = ExtResource("23_mxvw5")
 hp = 0
 unit_data = SubResource("Resource_hri7i")
 attack_range = 1
-move_range = 3
 skin = ExtResource("7")
 skin_offset = Vector2(2, 9)
 
@@ -403,7 +400,6 @@ equipped_weapon = ExtResource("23_mxvw5")
 hp = 0
 unit_data = SubResource("Resource_sqvbp")
 attack_range = 1
-move_range = 3
 skin = ExtResource("9")
 skin_offset = Vector2(2, 9)
 
@@ -416,7 +412,6 @@ hp = 0
 unit_data = SubResource("Resource_w3rk5")
 current_stats = ExtResource("24_xrxkg")
 attack_range = 1
-move_range = 3
 skin = ExtResource("8")
 skin_offset = Vector2(2, 9)
 

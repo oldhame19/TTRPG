@@ -86,6 +86,7 @@ func _ready():
 	if is_equippable and source != "inventory":
 		if slot.item_data.equipped:
 			$VBoxContainer/EquipButton.text = "UNEQUIP"
+
 		else:
 			$VBoxContainer/EquipButton.text = "EQUIP"
 
@@ -94,8 +95,8 @@ func _ready():
 			match button.name:
 				"CloseButton", "DescriptionButton":
 					button.visible = true
-				"EquipButton":
-					button.visible = is_equippable and source != "inventory"
+				#"EquipButton":
+					#button.visible = is_equippable and source != "inventory"
 				_:
 					button.visible = false
 

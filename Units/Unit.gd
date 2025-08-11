@@ -2,9 +2,10 @@
 class_name Unit
 extends Path2D
 @onready var hp_bar: ProgressBar = $PathFollow2D/HPBar  
-
+@onready var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 signal unit_died(unit) #singal to the gamebaord to remove unit from board, as well as anywhere else the unit may be accessible (units tab, etc)
 signal walk_finished ## Emitted when the unit reached the end of a path along which it was walking.
+
 @export var is_enemy: bool = false
 @export var is_player: bool = false
 @export var is_wait = false
@@ -17,14 +18,17 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 @export var held_items: HeldItemsData = null
 @export var equipped_weapon: ItemData = null 
 @export var equipped_armor: ItemData = null
+
+@export var active_abilities: Array[AbilityData]
 #stat stuff
 @export var level: int = 1
 @export var xp: int = 0
 @export var hp: int = 10
+
 @export var unit_data: UnitData
 @export var current_stats: StatBlock
 @export var current_class: ClassData
-@export var active_abilities: Array[AbilityData]
+
 
 @export var attack_range := 0 #can be modified based on equipped weapon
 @export var move_range := 6 #can be removed and read from current class data
@@ -64,11 +68,9 @@ func _ready() -> void:
 
 	if not Engine.is_editor_hint():
 		curve = Curve2D.new()
-
+	rng.randomize()
 	initialize_stats()
 	update_hp_bar()
-
-
 
 
 func initialize_stats() -> void:
@@ -107,10 +109,6 @@ func update_hp_bar() -> void:
 	hp_bar.max_value = max_hp_value
 	hp_bar.value = hp
 
-
-
-func level_up() -> void:
-	level += 1
 
 func take_damage(amount: int) -> void:
 	if current_stats == null:
@@ -333,3 +331,80 @@ func get_combat_stat_bonuses() -> Dictionary:
 				bonuses[key] += bonus[key]
 
 	return bonuses
+	
+
+func get_reward_xp() -> int:
+	if !is_enemy or is_player:
+		return 0  # No XP from players or non-enemies
+
+	# Example XP calculation based on enemy level and maybe other factors
+	var base_xp = 20  # Base XP for defeating an enemy; tune as you like
+
+	# Scale by level difference (reward more if enemy level > attacker level)
+	# Assuming you have reference to the attacker somehow; if not, keep simple for now
+	# For example:
+	# var level_diff = level - attacker.level
+	# base_xp += level_diff * 2
+	return base_xp
+
+
+func gain_xp(amount: int) -> void:
+	xp = min(xp + amount, 100)  # Clamp xp to 100 max for display
+
+	if xp >= 100:
+		xp = 0  # reset xp on level up
+		level_up()
+
+func level_up() -> void:
+	level += 1
+	var gained_stats := []
+	
+	if unit_data == null or unit_data.growth_rates.size() == 0:
+		# fallback if no growth data
+		current_stats.max_hp += 1
+		hp = min(hp + 1, current_stats.max_hp)
+		update_hp_bar()
+		return
+
+	for key in unit_data.growth_rates.keys():
+		var growth_chance: int = int(unit_data.growth_rates[key])
+		var prob := float(growth_chance) / 100.0
+		if rng.randf() < prob:
+			match key:
+				"hp":
+					current_stats.max_hp += 1
+					hp += 1
+					gained_stats.append("hp")
+				"strength":
+					current_stats.strength += 1
+					gained_stats.append("strength")
+				"defense":
+					current_stats.defense += 1
+					gained_stats.append("defense")
+				"speed":
+					current_stats.speed += 1
+					gained_stats.append("speed")
+				"dexterity":
+					current_stats.dexterity += 1
+					gained_stats.append("dexterity")
+				"charisma":
+					current_stats.charisma += 1
+					gained_stats.append("charisma")
+				"faith":
+					current_stats.faith += 1
+					gained_stats.append("faith")
+				_:
+					pass
+
+	if gained_stats.size() == 0:
+		current_stats.max_hp += 1
+		hp += 1
+		gained_stats.append("hp (default)")
+
+	hp = min(hp, current_stats.max_hp)
+	update_hp_bar()
+
+	print("=== LEVEL UP ===")
+	print(unit_data.unit_name if unit_data else "Unit", "reached level", level)
+	print("Stats increased:", gained_stats)
+	print("================")

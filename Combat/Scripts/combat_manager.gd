@@ -97,6 +97,9 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 
 	if defender.hp <= 0:
 		_emit_unit_death(defender)
+		
+		var xp_reward = defender.get_reward_xp()
+		attacker.gain_xp(xp_reward)
 		return false
 
 	return true
