@@ -8,6 +8,7 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 
 @export var is_enemy: bool = false
 @export var is_player: bool = false
+@export var is_boss: bool = false
 @export var is_wait = false
 
 @export var move_speed := 600.0
@@ -333,26 +334,64 @@ func get_combat_stat_bonuses() -> Dictionary:
 	return bonuses
 	
 
-func get_reward_xp() -> int:
+func get_reward_xp(attacker: Unit, defeated: bool = false) -> int:
 	if !is_enemy or is_player:
-		return 0  # No XP from players or non-enemies
+		# Only enemies reward XP to players or non-enemies
+		return 0
 
-	# Example XP calculation based on enemy level and maybe other factors
-	var base_xp = 20  # Base XP for defeating an enemy; tune as you like
+	var base_xp: int
+	var level_diff = level - attacker.level
+	
+	if defeated:
+		# XP for defeating enemy
+		base_xp = 20  # your existing base for defeat
 
-	# Scale by level difference (reward more if enemy level > attacker level)
-	# Assuming you have reference to the attacker somehow; if not, keep simple for now
-	# For example:
-	# var level_diff = level - attacker.level
-	# base_xp += level_diff * 2
-	return base_xp
+		# XP multipliers based on level difference
+		var multiplier := 1.0
+		if level_diff <= -4:
+			multiplier = 1.5
+		elif level_diff == -3:
+			multiplier = 1.3
+		elif level_diff == -2:
+			multiplier = 1.15
+		elif level_diff == -1:
+			multiplier = 1.05
+		elif level_diff == 0:
+			multiplier = 1.0
+		elif level_diff == 1:
+			multiplier = 0.85
+		elif level_diff == 2:
+			multiplier = 0.7
+		elif level_diff == 3:
+			multiplier = 0.5
+		elif level_diff >= 4:
+			multiplier = 0.3
+
+		return max(int(base_xp * multiplier), 1)
+	else:
+		# XP for hitting enemy (not defeated)
+		# Base 5 XP, adjust by level difference per your spec
+		if level_diff == 1:
+			base_xp = 3
+		elif level_diff > 1:
+			base_xp = 1
+		elif level_diff == -1:
+			base_xp = 7
+		elif level_diff < -1:
+			base_xp = 9
+		else:
+			base_xp = 5
+
+		return base_xp
+
+
 
 
 func gain_xp(amount: int) -> void:
 	xp = min(xp + amount, 100)  # Clamp xp to 100 max for display
 
 	if xp >= 100:
-		xp = 0  # reset xp on level up
+		xp - 100  # reset xp on level up
 		level_up()
 
 func level_up() -> void:

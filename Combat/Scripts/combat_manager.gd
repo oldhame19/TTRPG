@@ -63,7 +63,6 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 			print("⚠ Cannot attack with sling — no stones!")
 			return false  # cancel attack
 
-		# If sling, consume one stone per attack
 		for slot in attacker.held_items.slots:
 			if slot.item_data.name == "Stone" and slot.quantity > 0:
 				slot.quantity -= 1
@@ -71,7 +70,6 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 					attacker.held_items.slots.erase(slot)
 				break
 
-	# Now proceed with attack damage, hit, crit, etc.
 	var stats = combat_calc.calculate_combat_stats(attacker, defender)
 	var hit_chance = stats.get("ah", 0)
 	var crit_chance = stats.get("ac", 0)
@@ -85,21 +83,21 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 			damage *= 3
 		defender.take_damage(damage)
 		print(attacker.unit_data.unit_name, "hits", defender.unit_data.unit_name, "for", damage, ( "(CRIT)" if did_crit else "") )
+
+		# Grant XP on hit (not only on kill)
+		var defeated = defender.hp <= 0
+		var xp_reward = defender.get_reward_xp(attacker, defeated )
+		attacker.gain_xp(xp_reward)
 	else:
 		print(attacker.unit_data.unit_name, "misses", defender.unit_data.unit_name)
 
-	# Decrement durability once per attack
 	var broken = weapon.decrement_durability()
 	if broken:
 		print(weapon.name, "broke!")
 		attacker.equipped_weapon = null
-		# Optionally remove from inventory here
 
 	if defender.hp <= 0:
 		_emit_unit_death(defender)
-		
-		var xp_reward = defender.get_reward_xp()
-		attacker.gain_xp(xp_reward)
 		return false
 
 	return true
