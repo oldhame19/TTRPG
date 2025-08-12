@@ -15,6 +15,8 @@ func start_combat(attacking_unit: Unit, defending_unit: Unit) -> void:
 	attacker = attacking_unit
 	defender = defending_unit
 	
+	attacker.has_acted = true
+	attacker.update_acted_visual()
 	# Disable input or pause game as needed here
 
 	# Run combat sequence asynchronously (simulate step-by-step)

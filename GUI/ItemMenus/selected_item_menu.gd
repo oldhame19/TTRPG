@@ -175,8 +175,6 @@ func _on_hold_button_pressed() -> void:
 		hold_item_menu.global_position = global_position + Vector2(0, 0)
 
 
-
-
 func _on_trade_button_pressed() -> void:
 	# Store this slot as the first half of the trade
 	pending_trade_data = {

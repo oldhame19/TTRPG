@@ -237,12 +237,17 @@ func _on_items_button_pressed() -> void:
 func _on_wait_button_pressed() -> void:
 	# Set curr_unit to wait status
 	# Clear active unit
+	game_board._active_unit.has_acted = true
+	game_board._active_unit.update_acted_visual()
+
 	get_parent()._clear_active_unit()
 	# Enable cursor and close menu
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	cursor.reset_cursor()
 	cursor.show()
 	queue_free()
+	
+
 	
 
 func _on_summary_button_pressed() -> void:
@@ -292,6 +297,7 @@ func in_an_active_mode() -> bool:
 
 
 func _on_cancel_button_pressed() -> void:
+	game_board._active_unit.has_moved = false
 	
 	if opened_from_summary:
 		# Remove summary UI elements
@@ -357,104 +363,3 @@ func _clear_active_modes() -> void:
 	trade_mode_active = false
 	weapon_choice_active = false
 	opened_from_summary = false
-
-#func _on_cancel_button_pressed() -> void:
-	#
-	#if attack_mode_active:
-		#attack_mode_active = false
-		#game_board._unit_overlay.clear_attackable_cells()
-	#
-	#if assist_mode_active:
-		#assist_mode_active = false
-		#game_board._unit_overlay.clear_assistable_cells()
-#
-		## Restore buttons
-		#for button in $VBoxContainer.get_children():
-			#button.visible = true
-		#$VBoxContainer/CancelButton.visible = true
-#
-		## Reset cursor
-		#cursor.restricted_cells.clear()
-		#cursor.reset_cursor()
-		#cursor.set_pointer_visible(true)
-		#cursor.hide()
-		#cursor.process_mode = Node.PROCESS_MODE_DISABLED
-#
-		## Restore unit info panel
-		#if game_board._unit_info_panel and game_board._active_unit:
-			#game_board._unit_info_panel.update_info(game_board._active_unit)
-			#game_board._unit_info_panel.visible = true
-		#
-		#
-#
-#
-	#if trade_mode_active:
-		#trade_mode_active = false
-		#game_board._unit_overlay.clear_tradeable_cells()
-		#
-		## Restore buttons
-		#for button in $VBoxContainer.get_children():
-			#button.visible = true
-		#$VBoxContainer/CancelButton.visible = true
-#
-		## Reset cursor
-		#cursor.restricted_cells.clear()
-		#cursor.reset_cursor()
-		#cursor.set_pointer_visible(true)
-		#cursor.hide()
-		#cursor.process_mode = Node.PROCESS_MODE_DISABLED
-#
-		## Restore unit info panel
-		#if game_board._unit_info_panel and game_board._active_unit:
-			#game_board._unit_info_panel.update_info(game_board._active_unit)
-			#game_board._unit_info_panel.visible = true
-			#
-#
-	#elif opened_from_summary:
-		## Remove summary UI elements
-		#for child in get_tree().get_root().get_children():
-			#if child is HeldItemsMenu:
-				#child.queue_free()
-		#for child in get_children():
-			#if child is UnitStatsBox:
-				#child.queue_free()
-#
-		## Restore buttons
-		#for button in $VBoxContainer.get_children():
-			#button.visible = true
-		#$VBoxContainer/CancelButton.visible = true
-#
-		## Keep action menu open, hide cursor
-		#cursor.hide()
-		#cursor.process_mode = Node.PROCESS_MODE_DISABLED
-		#cursor.restricted_cells.clear()
-		#cursor.reset_cursor()
-		#cursor.set_pointer_visible(true)
-#
-		## Restore unit info panel
-		#if game_board._unit_info_panel and game_board._active_unit:
-			##game_board._unit_info_panel.update_info(game_board._active_unit)
-			#game_board._unit_info_panel.visible = true
-#
-		#opened_from_summary = false
-#
-	#else:
-		## Default behavior — back to board
-		#get_parent()._reset_unit()
-#
-		#cursor.restricted_cells.clear()
-		#cursor.reset_cursor()
-		#cursor.set_pointer_visible(true)
-		#cursor.show()
-		#cursor.process_mode = Node.PROCESS_MODE_INHERIT
-#
-		## Clear lingering UI
-		#for child in get_tree().get_root().get_children():
-			#if child is HeldItemsMenu:
-				#child.queue_free()
-#
-		## Restore unit info panel
-		##if game_board._unit_info_panel and game_board._active_unit:
-			##game_board._unit_info_panel.visible = true
-#
-		#queue_free()

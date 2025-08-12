@@ -37,7 +37,8 @@ func _run_ai_phase(units: Array):
 	for u in units:
 		if not is_instance_valid(u) or u.is_dead:
 			continue
-		u.take_turn() # Your AI logic inside Unit or AIController
+		await get_tree().create_timer(0.5).timeout # wait half a second
+		u.take_turn()
 	end_phase()
 
 func end_phase():

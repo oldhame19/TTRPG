@@ -3,6 +3,7 @@ class_name GameBoard
 extends Node2D
 
 @onready var cursor = $Cursor
+@onready var turn_manager = TurnManager.new()
 
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 const OBSTACLE_ATLAS_ID = 2
@@ -70,8 +71,10 @@ func _ready() -> void:
 	_unit_info_panel.anchor_bottom = 0.0
 	
 	_unit_info_panel.position = Vector2(15, 15)
-
-
+	
+	turn_manager.phase_started.connect(_on_phase_started)
+	turn_manager.phase_ended.connect(_on_phase_ended)
+	turn_manager.battle_ended.connect(_on_battle_ended)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _current_trade_scene != null:
@@ -82,14 +85,56 @@ func _unhandled_input(event: InputEvent) -> void:
 		_deselect_active_unit()
 		_clear_active_unit()
 
-
-
 func _get_configuration_warning() -> String:
 	var warning := ""
 	if not grid:
 		warning = "You need a Grid resource for this node to work."
 	return warning
 
+func start_battle():
+	# Add TurnManager to scene tree
+	add_child(turn_manager)
+
+	# Collect units into the turn manager's groups
+	var player_units = []
+	var enemy_units = []
+
+	for cell in _units.keys():
+		var u: Unit = _units[cell]
+		if u.is_enemy:
+			enemy_units.append(u)
+		else:
+			player_units.append(u)
+
+	turn_manager.unit_groups = {
+		"player": player_units,
+		"enemy": enemy_units
+	}
+	# Start the first phase
+	turn_manager.start_phase(turn_manager.phases[0])
+
+func _on_phase_started():
+	print("A new phase has started!")
+	# Put your start-of-phase logic here
+
+func _on_phase_ended():
+	print("The current phase has ended!")
+	# Put your end-of-phase logic here
+
+func _on_battle_ended():
+	print("The battle has ended!")
+	# Put your battle cleanup or victory/defeat screen logic here
+
+func _on_unit_finished_turn(unit: Unit):
+	unit.has_acted = true
+	unit.update_acted_visual()
+	# Check if all player units have acted
+	if turn_manager.phases[turn_manager.current_phase_index] == "player":
+		var remaining = turn_manager.unit_groups["player"].filter(
+			func(u): return is_instance_valid(u) and not u.is_dead and not u.has_acted
+		)
+		if remaining.is_empty():
+			turn_manager.end_phase()
 
 ## Returns true if the cell is occupied by a unit.
 func is_occupied(cell: Vector2) -> bool:
@@ -344,7 +389,7 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 					if is_occupied(coordinates):
 						if curr_unit.is_enemy != _units[coordinates].is_enemy:
 							distance_to_node = current.priority + MAX_VALUE
-						elif _units[coordinates].is_wait and attackable_check:
+						elif _units[coordinates].has_acted and attackable_check:
 							occupied_cells.append(coordinates)
 					
 					visited[coordinates.y][coordinates.x] = true
@@ -371,25 +416,31 @@ func _move_active_unit(new_cell: Vector2) -> void:
 	_active_unit.walk_along(_unit_path.current_path)
 	await _active_unit.walk_finished
 
-		
 	if _unit_info_panel and _active_unit:
 		_unit_info_panel.update_info(_active_unit)
 		_unit_info_panel.visible = true
-
+		
+	_active_unit.has_moved = true
 
 
 func _select_unit(cell: Vector2) -> void:
 	if _current_action_menu and _current_action_menu.trade_mode_active:
 		return  # Block unit selection during trade
+	
 	if not _units.has(cell):
 		return
 
 	if not _units.has(cell):
 		return
 	var candidate_unit = _units[cell]
-	if candidate_unit == null or not is_instance_valid(candidate_unit):
+	if candidate_unit == null or not is_instance_valid(candidate_unit) :
 		return
 
+	if candidate_unit.has_acted:
+		# Optionally, you can play a sound or flash the unit to indicate it's not selectable
+		print("Unit has already acted and cannot be selected.")
+		return
+		
 	_active_unit = candidate_unit
 	_prev_cell = cell
 	_prev_position = _active_unit.position
@@ -602,8 +653,8 @@ func _handle_trade_mode(cell: Vector2) -> void:
 		return
 	
 	var active_cell = _active_unit.cell
-	cursor.show()
-	cursor.process_mode = Node.PROCESS_MODE_INHERIT
+	#cursor.show()
+	#cursor.process_mode = Node.PROCESS_MODE_INHERIT
 	
 	_reinitialize()
 	
@@ -623,8 +674,8 @@ func _handle_trade_mode(cell: Vector2) -> void:
 	
 	_current_action_menu.trade_mode_active = false
 	_unit_overlay.clear_tradeable_cells()
-	cursor.reset_cursor()
-	cursor.show()
+	#cursor.reset_cursor()
+	#cursor.show()
 
 
 func _start_trade_with(target_unit: Unit, cell: Vector2) -> void:
@@ -634,6 +685,9 @@ func _start_trade_with(target_unit: Unit, cell: Vector2) -> void:
 	
 	_current_trade_scene.set_units(_active_unit, target_unit)
 	add_child(_current_trade_scene)
+	
+	cursor.hide()
+	cursor.process_mode = Node.PROCESS_MODE_DISABLED
 	
 	_active_trade_target_cell = cell
 	var tradeable_cells = get_tradeable_cells(_active_unit)

@@ -9,7 +9,9 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 @export var is_enemy: bool = false
 @export var is_player: bool = false
 @export var is_boss: bool = false
-@export var is_wait = false
+
+@export var has_moved = false
+@export var has_acted = false
 
 @export var move_speed := 600.0
 @export var grid: Resource ## Shared resource of type Grid, used to calculate map coordinates.
@@ -145,8 +147,9 @@ var _is_walking := false:
 @onready var _anim_player: AnimationPlayer = $AnimationPlayer
 @onready var _path_follow: PathFollow2D = $PathFollow2D
 
-
-
+func reset_turn():
+	has_acted = false
+	update_acted_visual()
 
 func _process(delta: float) -> void:
 	_path_follow.progress += move_speed * delta
@@ -447,3 +450,11 @@ func level_up() -> void:
 	print(unit_data.unit_name if unit_data else "Unit", "reached level", level)
 	print("Stats increased:", gained_stats)
 	print("================")
+	
+func update_acted_visual() -> void:
+	if has_acted:
+		# Dim sprite to gray (reduce color and alpha)
+		_sprite.modulate = Color(0.5, 0.5, 0.5, 0.7)
+	else:
+		# Normal color
+		_sprite.modulate = Color(1, 1, 1, 1)

@@ -9,6 +9,8 @@ var held_items_menu_a := preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn
 var held_items_menu_b := preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn")
 var game_board: GameBoard
 
+var original_held_items_a := []
+var original_held_items_b := []
 
 @onready var cursor = get_parent().get_node("_cursor")  # assuming cursor is a sibling of this node
 
@@ -23,7 +25,102 @@ func _ready() -> void:
 func set_units(a: Unit, b: Unit) -> void:
 	unit_a = a
 	unit_b = b
+
+	# Snapshot the original items (IDs or references)
+	original_held_items_a = get_held_items_snapshot(unit_a)
+	original_held_items_b = get_held_items_snapshot(unit_b)
+
 	update_ui()
+
+func get_held_items_snapshot(unit: Unit) -> Array:
+	var items = []
+	for slot in unit.held_items.slots:
+		items.append(slot.item_data)  # or slot.item_data.name or unique ID if you have one
+	return items
+
+func _check_trade_completed() -> bool:
+	var current_a = get_held_items_snapshot(unit_a)
+	var current_b = get_held_items_snapshot(unit_b)
+
+	return not _arrays_equal(current_a, original_held_items_a) or not _arrays_equal(current_b, original_held_items_b)
+	
+func _arrays_equal(arr1: Array, arr2: Array) -> bool:
+	if arr1.size() != arr2.size():
+		return false
+	for i in range(arr1.size()):
+		if arr1[i] != arr2[i]:
+			return false
+	return true
+	
+func update_ui() -> void:
+	for child in get_children():
+		if child != $CanvasLayer:
+			child.queue_free()
+
+	cancel_button = $CanvasLayer/CancelButton
+
+	if cancel_button:
+		cancel_button.position = Vector2(535, 535)
+		if not cancel_button.is_connected("pressed", Callable(self, "_on_cancel_button_pressed")):
+			cancel_button.connect("pressed", Callable(self, "_on_cancel_button_pressed"))
+	else:
+		push_error("CancelButton is null in update_ui()")
+
+	var menu_a = held_items_menu_a.instantiate()
+	menu_a.unit = unit_a
+	menu_a.game_board = game_board  
+	add_child(menu_a)
+	menu_a.get_node("Panel").position = Vector2(-400, -250)
+	var close_button_a = menu_a.get_node_or_null("Panel/CloseButton")
+	if close_button_a:
+		close_button_a.visible = false
+
+	var menu_b = held_items_menu_b.instantiate()
+	menu_b.unit = unit_b
+	menu_b.game_board = game_board  
+	add_child(menu_b)
+	menu_b.get_node("Panel").position = Vector2(50, -250)
+	var close_button_b = menu_b.get_node_or_null("Panel/CloseButton")
+	if close_button_b:
+		close_button_b.visible = false
+	menu_a.side = "A"
+	menu_b.side = "B"
+	if cursor:
+		cursor.visible = false
+		cursor.process_mode = Node.PROCESS_MODE_DISABLED
+		cursor.zoom_enabled = false
+
+
+func _on_trade_completed() -> void:
+	emit_signal("trade_completed")
+
+	if cursor:
+		cursor.visible = true
+		cursor.process_mode = Node.PROCESS_MODE_INHERIT
+		cursor.zoom_enabled = true
+	queue_free()
+
+func _on_cancel_button_pressed() -> void:
+	if _check_trade_completed():
+		_on_trade_completed()
+	else:
+		emit_signal("trade_closed")
+
+	# restore cursor visibility and process mode
+	if cursor:
+		cursor.visible = true
+		cursor.process_mode = Node.PROCESS_MODE_INHERIT
+		cursor.zoom_enabled = true
+
+	queue_free()
+
+
+func _unhandled_input(event):
+	if event is InputEventMouseButton and event.is_pressed():
+		if event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+			# Consume mouse wheel events to disable zoom during trade UI
+			get_viewport().set_input_as_handled()
+
 
 #func update_ui() -> void:
 	#var root = self
@@ -82,69 +179,3 @@ func set_units(a: Unit, b: Unit) -> void:
 		#cursor.visible = false
 		#cursor.process_mode = Node.PROCESS_MODE_DISABLED
 		#cursor.zoom_enabled = false
-
-func update_ui() -> void:
-	for child in get_children():
-		if child != $CanvasLayer:
-			child.queue_free()
-
-	cancel_button = $CanvasLayer/CancelButton
-
-	if cancel_button:
-		cancel_button.position = Vector2(535, 535)
-		if not cancel_button.is_connected("pressed", Callable(self, "_on_cancel_button_pressed")):
-			cancel_button.connect("pressed", Callable(self, "_on_cancel_button_pressed"))
-	else:
-		push_error("CancelButton is null in update_ui()")
-
-	var menu_a = held_items_menu_a.instantiate()
-	menu_a.unit = unit_a
-	menu_a.game_board = game_board  
-	add_child(menu_a)
-	menu_a.get_node("Panel").position = Vector2(-400, -250)
-	var close_button_a = menu_a.get_node_or_null("Panel/CloseButton")
-	if close_button_a:
-		close_button_a.visible = false
-
-	var menu_b = held_items_menu_b.instantiate()
-	menu_b.unit = unit_b
-	menu_b.game_board = game_board  
-	add_child(menu_b)
-	menu_b.get_node("Panel").position = Vector2(50, -250)
-	var close_button_b = menu_b.get_node_or_null("Panel/CloseButton")
-	if close_button_b:
-		close_button_b.visible = false
-	menu_a.side = "A"
-	menu_b.side = "B"
-	if cursor:
-		cursor.visible = false
-		cursor.process_mode = Node.PROCESS_MODE_DISABLED
-		cursor.zoom_enabled = false
-
-
-func _on_trade_completed() -> void:
-	emit_signal("trade_completed")
-
-	if cursor:
-		cursor.visible = true
-		cursor.process_mode = Node.PROCESS_MODE_INHERIT
-		cursor.zoom_enabled = true
-	queue_free()
-
-func _on_cancel_button_pressed() -> void:
-	emit_signal("trade_closed")
-	if game_board._unit_info_panel and game_board._active_unit:
-		game_board._unit_info_panel.update_info(game_board._active_unit)
-		game_board._unit_info_panel.visible = true
-	if cursor:
-		cursor.visible = true
-		cursor.process_mode = Node.PROCESS_MODE_INHERIT
-		cursor.zoom_enabled = true
-	queue_free()
-
-
-func _unhandled_input(event):
-	if event is InputEventMouseButton and event.is_pressed():
-		if event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
-			# Consume mouse wheel events to disable zoom during trade UI
-			get_viewport().set_input_as_handled()
