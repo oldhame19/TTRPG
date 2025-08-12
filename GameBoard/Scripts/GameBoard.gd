@@ -590,7 +590,6 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 		_unit_info_panel.visible = false
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
-
 	if _current_trade_scene != null:
 		return
 
@@ -631,7 +630,11 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	
 	# If no active unit, select unit at cell if possible
 	if _active_unit == null and _units.has(cell):
-		_select_unit(cell)
+		var candidate_unit = _units[cell]
+		if candidate_unit.has_acted:
+			_show_pause_menu()
+		else:
+			_select_unit(cell)
 	# If there is an active unit, handle clicks for move or deselect
 	elif _active_unit != null:
 		_handle_active_unit_click(cell)
@@ -755,5 +758,7 @@ func _show_action_menu() -> void:
 	)
 
 func _show_pause_menu() -> void:
+	if _unit_info_panel:
+		_unit_info_panel.hide()
 	var pause_menu = PauseMenu.instantiate()
 	add_child(pause_menu)
