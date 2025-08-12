@@ -43,8 +43,6 @@ var _active_assist_target_cell: Vector2 = Vector2(-1, -1)
 @onready var _map: TileMapLayer = $Map
 @onready var _cursor: Cursor = $Cursor
 
-
-
 func _ready() -> void:
 	
 	_movement_costs = _map.get_movement_costs(grid)
@@ -75,6 +73,8 @@ func _ready() -> void:
 	turn_manager.phase_started.connect(_on_phase_started)
 	turn_manager.phase_ended.connect(_on_phase_ended)
 	turn_manager.battle_ended.connect(_on_battle_ended)
+	
+	start_battle()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _current_trade_scene != null:
@@ -94,7 +94,8 @@ func _get_configuration_warning() -> String:
 func start_battle():
 	# Add TurnManager to scene tree
 	add_child(turn_manager)
-
+	for cell in _units.keys():
+		var u = _units[cell]
 	# Collect units into the turn manager's groups
 	var player_units = []
 	var enemy_units = []
@@ -110,12 +111,19 @@ func start_battle():
 		"player": player_units,
 		"enemy": enemy_units
 	}
-	# Start the first phase
-	turn_manager.start_phase(turn_manager.phases[0])
+	
 
-func _on_phase_started():
-	print("A new phase has started!")
-	# Put your start-of-phase logic here
+func _on_phase_started(phase_name: String):
+	if phase_name == "enemy":
+		# Disable/hide cursor & input for player
+		$Cursor.hide()
+		$Cursor.process_mode = Node.PROCESS_MODE_DISABLED
+		# Optionally disable player controls globally here
+	elif phase_name == "player":
+		# Enable/show cursor & input for player
+		$Cursor.show()
+		$Cursor.process_mode = Node.PROCESS_MODE_INHERIT
+		# Enable player controls again
 
 func _on_phase_ended():
 	print("The current phase has ended!")
@@ -125,16 +133,37 @@ func _on_battle_ended():
 	print("The battle has ended!")
 	# Put your battle cleanup or victory/defeat screen logic here
 
-func _on_unit_finished_turn(unit: Unit):
-	unit.has_acted = true
-	unit.update_acted_visual()
-	# Check if all player units have acted
-	if turn_manager.phases[turn_manager.current_phase_index] == "player":
-		var remaining = turn_manager.unit_groups["player"].filter(
-			func(u): return is_instance_valid(u) and not u.is_dead and not u.has_acted
-		)
-		if remaining.is_empty():
-			turn_manager.end_phase()
+func _on_unit_died(unit: Unit) -> void:
+	if unit == null or not is_instance_valid(unit):
+		return
+	
+	# Remove unit from _units dictionary by cell key
+	var cell_to_remove = null
+	for cell_key in _units.keys():
+		if _units[cell_key] == unit:
+			cell_to_remove = cell_key
+			break
+	if cell_to_remove != null:
+		_units.erase(cell_to_remove)
+	
+	# If this unit is currently selected, deselect and clear
+	if _active_unit == unit:
+		_deselect_active_unit()
+		_clear_active_unit()
+	
+	# Remove unit node from scene tree (removes from display and processing)
+	unit.queue_free()
+	
+	# Optionally, update overlays, paths, etc.
+	_unit_overlay.clear()
+	_unit_path.stop()
+	
+	# Optionally update turn manager to remove dead unit from groups
+	for group_key in turn_manager.unit_groups.keys():
+		turn_manager.unit_groups[group_key] = turn_manager.unit_groups[group_key].filter(func(u): return u != unit)
+
+	print("Unit", unit.name, "removed from board after death.")
+
 
 ## Returns true if the cell is occupied by a unit.
 func is_occupied(cell: Vector2) -> bool:
@@ -300,6 +329,7 @@ func _reinitialize() -> void:
 		if unit == null:
 			continue
 			
+		unit.connect("unit_died", self._on_unit_died)
 		unit.grid = grid  # assign grid early for unit
 		
 		# recalc cell and snap position
@@ -641,10 +671,12 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	else:
 		_show_pause_menu()
 
-func _on_combat_finished():
+func _on_combat_finished(attacker: Unit):
 	# Your code to handle what happens after combat ends
 	print("Combat finished!")
 	# For example, refresh units, clear menus, etc.
+	
+	turn_manager.unit_finished_turn(attacker)
 	_clear_active_unit()
 	_current_action_menu = null
 	if combat_manager_instance:

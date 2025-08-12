@@ -12,6 +12,7 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 
 @export var has_moved = false
 @export var has_acted = false
+var is_dead = false
 
 @export var move_speed := 600.0
 @export var grid: Resource ## Shared resource of type Grid, used to calculate map coordinates.
@@ -74,6 +75,8 @@ func _ready() -> void:
 	rng.randomize()
 	initialize_stats()
 	update_hp_bar()
+	
+	connect("unit_died", self._on_unit_died)
 
 
 func initialize_stats() -> void:
@@ -458,3 +461,9 @@ func update_acted_visual() -> void:
 	else:
 		# Normal color
 		_sprite.modulate = Color(1, 1, 1, 1)
+
+func _on_unit_died(dead_unit: Unit) -> void:
+	# Since this is the unit's own signal, dead_unit should be self
+	if dead_unit == self:
+		is_dead = true
+		print(name, "died.")
