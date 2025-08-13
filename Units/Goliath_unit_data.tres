@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=3 format=3 uid="uid://df5q2a0550p"]
+
+[ext_resource type="Resource" uid="uid://dsgsre828qi7" path="res://Units/goliath_stats.tres" id="1_831um"]
+[ext_resource type="Script" uid="uid://u3i27lovwmxw" path="res://Units/Scripts/ResourceData/unit_data.gd" id="2_kjkpc"]
+
+[resource]
+script = ExtResource("2_kjkpc")
+is_player = false
+unit_name = "Goliath"
+base_stats = ExtResource("1_831um")
+growth_rates = {
+"charisma": 0,
+"defense": 0,
+"dexterity": 0,
+"faith": 0,
+"hp": 0,
+"speed": 0,
+"strength": 0
+}
+metadata/_custom_type_script = "uid://u3i27lovwmxw"

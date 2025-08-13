@@ -27,27 +27,39 @@ func _run_combat() -> void:
 	if not attacker or not defender:
 		print("CombatManager: attacker or defender null")
 		return
-	
+
+	# Small delay before starting
+	await get_tree().create_timer(0.05).timeout
+
 	# Step 1: Attacker hits defender
 	if !_perform_attack(attacker, defender):
-		return  # Defender died, combat ends
+		emit_signal("combat_finished", attacker, defender, {"status": "finished"})
+		return
+	await get_tree().process_frame
 
 	# Step 2: Defender retaliates if possible
 	if _can_retaliate(defender, attacker):
 		if !_perform_attack(defender, attacker):
-			return  # Attacker died, combat ends
+			emit_signal("combat_finished", attacker, defender, {"status": "finished"})
+			return
+		await get_tree().process_frame
 
 	# Step 3: Attacker double attacks if possible
 	if _can_double_attack(attacker, defender):
 		if !_perform_attack(attacker, defender):
-			return  # Defender died, combat ends
+			emit_signal("combat_finished", attacker, defender, {"status": "finished"})
+			return
+		await get_tree().process_frame
 
 	# Step 4: Defender double attacks if possible and can retaliate
 	if _can_retaliate(defender, attacker) and _can_double_attack(defender, attacker):
 		if !_perform_attack(defender, attacker):
-			return  # Attacker died, combat ends
+			emit_signal("combat_finished", attacker, defender, {"status": "finished"})
+			return
+		await get_tree().process_frame
 
 	emit_signal("combat_finished", attacker, defender, {"status": "finished"})
+
 
 func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 	var weapon = attacker.equipped_weapon
@@ -119,10 +131,16 @@ func _can_double_attack(attacker: Unit, defender: Unit) -> bool:
 	return stats.get("double", false)
 
 func _is_in_attack_range(attacker: Unit, defender: Unit) -> bool:
+	if attacker.attack_range <= 0:
+		return false  # Cannot attack if range is zero or negative
+
 	var atk_pos = attacker.grid.calculate_grid_coordinates(attacker.position)
 	var def_pos = defender.grid.calculate_grid_coordinates(defender.position)
 	var dist = abs(atk_pos.x - def_pos.x) + abs(atk_pos.y - def_pos.y)
-	return dist >= 1 and dist <= attacker.attack_range
+
+	# Ensure melee units can attack adjacent cells
+	return dist >= 1 and dist <= max(attacker.attack_range, 1)
+
 
 func _roll_chance(chance: int) -> bool:
 	# chance is percentage 0-100

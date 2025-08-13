@@ -160,7 +160,7 @@ func _process(delta: float) -> void:
 	if _path_follow.progress_ratio >= 1.0:
 		_is_walking = false
 		# Setting this value to 0.0 causes a Zero Length Interval error
-		_path_follow.progress = 0.00001
+		_path_follow.progress = 0.0
 		position = grid.calculate_map_position(cell)
 		curve.clear_points()
 		emit_signal("walk_finished")
@@ -170,6 +170,7 @@ func _process(delta: float) -> void:
 ## path is an array of grid coordinates that the function converts to map coordinates.
 func walk_along(path: PackedVector2Array) -> void:
 	if path.is_empty():
+		emit_signal("walk_finished")
 		return
 	
 	curve.add_point(Vector2.ZERO)
@@ -397,7 +398,7 @@ func gain_xp(amount: int) -> void:
 	xp = min(xp + amount, 100)  # Clamp xp to 100 max for display
 
 	if xp >= 100:
-		xp - 100  # reset xp on level up
+		xp -= 100  # reset xp on level up
 		level_up()
 
 func level_up() -> void:

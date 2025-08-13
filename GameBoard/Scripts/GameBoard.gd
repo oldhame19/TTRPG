@@ -92,16 +92,10 @@ func _get_configuration_warning() -> String:
 	return warning
 
 func start_battle():
-	# Add TurnManager to scene tree
-	add_child(turn_manager)
-	for cell in _units.keys():
-		var u = _units[cell]
-	# Collect units into the turn manager's groups
+	# Collect units into groups first
 	var player_units = []
 	var enemy_units = []
-
-	for cell in _units.keys():
-		var u: Unit = _units[cell]
+	for u in _units.values():
 		if u.is_enemy:
 			enemy_units.append(u)
 		else:
@@ -111,7 +105,11 @@ func start_battle():
 		"player": player_units,
 		"enemy": enemy_units
 	}
-	
+
+	# Then assign the game board and add to scene tree
+	turn_manager.game_board = self
+	add_child(turn_manager)
+
 
 func _on_phase_started(phase_name: String):
 	if phase_name == "enemy":

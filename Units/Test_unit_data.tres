@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=4 format=3 uid="uid://vgrdpkarv033"]
+
+[ext_resource type="Script" uid="uid://blaaacoyl7slh" path="res://Units/Scripts/ResourceData/stat_block.gd" id="1_x8ytp"]
+[ext_resource type="Script" uid="uid://u3i27lovwmxw" path="res://Units/Scripts/ResourceData/unit_data.gd" id="2_btism"]
+
+[sub_resource type="Resource" id="Resource_ud8ml"]
+script = ExtResource("1_x8ytp")
+max_hp = 1
+strength = 1
+defense = 1
+speed = 1
+dexterity = 1
+charisma = 1
+faith = 1
+metadata/_custom_type_script = "uid://blaaacoyl7slh"
+
+[resource]
+script = ExtResource("2_btism")
+is_player = false
+unit_name = "Test Ally"
+base_stats = SubResource("Resource_ud8ml")
+growth_rates = {
+"charisma": 0,
+"defense": 0,
+"dexterity": 0,
+"faith": 0,
+"hp": 0,
+"speed": 0,
+"strength": 0
+}
+metadata/_custom_type_script = "uid://u3i27lovwmxw"
