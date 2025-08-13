@@ -393,6 +393,7 @@ skin_offset = Vector2(6, 17)
 modulate = Color(1, 0.116667, 0, 1)
 position = Vector2(349.289, 363.685)
 is_enemy = true
+is_boss = true
 held_items = SubResource("Resource_hhcpw")
 equipped_weapon = ExtResource("23_mxvw5")
 hp = 0
@@ -422,6 +423,7 @@ hp = 0
 unit_data = SubResource("Resource_w3rk5")
 current_stats = ExtResource("24_xrxkg")
 attack_range = 1
+move_range = 4
 skin = ExtResource("8")
 skin_offset = Vector2(2, 9)
 

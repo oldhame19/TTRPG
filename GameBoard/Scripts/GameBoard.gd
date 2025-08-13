@@ -105,6 +105,9 @@ func start_battle():
 		"player": player_units,
 		"enemy": enemy_units
 	}
+	combat_manager_instance = combat_manager_scene.instantiate()
+	get_tree().root.add_child(combat_manager_instance)
+	turn_manager.combat_manager = combat_manager_instance
 
 	# Then assign the game board and add to scene tree
 	turn_manager.game_board = self
@@ -614,8 +617,7 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 	if _units.has(new_cell) and _active_unit == null:
 		_hover_display(new_cell)
 	else:
-		_unit_info_panel.update_info(null)
-		_unit_info_panel.visible = false
+		_clear_hover_display()
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _current_trade_scene != null:

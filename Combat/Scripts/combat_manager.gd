@@ -9,14 +9,15 @@ var attacker: Unit
 var defender: Unit
 
 # Reference to the combat_calculator singleton or autoload
-@onready var combat_calc = preload("res://Globals/combat_calculator.gd")
+#@onready var combat_calc = preload("res://Globals/combat_calculator.gd")
 
 func start_combat(attacking_unit: Unit, defending_unit: Unit) -> void:
 	attacker = attacking_unit
 	defender = defending_unit
 	
 	attacker.has_acted = true
-	attacker.update_acted_visual()
+	if !attacker.is_enemy:
+		attacker.update_acted_visual()
 	# Disable input or pause game as needed here
 
 	# Run combat sequence asynchronously (simulate step-by-step)
@@ -29,7 +30,7 @@ func _run_combat() -> void:
 		return
 
 	# Small delay before starting
-	await get_tree().create_timer(0.05).timeout
+	#await get_tree().create_timer(0.05).timeout
 
 	# Step 1: Attacker hits defender
 	if !_perform_attack(attacker, defender):
@@ -84,7 +85,7 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 					attacker.held_items.slots.erase(slot)
 				break
 
-	var stats = combat_calc.calculate_combat_stats(attacker, defender)
+	var stats = CombatCalculator.calculate_combat_stats(attacker, defender)
 	var hit_chance = stats.get("ah", 0)
 	var crit_chance = stats.get("ac", 0)
 	var damage = stats.get("dpa", 0)
@@ -127,19 +128,20 @@ func _can_retaliate(defender: Unit, attacker: Unit) -> bool:
 	return true
 
 func _can_double_attack(attacker: Unit, defender: Unit) -> bool:
-	var stats = combat_calc.calculate_combat_stats(attacker, defender)
+	var stats = CombatCalculator.calculate_combat_stats(attacker, defender)
 	return stats.get("double", false)
 
 func _is_in_attack_range(attacker: Unit, defender: Unit) -> bool:
 	if attacker.attack_range <= 0:
-		return false  # Cannot attack if range is zero or negative
+		return false
 
+	# Make sure positions are grid-aligned
 	var atk_pos = attacker.grid.calculate_grid_coordinates(attacker.position)
 	var def_pos = defender.grid.calculate_grid_coordinates(defender.position)
 	var dist = abs(atk_pos.x - def_pos.x) + abs(atk_pos.y - def_pos.y)
 
-	# Ensure melee units can attack adjacent cells
-	return dist >= 1 and dist <= max(attacker.attack_range, 1)
+	# Allow attacks within attack_range, including melee (adjacent)
+	return dist > 0 and dist <= attacker.attack_range
 
 
 func _roll_chance(chance: int) -> bool:

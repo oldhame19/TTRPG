@@ -35,7 +35,6 @@ func start_phase(phase_name: String) -> void:
 			u.has_acted = false
 			units.append(u)
 			
-
 	if units.size() == 0:
 		call_deferred("end_phase")
 		return
@@ -113,7 +112,6 @@ func _run_ai_phase(units: Array[Unit]) -> void:
 			u.has_acted = true
 			planned_enemy_cells.append(best_action.move_to)
 
-		unit_finished_turn(u)
 
 # ================= AI Actions =================
 
@@ -125,10 +123,12 @@ func _execute_ai_action(unit: Unit, action: Dictionary) -> void:
 		if path.size() > 0:
 			unit.cell = action.move_to
 			unit.walk_along(path)
-			await unit.walk_finished
+			await unit.walk_finished  # still valid in Godot 4.4
 
 	if action.has("attack_target") and action.attack_target != null:
-		_combat_attack(unit, action.attack_target)
+		await _combat_attack(unit, action.attack_target)
+
+	unit_finished_turn(unit)
 
 func _find_path_to_cell(reachable_cells: Array, target: Vector2, start: Vector2) -> Array[Vector2]:
 	var path: Array[Vector2] = []
@@ -163,11 +163,32 @@ func _find_path_to_cell(reachable_cells: Array, target: Vector2, start: Vector2)
 
 # ================= Combat =================
 
+# Member variable
+# Member variable
+var _combat_finished_flag := false
+
+# Method to handle combat finished
+func _on_combat_finished(attacker: Unit, defender: Unit, result: Dictionary) -> void:
+	_combat_finished_flag = true
+
+# Combat attack function
 func _combat_attack(attacker: Unit, defender: Unit) -> void:
 	if combat_manager == null:
 		print("⚠ CombatManager not assigned!")
 		return
+
+	_combat_finished_flag = false
+
+	# Connect using a Callable (Godot 4.x style)
+	combat_manager.connect("combat_finished", Callable(self, "_on_combat_finished"), CONNECT_ONE_SHOT)
+
 	combat_manager.start_combat(attacker, defender)
+
+	# Wait for combat to finish
+	while not _combat_finished_flag:
+		await get_tree().process_frame
+
+
 
 # ================= AI Evaluation =================
 
@@ -187,18 +208,24 @@ func _evaluate_best_action(unit: Unit, depth: int, blocked_cells: Array = []) ->
 	var best: Dictionary = {"reward": -99999.0, "move_to": unit.cell, "attack_target": null}
 
 	for move_cell in possible_moves:
-		var targets: Array[Unit] = _get_attackable_units(unit, move_cell)
-		if targets.size() == 0:
-			var reward: float = _reward_for_proximity(unit, move_cell, player_units)
-			if reward > best.reward:
-				best = {"reward": reward, "move_to": move_cell, "attack_target": null}
-		else:
+		# Determine attackable units from this move cell
+		var targets: Array[Unit] = []
+		for p in player_units:
+			var dist = abs(move_cell.x - p.cell.x) + abs(move_cell.y - p.cell.y)
+			if dist <= unit.attack_range:
+				targets.append(p)
+
+		if targets.size() > 0:
 			for target in targets:
 				var reward: float = _simulate_combat_reward(unit, target)
 				if depth > 1:
 					reward -= _simulate_player_counter_reward(target, depth-1)
 				if reward > best.reward:
 					best = {"reward": reward, "move_to": move_cell, "attack_target": target}
+		else:
+			var reward: float = _reward_for_proximity(unit, move_cell, player_units)
+			if reward > best.reward:
+				best = {"reward": reward, "move_to": move_cell, "attack_target": null}
 
 	return best
 
@@ -216,31 +243,23 @@ func _simulate_player_counter_reward(defender: Unit, depth: int) -> float:
 	var expected_damage: float = float(atk_stats.strength - enemy_stats.defense)
 	return max(expected_damage, 0.0)
 
-func _get_attackable_units(unit: Unit, from_cell: Vector2) -> Array[Unit]:
-	var result: Array[Unit] = []
-	for p in unit_groups["player"]:
-		if is_instance_valid(p) and not p.is_dead:
-			if (from_cell - p.cell).length() <= unit.attack_range:
-				result.append(p)
-	return result
-
 func _simulate_combat_reward(attacker: Unit, defender: Unit) -> float:
 	var combat_stats: Dictionary = CombatCalculator.calculate_combat_stats(attacker, defender)
-	var damage: float = float(combat_stats["dpa"])
-	if combat_stats["double"]:
+	var damage: float = float(combat_stats.get("dpa", 0))
+	if combat_stats.get("double", false):
 		damage *= 2.0
 
 	var reward: float = damage * 2.0
 	if damage >= float(defender.hp):
-		reward += 100.0
+		reward += 100.0  # Extra reward for potential kill
 
 	var counter_stats: Dictionary = CombatCalculator.calculate_combat_stats(defender, attacker)
-	var counter_damage: float = float(counter_stats["dpa"])
-	if counter_stats["double"]:
+	var counter_damage: float = float(counter_stats.get("dpa", 0))
+	if counter_stats.get("double", false):
 		counter_damage *= 2.0
-	reward -= counter_damage * 1.5
+	reward -= counter_damage * 1.5  # Penalize for retaliation
 
 	if attacker.attack_range > 1:
-		reward += 5.0
+		reward += 5.0  # Slight bonus for ranged attacks
 
 	return reward
