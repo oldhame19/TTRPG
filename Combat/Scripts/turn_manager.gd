@@ -28,11 +28,17 @@ func start_phase(phase_name: String) -> void:
 	emit_signal("phase_started", phase_name)
 	print("Starting phase:", phase_name)
 
+	# Reset all units for the start of the player phase
+	if phase_name == "player":
+		for group_name in ["player", "enemy"]:
+			for u in unit_groups.get(group_name, []):
+				if is_instance_valid(u) and not u.is_dead:
+					u.reset_turn()  # Clears has_acted and updates visuals
+
 	var raw_units: Array = unit_groups.get(phase_name, [])
 	var units: Array[Unit] = []
 	for u in raw_units:
 		if is_instance_valid(u) and not u.is_dead:
-			u.has_acted = false
 			units.append(u)
 			
 	if units.size() == 0:
@@ -40,10 +46,11 @@ func start_phase(phase_name: String) -> void:
 		return
 
 	if phase_name == "player":
-		for u in units:
-			u.reset_turn()
+		# All turns are already reset above
+		return
 	else:
 		await _run_ai_phase(units)
+
 
 func end_phase() -> void:
 	if _phase_ending:
@@ -65,8 +72,7 @@ func end_phase() -> void:
 
 func unit_finished_turn(unit: Unit) -> void:
 	unit.has_acted = true
-	if not unit.is_enemy:
-		unit.update_acted_visual()
+	unit.update_acted_visual()
 
 	var current_phase: String = phases[current_phase_index]
 	var remaining: Array[Unit] = []
@@ -121,7 +127,9 @@ func _execute_ai_action(unit: Unit, action: Dictionary) -> void:
 		var path: = _find_path_to_cell(reachable, action.move_to, unit.cell)
 
 		if path.size() > 0:
+			game_board._units.erase(unit.cell)
 			unit.cell = action.move_to
+			game_board._units[unit.cell] = unit
 			unit.walk_along(path)
 			await unit.walk_finished  # still valid in Godot 4.4
 

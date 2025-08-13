@@ -1,9 +1,7 @@
-
-class_name GameBoard 
+class_name GameBoard
 extends Node2D
 
 @onready var cursor = $Cursor
-@onready var turn_manager = TurnManager.new()
 
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 const OBSTACLE_ATLAS_ID = 2
@@ -14,18 +12,17 @@ const ActionMenu = preload("res://GUI/ActionMenu/Action Menu.tscn")
 var CombatForecastScene = preload("res://GUI/CombatUI/CombatForecast.tscn")
 const UnitInfoPanelScene = preload("res://GUI/UnitInfo/UnitInfoPanel.tscn")
 var combat_manager_scene = preload("res://Combat/Scenes/CombatManager.tscn")
-var combat_manager_instance = null
+
+var turn_manager: TurnManager
+var combat_manager_instance: CombatManager
 
 var _current_action_menu: ActionMenu = null
 var _current_trade_scene = null
 var _unit_info_panel: UnitInfoPanel
 var combat_forecast_panel: CombatForecastPanel
 
-
-## Resource of type Grid.
 @export var grid: Resource = preload("res://GameBoard/Resources/Grid.tres")
 
-## Mapping of coordinates of a cell to a reference to the unit it contains.
 var _units := {}
 var _active_unit: Unit
 var _walkable_cells := []
@@ -34,7 +31,6 @@ var _assistable_cells := []
 var _movement_costs
 var _prev_cell
 var _prev_position
-
 var _active_trade_target_cell: Vector2 = Vector2(-1, -1)
 var _active_assist_target_cell: Vector2 = Vector2(-1, -1)
 
@@ -44,7 +40,6 @@ var _active_assist_target_cell: Vector2 = Vector2(-1, -1)
 @onready var _cursor: Cursor = $Cursor
 
 func _ready() -> void:
-	
 	_movement_costs = _map.get_movement_costs(grid)
 	_reinitialize()
 
@@ -55,41 +50,35 @@ func _ready() -> void:
 	_unit_info_panel = UnitInfoPanelScene.instantiate()
 	ui_root.add_child(_unit_info_panel)
 	_unit_info_panel.visible = false
-	
-	# Instantiate CombatForecastPanel
-	combat_forecast_panel = CombatForecastScene.instantiate()
-
-	ui_root.add_child(combat_forecast_panel)
-	combat_forecast_panel.visible = false
-
-	# Position UnitInfoPanel in top-left corner with offset
 	_unit_info_panel.anchor_left = 0.0
 	_unit_info_panel.anchor_top = 0.0
 	_unit_info_panel.anchor_right = 0.0
 	_unit_info_panel.anchor_bottom = 0.0
-	
 	_unit_info_panel.position = Vector2(15, 15)
 	
+	# Instantiate CombatForecastPanel
+	combat_forecast_panel = CombatForecastScene.instantiate()
+	ui_root.add_child(combat_forecast_panel)
+	combat_forecast_panel.visible = false
+
+	# Instantiate CombatManager and add to tree before any methods call get_tree()
+	combat_manager_instance = combat_manager_scene.instantiate()
+	add_child(combat_manager_instance)
+
+	# Instantiate TurnManager and add to tree before starting battle
+	turn_manager = TurnManager.new()
+	turn_manager.game_board = self
+	turn_manager.combat_manager = combat_manager_instance
+	add_child(turn_manager)
+
+	# Connect signals
 	turn_manager.phase_started.connect(_on_phase_started)
 	turn_manager.phase_ended.connect(_on_phase_ended)
 	turn_manager.battle_ended.connect(_on_battle_ended)
-	
+
+	# Start the battle after nodes are safely in the tree
 	start_battle()
 
-func _unhandled_input(event: InputEvent) -> void:
-	if _current_trade_scene != null:
-		# Ignore all input while trade UI is active
-		return
-	
-	if _active_unit and event.is_action_pressed("ui_cancel"):
-		_deselect_active_unit()
-		_clear_active_unit()
-
-func _get_configuration_warning() -> String:
-	var warning := ""
-	if not grid:
-		warning = "You need a Grid resource for this node to work."
-	return warning
 
 func start_battle():
 	# Collect units into groups first
@@ -105,13 +94,29 @@ func start_battle():
 		"player": player_units,
 		"enemy": enemy_units
 	}
-	combat_manager_instance = combat_manager_scene.instantiate()
-	get_tree().root.add_child(combat_manager_instance)
-	turn_manager.combat_manager = combat_manager_instance
 
-	# Then assign the game board and add to scene tree
-	turn_manager.game_board = self
-	add_child(turn_manager)
+	# Start the first phase deferred to ensure everything is ready
+	call_deferred("start_first_phase")
+
+func start_first_phase():
+	# Let TurnManager handle starting the first phase safely
+	turn_manager.start_phase("player")
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _current_trade_scene != null:
+		# Ignore all input while trade UI is active
+		return
+	
+	if _active_unit and event.is_action_pressed("ui_cancel"):
+		_deselect_active_unit()
+		_clear_active_unit()
+
+func _get_configuration_warning() -> String:
+	var warning := ""
+	if not grid:
+		warning = "You need a Grid resource for this node to work."
+	return warning
 
 
 func _on_phase_started(phase_name: String):
@@ -433,9 +438,6 @@ func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Arra
 	
 	return movable_cells.filter(func(i): return i not in occupied_cells)
 
-
-
-
 func _move_active_unit(new_cell: Vector2) -> void:
 	if is_occupied(new_cell) or not new_cell in _walkable_cells:
 		return
@@ -538,28 +540,26 @@ func _handle_normal_hover(cell: Vector2, hovered_unit) -> void:
 		if _current_action_menu and _current_action_menu.weapon_choice_active:
 			return
 
+		
 		var walkable_cells = get_walkable_cells(hovered_unit)
 		var attackable_cells = get_attackable_cells(hovered_unit)
 
 		_unit_overlay.clear()
 		_unit_overlay.draw_walkable_cells(walkable_cells)
 		_unit_overlay.draw_attackable_cells(attackable_cells)
-
+		
 		if hovered_unit.current_class and hovered_unit.current_class.can_assist:
 			var assistable_cells = get_reachable_assistable_cells(hovered_unit)
 			_unit_overlay.draw_assistable_cells(assistable_cells)
-	else:
-		_clear_hover_display()
+	#else:
+		#_clear_hover_display()
 
 
 func _clear_hover_display() -> void:
 	_unit_overlay.clear()
 	_unit_info_panel.update_info(null)
-	_unit_info_panel.visible = false
 	combat_forecast_panel.visible = false
-
-
-
+	_unit_info_panel.visible = false
 
 func _reset_unit() -> void:
 	if _active_unit != null and _active_unit.cell != _prev_cell:
@@ -616,8 +616,11 @@ func _on_Cursor_moved(new_cell: Vector2) -> void:
 
 	if _units.has(new_cell) and _active_unit == null:
 		_hover_display(new_cell)
-	else:
+	if _active_unit == null and !_units.has(new_cell) :
 		_clear_hover_display()
+	elif !_active_unit == null and !_units.has(new_cell):
+		_unit_info_panel.visible = false
+	
 
 func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	if _current_trade_scene != null:
@@ -661,7 +664,13 @@ func _on_Cursor_accept_pressed(cell: Vector2) -> void:
 	# If no active unit, select unit at cell if possible
 	if _active_unit == null and _units.has(cell):
 		var candidate_unit = _units[cell]
-		if candidate_unit.has_acted:
+		if candidate_unit.is_enemy:
+			_active_unit = candidate_unit
+			_prev_cell = cell
+			_prev_position = candidate_unit.position
+			_show_action_menu_for_enemy(candidate_unit)
+			return
+		if candidate_unit.has_acted :
 			_show_pause_menu()
 		else:
 			_select_unit(cell)
@@ -788,7 +797,18 @@ func _show_action_menu() -> void:
 		_clear_active_unit()
 		_current_action_menu = null
 	)
+func _show_action_menu_for_enemy(enemy_unit: Unit) -> void:
+	var action_menu = ActionMenu.instantiate()
+	action_menu.unit = enemy_unit
+	action_menu.game_board = self
+	action_menu.is_enemy_menu = true# Optional flag in ActionMenu to disable certain buttons
+	add_child(action_menu)
+	_current_action_menu = action_menu
 
+	action_menu.tree_exited.connect(func():
+		_clear_active_unit()
+		_current_action_menu = null
+	)
 func _show_pause_menu() -> void:
 	if _unit_info_panel:
 		_unit_info_panel.hide()

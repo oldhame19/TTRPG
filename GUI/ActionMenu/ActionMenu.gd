@@ -14,7 +14,7 @@ var _current_trade_scene: Control = null
 var _weapon_choice_instance: Node = null
 
 var opened_from_summary: bool = false
-
+var is_enemy_menu: bool = false
 var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")
 var weapon_choice_menu = preload("res://GUI/CombatUI/weapon_choice_menu.tscn")
 func _ready() -> void:
@@ -27,6 +27,12 @@ func _ready() -> void:
 
 func _update_buttons_visibility() -> void:
 	if not unit or not game_board:
+		return
+
+	# If this is an enemy menu, only show Cancel and Summary
+	if is_enemy_menu:
+		for button in $VBoxContainer.get_children():
+			button.visible = button.name in ["CancelButton", "SummaryButton", "EmptyButton"]
 		return
 
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
@@ -77,8 +83,8 @@ func _update_buttons_visibility() -> void:
 				break
 
 	$VBoxContainer/AttackButton.visible = enemy_in_range
-	
 	$VBoxContainer/ActionButton.visible = false
+
 
 func _on_attack_button_pressed() -> void:
 	attack_mode_active = true

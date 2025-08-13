@@ -1,4 +1,4 @@
-[gd_scene load_steps=47 format=4 uid="uid://30jb4kc5kf5p"]
+[gd_scene load_steps=49 format=4 uid="uid://30jb4kc5kf5p"]
 
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://GameBoard/Cursor/Cursor.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="2"]
@@ -255,6 +255,17 @@ slots = Array[ExtResource("19_3b0ty")]([])
 
 [sub_resource type="Resource" id="Resource_oye8v"]
 script = ExtResource("23_hhcpw")
+max_hp = 50
+strength = 1
+defense = 1
+speed = 1
+dexterity = 1
+charisma = 1
+faith = 1
+metadata/_custom_type_script = "uid://blaaacoyl7slh"
+
+[sub_resource type="Resource" id="Resource_ud8ml"]
+script = ExtResource("23_hhcpw")
 max_hp = 1
 strength = 1
 defense = 1
@@ -264,9 +275,25 @@ charisma = 1
 faith = 1
 metadata/_custom_type_script = "uid://blaaacoyl7slh"
 
+[sub_resource type="Resource" id="Resource_hri7i"]
+script = ExtResource("24_mxvw5")
+is_player = false
+unit_name = "Test Ally"
+base_stats = SubResource("Resource_ud8ml")
+growth_rates = {
+"charisma": 0,
+"defense": 0,
+"dexterity": 0,
+"faith": 0,
+"hp": 0,
+"speed": 0,
+"strength": 0
+}
+metadata/_custom_type_script = "uid://u3i27lovwmxw"
+
 [sub_resource type="Resource" id="Resource_40n85"]
 script = ExtResource("23_hhcpw")
-max_hp = 1
+max_hp = 50
 strength = 1
 defense = 1
 speed = 1
@@ -372,7 +399,7 @@ skin_offset = Vector2(2, 9)
 [node name="Cat" parent="GameBoard" instance=ExtResource("2")]
 position = Vector2(543.188, 415.064)
 held_items = SubResource("Resource_3b0ty")
-hp = 0
+hp = 50
 unit_data = ExtResource("21_hri7i")
 current_stats = SubResource("Resource_oye8v")
 attack_range = 2
@@ -382,8 +409,8 @@ skin_offset = Vector2(5, 12)
 [node name="Squirrel" parent="GameBoard" instance=ExtResource("2")]
 position = Vector2(671.294, 361.315)
 held_items = ExtResource("18_5tuhn")
-hp = 0
-unit_data = ExtResource("21_hri7i")
+hp = 50
+unit_data = SubResource("Resource_hri7i")
 current_stats = SubResource("Resource_40n85")
 attack_range = 1
 skin = ExtResource("7")
