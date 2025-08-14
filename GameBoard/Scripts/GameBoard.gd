@@ -1,6 +1,7 @@
 class_name GameBoard
 extends Node2D
 
+signal phase_transition_finished
 @onready var cursor = $Cursor
 
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
@@ -12,7 +13,10 @@ const ActionMenu = preload("res://GUI/ActionMenu/Action Menu.tscn")
 var CombatForecastScene = preload("res://GUI/CombatUI/CombatForecast.tscn")
 const UnitInfoPanelScene = preload("res://GUI/UnitInfo/UnitInfoPanel.tscn")
 var combat_manager_scene = preload("res://Combat/Scenes/CombatManager.tscn")
+var PhaseTransitionScene = preload("res://GUI/CombatUI/PhaseTransition.tscn")
 
+var phase_transition: PhaseTransition = null
+var _phase_transition_active: bool = false
 var turn_manager: TurnManager
 var combat_manager_instance: CombatManager
 
@@ -46,6 +50,10 @@ func _ready() -> void:
 	var ui_root = CanvasLayer.new()
 	add_child(ui_root)
 
+	phase_transition = PhaseTransitionScene.instantiate()
+	add_child(phase_transition)
+	phase_transition.phase_animation_finished.connect(_on_phase_transition_finished)
+	
 	# Instantiate UnitInfoPanel
 	_unit_info_panel = UnitInfoPanelScene.instantiate()
 	ui_root.add_child(_unit_info_panel)
@@ -75,7 +83,7 @@ func _ready() -> void:
 	turn_manager.phase_started.connect(_on_phase_started)
 	turn_manager.phase_ended.connect(_on_phase_ended)
 	turn_manager.battle_ended.connect(_on_battle_ended)
-
+	
 	# Start the battle after nodes are safely in the tree
 	start_battle()
 
@@ -104,6 +112,8 @@ func start_first_phase():
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _phase_transition_active:
+		return  # block everything during phase transition
 	if _current_trade_scene != null:
 		# Ignore all input while trade UI is active
 		return
@@ -111,7 +121,204 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _active_unit and event.is_action_pressed("ui_cancel"):
 		_deselect_active_unit()
 		_clear_active_unit()
+func _select_unit(cell: Vector2) -> void:
+	if _current_action_menu and _current_action_menu.trade_mode_active:
+		return  # Block unit selection during trade
+	
+	if not _units.has(cell):
+		return
 
+	if not _units.has(cell):
+		return
+	var candidate_unit = _units[cell]
+	if candidate_unit == null or not is_instance_valid(candidate_unit) :
+		return
+
+	if candidate_unit.has_acted:
+		# Optionally, you can play a sound or flash the unit to indicate it's not selectable
+		print("Unit has already acted and cannot be selected.")
+		return
+		
+	_active_unit = candidate_unit
+	_prev_cell = cell
+	_prev_position = _active_unit.position
+
+	_active_unit.is_selected = true
+	
+	_walkable_cells = get_walkable_cells(_active_unit)
+	_attackable_cells = get_attackable_cells(_active_unit)
+	
+	_unit_overlay.draw_attackable_cells(_attackable_cells)
+	_unit_overlay.draw_walkable_cells(_walkable_cells)
+	
+	if _active_unit.current_class and _active_unit.current_class.can_assist:
+		var assistable_cells = get_reachable_assistable_cells(_active_unit)
+		_unit_overlay.draw_assistable_cells(assistable_cells)
+		
+	_unit_path.initialize(_walkable_cells)
+	
+func _on_Cursor_moved(new_cell: Vector2) -> void:
+	if _phase_transition_active:
+		return  # block everything during phase transition
+	if !_unit_info_panel:
+		return
+	if _current_trade_scene != null:
+		return  # lock cursor during trade UI
+	if _current_action_menu and _current_action_menu.in_an_active_mode():
+		_hover_display(new_cell)
+		return
+	# Hide combat forecast if not in attack mode or hovering invalid target
+	if not (_current_action_menu and _current_action_menu.attack_mode_active):
+		combat_forecast_panel.visible = false
+	if _current_action_menu and _current_action_menu.trade_mode_active:
+		# We DO want to show hover info during trade mode
+		_hover_display(new_cell)
+		return
+
+	# Normal (non-trade) behavior:
+	if _active_unit and _active_unit.is_selected:
+		_unit_path.draw(_active_unit.cell, new_cell)
+	elif _unit_overlay != null and _walkable_cells.size() > 0:
+		if not (_current_action_menu and _current_action_menu.assist_mode_active):
+			_walkable_cells.clear()
+			_unit_overlay.clear()
+		if  not (_current_action_menu and _current_action_menu.attack_mode_active):
+			_unit_overlay.clear()
+
+	if _units.has(new_cell) and _active_unit == null:
+		_hover_display(new_cell)
+	if _active_unit == null and !_units.has(new_cell) :
+		_clear_hover_display()
+	elif !_active_unit == null and !_units.has(new_cell):
+		_unit_info_panel.visible = false
+	
+
+func _on_Cursor_accept_pressed(cell: Vector2) -> void:
+	if _current_trade_scene != null:
+		return
+
+	if _current_action_menu and _current_action_menu.trade_mode_active:
+		_handle_trade_mode(cell)
+		return
+
+	# Attack mode combat start
+	if _current_action_menu and _current_action_menu.attack_mode_active:
+		if _active_unit == null:
+			return
+		if _units.has(cell):
+			var target_unit = _units[cell]
+			if target_unit == null or not is_instance_valid(target_unit):
+				return
+			if target_unit.is_enemy != _active_unit.is_enemy and cell in get_attackable_cells(_active_unit):
+				combat_forecast_panel.visible = false
+				#hide weapon choice menu here 
+				if _current_action_menu and _current_action_menu._weapon_choice_instance != null:
+					_current_action_menu._clear_active_modes()
+					_current_action_menu._weapon_choice_instance.queue_free()
+					_current_action_menu.queue_free()
+				
+				print("Starting combat between ", _active_unit.name, " and ", target_unit.name)
+				if combat_manager_instance:
+					combat_manager_instance.queue_free()
+				combat_manager_instance = combat_manager_scene.instantiate()
+				get_tree().root.add_child(combat_manager_instance)
+				combat_manager_instance.start_combat(_active_unit, target_unit)
+				combat_manager_instance.combat_finished.connect(_on_combat_finished)
+				_clear_active_unit()
+				return
+			else:
+				print("Target unit not enemy or cell not attackable.")
+		else:
+			print("No unit at cell during attack mode.")
+		
+	
+	# If no active unit, select unit at cell if possible
+	if _active_unit == null and _units.has(cell):
+		var candidate_unit = _units[cell]
+		if candidate_unit.is_enemy:
+			_active_unit = candidate_unit
+			_prev_cell = cell
+			_prev_position = candidate_unit.position
+			_show_action_menu_for_enemy(candidate_unit)
+			return
+		if candidate_unit.has_acted :
+			_show_pause_menu()
+		else:
+			_select_unit(cell)
+	# If there is an active unit, handle clicks for move or deselect
+	elif _active_unit != null:
+		_handle_active_unit_click(cell)
+	else:
+		_show_pause_menu()
+
+func _hover_display(cell: Vector2) -> void:
+	if not _unit_info_panel:
+		return
+
+	var hovered_unit = _units.get(cell, null)
+
+	if _current_action_menu:
+		if _current_action_menu.attack_mode_active:
+			_handle_attack_mode_hover(cell, hovered_unit)
+			return
+
+		if _current_action_menu.trade_mode_active:
+			_unit_info_panel.update_info(hovered_unit)
+			return
+
+		if _current_action_menu.assist_mode_active:
+			_unit_info_panel.update_info(hovered_unit)
+			return
+	
+	_handle_normal_hover(cell, hovered_unit)
+
+
+func _handle_attack_mode_hover(cell: Vector2, hovered_unit) -> void:
+	if hovered_unit != null and is_instance_valid(hovered_unit):
+		if _active_unit != null and hovered_unit.is_enemy and hovered_unit != _active_unit:
+			var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
+			var combat_stats = CombatCalculator.calculate_full_combat_stats(_active_unit, hovered_unit)
+			combat_forecast_panel.attacker_unit = _active_unit
+			combat_forecast_panel.defender_unit = hovered_unit
+			combat_forecast_panel.update_forecast(forecast, combat_stats)
+			combat_forecast_panel.visible = true
+			_unit_info_panel.visible = false
+
+			if _current_action_menu.weapon_choice_active:
+				return
+	else:
+		combat_forecast_panel.visible = false
+
+
+func _handle_normal_hover(cell: Vector2, hovered_unit) -> void:
+	if hovered_unit and is_instance_valid(hovered_unit):
+		_unit_info_panel.update_info(hovered_unit)
+		_unit_info_panel.visible = true
+
+		if _current_action_menu and _current_action_menu.weapon_choice_active:
+			return
+
+		
+		var walkable_cells = get_walkable_cells(hovered_unit)
+		var attackable_cells = get_attackable_cells(hovered_unit)
+
+		_unit_overlay.clear()
+		_unit_overlay.draw_walkable_cells(walkable_cells)
+		_unit_overlay.draw_attackable_cells(attackable_cells)
+		
+		if hovered_unit.current_class and hovered_unit.current_class.can_assist:
+			var assistable_cells = get_reachable_assistable_cells(hovered_unit)
+			_unit_overlay.draw_assistable_cells(assistable_cells)
+	#else:
+		#_clear_hover_display()
+
+
+func _clear_hover_display() -> void:
+	_unit_overlay.clear()
+	_unit_info_panel.update_info(null)
+	combat_forecast_panel.visible = false
+	_unit_info_panel.visible = false
+	
 func _get_configuration_warning() -> String:
 	var warning := ""
 	if not grid:
@@ -119,17 +326,30 @@ func _get_configuration_warning() -> String:
 	return warning
 
 
+var _next_phase_name: String = ""
+
 func _on_phase_started(phase_name: String):
-	if phase_name == "enemy":
-		# Disable/hide cursor & input for player
+	_next_phase_name = phase_name  # store the phase for later
+	_phase_transition_active = true
+	$Cursor.hide()
+	$Cursor.process_mode = Node.PROCESS_MODE_DISABLED
+	
+	if phase_transition:
+		phase_transition.show_phase(phase_name)
+
+# Called when the animation finishes
+func _on_phase_transition_finished():
+	_phase_transition_active = false  # unlock input
+	emit_signal("phase_transition_finished")  # notify TurnManager
+	# Now apply the phase-specific cursor logic
+	if _next_phase_name == "enemy":
 		$Cursor.hide()
 		$Cursor.process_mode = Node.PROCESS_MODE_DISABLED
-		# Optionally disable player controls globally here
-	elif phase_name == "player":
-		# Enable/show cursor & input for player
+	elif _next_phase_name == "player":
 		$Cursor.show()
 		$Cursor.process_mode = Node.PROCESS_MODE_INHERIT
-		# Enable player controls again
+
+
 
 func _on_phase_ended():
 	print("The current phase has ended!")
@@ -138,7 +358,8 @@ func _on_phase_ended():
 func _on_battle_ended():
 	print("The battle has ended!")
 	# Put your battle cleanup or victory/defeat screen logic here
-
+	
+	
 func _on_unit_died(unit: Unit) -> void:
 	if unit == null or not is_instance_valid(unit):
 		return
@@ -455,112 +676,6 @@ func _move_active_unit(new_cell: Vector2) -> void:
 		
 	_active_unit.has_moved = true
 
-
-func _select_unit(cell: Vector2) -> void:
-	if _current_action_menu and _current_action_menu.trade_mode_active:
-		return  # Block unit selection during trade
-	
-	if not _units.has(cell):
-		return
-
-	if not _units.has(cell):
-		return
-	var candidate_unit = _units[cell]
-	if candidate_unit == null or not is_instance_valid(candidate_unit) :
-		return
-
-	if candidate_unit.has_acted:
-		# Optionally, you can play a sound or flash the unit to indicate it's not selectable
-		print("Unit has already acted and cannot be selected.")
-		return
-		
-	_active_unit = candidate_unit
-	_prev_cell = cell
-	_prev_position = _active_unit.position
-
-	_active_unit.is_selected = true
-	
-	_walkable_cells = get_walkable_cells(_active_unit)
-	_attackable_cells = get_attackable_cells(_active_unit)
-	
-	_unit_overlay.draw_attackable_cells(_attackable_cells)
-	_unit_overlay.draw_walkable_cells(_walkable_cells)
-	
-	if _active_unit.current_class and _active_unit.current_class.can_assist:
-		var assistable_cells = get_reachable_assistable_cells(_active_unit)
-		_unit_overlay.draw_assistable_cells(assistable_cells)
-		
-	_unit_path.initialize(_walkable_cells)
-	
-
-func _hover_display(cell: Vector2) -> void:
-	if not _unit_info_panel:
-		return
-
-	var hovered_unit = _units.get(cell, null)
-
-	if _current_action_menu:
-		if _current_action_menu.attack_mode_active:
-			_handle_attack_mode_hover(cell, hovered_unit)
-			return
-
-		if _current_action_menu.trade_mode_active:
-			_unit_info_panel.update_info(hovered_unit)
-			return
-
-		if _current_action_menu.assist_mode_active:
-			_unit_info_panel.update_info(hovered_unit)
-			return
-	
-	_handle_normal_hover(cell, hovered_unit)
-
-
-func _handle_attack_mode_hover(cell: Vector2, hovered_unit) -> void:
-	if hovered_unit != null and is_instance_valid(hovered_unit):
-		if _active_unit != null and hovered_unit.is_enemy and hovered_unit != _active_unit:
-			var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
-			var combat_stats = CombatCalculator.calculate_full_combat_stats(_active_unit, hovered_unit)
-			combat_forecast_panel.attacker_unit = _active_unit
-			combat_forecast_panel.defender_unit = hovered_unit
-			combat_forecast_panel.update_forecast(forecast, combat_stats)
-			combat_forecast_panel.visible = true
-			_unit_info_panel.visible = false
-
-			if _current_action_menu.weapon_choice_active:
-				return
-	else:
-		combat_forecast_panel.visible = false
-
-
-func _handle_normal_hover(cell: Vector2, hovered_unit) -> void:
-	if hovered_unit and is_instance_valid(hovered_unit):
-		_unit_info_panel.update_info(hovered_unit)
-		_unit_info_panel.visible = true
-
-		if _current_action_menu and _current_action_menu.weapon_choice_active:
-			return
-
-		
-		var walkable_cells = get_walkable_cells(hovered_unit)
-		var attackable_cells = get_attackable_cells(hovered_unit)
-
-		_unit_overlay.clear()
-		_unit_overlay.draw_walkable_cells(walkable_cells)
-		_unit_overlay.draw_attackable_cells(attackable_cells)
-		
-		if hovered_unit.current_class and hovered_unit.current_class.can_assist:
-			var assistable_cells = get_reachable_assistable_cells(hovered_unit)
-			_unit_overlay.draw_assistable_cells(assistable_cells)
-	#else:
-		#_clear_hover_display()
-
-
-func _clear_hover_display() -> void:
-	_unit_overlay.clear()
-	_unit_info_panel.update_info(null)
-	combat_forecast_panel.visible = false
-	_unit_info_panel.visible = false
-
 func _reset_unit() -> void:
 	if _active_unit != null and _active_unit.cell != _prev_cell:
 		_active_unit.position = _prev_position
@@ -587,98 +702,7 @@ func _clear_active_unit() -> void:
 	_cursor.restricted_cells.clear()
 
 
-func _on_Cursor_moved(new_cell: Vector2) -> void:
-	
-	if !_unit_info_panel:
-		return
-	if _current_trade_scene != null:
-		return  # lock cursor during trade UI
-	if _current_action_menu and _current_action_menu.in_an_active_mode():
-		_hover_display(new_cell)
-		return
-	# Hide combat forecast if not in attack mode or hovering invalid target
-	if not (_current_action_menu and _current_action_menu.attack_mode_active):
-		combat_forecast_panel.visible = false
-	if _current_action_menu and _current_action_menu.trade_mode_active:
-		# We DO want to show hover info during trade mode
-		_hover_display(new_cell)
-		return
 
-	# Normal (non-trade) behavior:
-	if _active_unit and _active_unit.is_selected:
-		_unit_path.draw(_active_unit.cell, new_cell)
-	elif _unit_overlay != null and _walkable_cells.size() > 0:
-		if not (_current_action_menu and _current_action_menu.assist_mode_active):
-			_walkable_cells.clear()
-			_unit_overlay.clear()
-		if  not (_current_action_menu and _current_action_menu.attack_mode_active):
-			_unit_overlay.clear()
-
-	if _units.has(new_cell) and _active_unit == null:
-		_hover_display(new_cell)
-	if _active_unit == null and !_units.has(new_cell) :
-		_clear_hover_display()
-	elif !_active_unit == null and !_units.has(new_cell):
-		_unit_info_panel.visible = false
-	
-
-func _on_Cursor_accept_pressed(cell: Vector2) -> void:
-	if _current_trade_scene != null:
-		return
-
-	if _current_action_menu and _current_action_menu.trade_mode_active:
-		_handle_trade_mode(cell)
-		return
-
-	# Attack mode combat start
-	if _current_action_menu and _current_action_menu.attack_mode_active:
-		if _active_unit == null:
-			return
-		if _units.has(cell):
-			var target_unit = _units[cell]
-			if target_unit == null or not is_instance_valid(target_unit):
-				return
-			if target_unit.is_enemy != _active_unit.is_enemy and cell in get_attackable_cells(_active_unit):
-				combat_forecast_panel.visible = false
-				#hide weapon choice menu here 
-				if _current_action_menu and _current_action_menu._weapon_choice_instance != null:
-					_current_action_menu._clear_active_modes()
-					_current_action_menu._weapon_choice_instance.queue_free()
-					_current_action_menu.queue_free()
-				
-				print("Starting combat between ", _active_unit.name, " and ", target_unit.name)
-				if combat_manager_instance:
-					combat_manager_instance.queue_free()
-				combat_manager_instance = combat_manager_scene.instantiate()
-				get_tree().root.add_child(combat_manager_instance)
-				combat_manager_instance.start_combat(_active_unit, target_unit)
-				combat_manager_instance.combat_finished.connect(_on_combat_finished)
-				_clear_active_unit()
-				return
-			else:
-				print("Target unit not enemy or cell not attackable.")
-		else:
-			print("No unit at cell during attack mode.")
-		
-	
-	# If no active unit, select unit at cell if possible
-	if _active_unit == null and _units.has(cell):
-		var candidate_unit = _units[cell]
-		if candidate_unit.is_enemy:
-			_active_unit = candidate_unit
-			_prev_cell = cell
-			_prev_position = candidate_unit.position
-			_show_action_menu_for_enemy(candidate_unit)
-			return
-		if candidate_unit.has_acted :
-			_show_pause_menu()
-		else:
-			_select_unit(cell)
-	# If there is an active unit, handle clicks for move or deselect
-	elif _active_unit != null:
-		_handle_active_unit_click(cell)
-	else:
-		_show_pause_menu()
 
 func _on_combat_finished(attacker: Unit):
 	# Your code to handle what happens after combat ends

@@ -256,8 +256,6 @@ func _on_wait_button_pressed() -> void:
 	queue_free()
 	
 
-	
-
 func _on_summary_button_pressed() -> void:
 	var selected_unit = get_parent()._active_unit
 	if not selected_unit:

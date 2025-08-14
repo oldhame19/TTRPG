@@ -70,6 +70,7 @@ func _ready() -> void:
 		fill_style.bg_color = Color(1.0, 0.2, 0.2)  # Red
 		hp_bar.add_theme_stylebox_override("fill", fill_style)
 
+
 	if not Engine.is_editor_hint():
 		curve = Curve2D.new()
 	rng.randomize()
@@ -77,6 +78,12 @@ func _ready() -> void:
 	update_hp_bar()
 	
 	connect("unit_died", self._on_unit_died)
+	
+	if is_enemy and equipped_weapon == null:
+		for slot in held_items.slots:
+			if slot.item_data and slot.item_data is WeaponItemData:
+				equip_item(slot.item_data)
+				break
 
 
 func initialize_stats() -> void:

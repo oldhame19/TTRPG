@@ -28,28 +28,26 @@ func start_phase(phase_name: String) -> void:
 	emit_signal("phase_started", phase_name)
 	print("Starting phase:", phase_name)
 
-	# Reset all units for the start of the player phase
 	if phase_name == "player":
 		for group_name in ["player", "enemy"]:
 			for u in unit_groups.get(group_name, []):
 				if is_instance_valid(u) and not u.is_dead:
-					u.reset_turn()  # Clears has_acted and updates visuals
-
-	var raw_units: Array = unit_groups.get(phase_name, [])
-	var units: Array[Unit] = []
-	for u in raw_units:
-		if is_instance_valid(u) and not u.is_dead:
-			units.append(u)
-			
-	if units.size() == 0:
-		call_deferred("end_phase")
-		return
-
-	if phase_name == "player":
-		# All turns are already reset above
-		return
+					u.reset_turn()
 	else:
+		# Wait for phase animation to finish before starting AI
+		await game_board.phase_transition_finished
+		var raw_units: Array = unit_groups.get("enemy", [])
+		var units: Array[Unit] = []
+		for u in raw_units:
+			if is_instance_valid(u) and not u.is_dead:
+				units.append(u)
+
+		if units.size() == 0:
+			call_deferred("end_phase")
+			return
+
 		await _run_ai_phase(units)
+
 
 
 func end_phase() -> void:
