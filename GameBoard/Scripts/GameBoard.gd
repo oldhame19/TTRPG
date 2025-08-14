@@ -727,6 +727,7 @@ func _start_trade_with(target_unit: Unit, cell: Vector2) -> void:
 	_current_trade_scene = preload("res://GUI/ActionMenu/trade_ui.tscn").instantiate()
 	_current_trade_scene.game_board = self
 	
+	
 	_current_trade_scene.set_units(_active_unit, target_unit)
 	add_child(_current_trade_scene)
 	
@@ -764,6 +765,7 @@ func _cleanup_after_trade(retained_unit: Unit) -> void:
 	var action_menu = ActionMenu.instantiate()
 	action_menu.unit = retained_unit
 	action_menu.game_board = self
+	action_menu.turn_manager = turn_manager
 	add_child(action_menu)
 	_current_action_menu = action_menu
 	
@@ -790,6 +792,7 @@ func _show_action_menu() -> void:
 	var action_menu = ActionMenu.instantiate()
 	action_menu.unit = _active_unit
 	action_menu.game_board = self
+	action_menu.turn_manager = turn_manager
 	add_child(action_menu)
 	_current_action_menu = action_menu
 	
@@ -801,6 +804,7 @@ func _show_action_menu_for_enemy(enemy_unit: Unit) -> void:
 	var action_menu = ActionMenu.instantiate()
 	action_menu.unit = enemy_unit
 	action_menu.game_board = self
+	action_menu.turn_manager = turn_manager
 	action_menu.is_enemy_menu = true# Optional flag in ActionMenu to disable certain buttons
 	add_child(action_menu)
 	_current_action_menu = action_menu

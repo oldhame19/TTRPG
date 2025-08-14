@@ -2,10 +2,11 @@ extends CanvasLayer
 class_name ActionMenu
 
 @onready var cursor: Cursor = get_parent()._cursor
-
+var game_board: GameBoard  # assign before _ready runs
+var turn_manager: TurnManager
 var DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 var unit: Unit        # assign before _ready runs
-var game_board: GameBoard  # assign before _ready runs
+
 var trade_mode_active: bool = false
 var attack_mode_active: bool = false
 var assist_mode_active: bool = false
@@ -15,6 +16,7 @@ var _weapon_choice_instance: Node = null
 
 var opened_from_summary: bool = false
 var is_enemy_menu: bool = false
+
 var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")
 var weapon_choice_menu = preload("res://GUI/CombatUI/weapon_choice_menu.tscn")
 func _ready() -> void:
@@ -243,9 +245,9 @@ func _on_items_button_pressed() -> void:
 func _on_wait_button_pressed() -> void:
 	# Set curr_unit to wait status
 	# Clear active unit
-	game_board._active_unit.has_acted = true
-	game_board._active_unit.update_acted_visual()
-
+	#game_board._active_unit.has_acted = true
+	#game_board._active_unit.update_acted_visual()
+	turn_manager.unit_finished_turn(unit)
 	get_parent()._clear_active_unit()
 	# Enable cursor and close menu
 	cursor.process_mode = Node.PROCESS_MODE_INHERIT
@@ -326,12 +328,16 @@ func _on_cancel_button_pressed() -> void:
 		game_board._unit_overlay.clear_tradeable_cells()
 
 	# Restore all buttons to visible
-		_update_buttons_visibility()
-		$VBoxContainer/CancelButton.visible = true
-		$VBoxContainer/ItemsButton.visible = true
-		$VBoxContainer/SummaryButton.visible = true
-		$VBoxContainer/EmptyButton.visible = true
-		$VBoxContainer/WaitButton.visible = true
+		if !unit.is_enemy:
+			_update_buttons_visibility()
+			$VBoxContainer/CancelButton.visible = true
+			$VBoxContainer/ItemsButton.visible = true
+			$VBoxContainer/SummaryButton.visible = true
+			$VBoxContainer/EmptyButton.visible = true
+			$VBoxContainer/WaitButton.visible = true
+		else:
+			_update_buttons_visibility()
+			
 	# Reset and hide cursor (same as initial ActionMenu state)
 		cursor.restricted_cells.clear()
 		cursor.reset_cursor()

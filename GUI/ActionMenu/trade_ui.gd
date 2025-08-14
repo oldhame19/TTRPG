@@ -1,4 +1,3 @@
-#trade_ui.gd
 extends Control
 signal trade_closed
 signal trade_completed
@@ -69,6 +68,7 @@ func update_ui() -> void:
 	var menu_a = held_items_menu_a.instantiate()
 	menu_a.unit = unit_a
 	menu_a.game_board = game_board  
+	menu_a.side = "A"
 	add_child(menu_a)
 	menu_a.get_node("Panel").position = Vector2(-400, -250)
 	var close_button_a = menu_a.get_node_or_null("Panel/CloseButton")
@@ -78,6 +78,7 @@ func update_ui() -> void:
 	var menu_b = held_items_menu_b.instantiate()
 	menu_b.unit = unit_b
 	menu_b.game_board = game_board  
+	menu_b.side = "B"
 	add_child(menu_b)
 	menu_b.get_node("Panel").position = Vector2(50, -250)
 	var close_button_b = menu_b.get_node_or_null("Panel/CloseButton")
@@ -120,62 +121,3 @@ func _unhandled_input(event):
 		if event.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
 			# Consume mouse wheel events to disable zoom during trade UI
 			get_viewport().set_input_as_handled()
-
-
-#func update_ui() -> void:
-	#var root = self
-#
-	## Clear existing children except the CancelButton
-	#for child in root.get_children():
-		#if child != $CancelButton:
-			#child.queue_free()
-#
-	## Instantiate held items menus
-	#var menu_a = held_items_menu_a.instantiate()
-	#menu_a.unit = unit_a
-	#menu_a.game_board = get_node("/root/GameBoard")
-	#root.add_child(menu_a)
-	#menu_a.get_node("Panel").position = Vector2(-400, -250)
-#
-	#var menu_b = held_items_menu_b.instantiate()
-	#menu_b.unit = unit_b
-	#menu_b.game_board = get_node("/root/GameBoard")
-	#root.add_child(menu_b)
-	#menu_b.get_node("Panel").position = Vector2(35, -250)
-#
-	## Position cancel button below the menus
-	#$CancelButton.position = Vector2(700, 700)
-#
-	## Hide and disable cursor while in trade UI
-	#if cursor:
-		#cursor.visible = false
-		#cursor.process_mode = Node.PROCESS_MODE_DISABLED
-		#cursor.zoom_enabled = false
-#
-
-#func update_ui() -> void:
-	## Clear children except cancel button
-	#for child in get_children():
-		#if child != $CancelButton:
-			#child.queue_free()
-#
-	## Instantiate and add held item menus as children
-	#var menu_a = held_items_menu_a.instantiate()
-	#menu_a.unit = unit_a
-	#menu_a.game_board = get_node("/root/GameBoard")
-	#add_child(menu_a)
-	#menu_a.get_node("Panel").position = Vector2(10, 10)  # relative inside popup trade UI
-#
-	#var menu_b = held_items_menu_b.instantiate()
-	#menu_b.unit = unit_b
-	#menu_b.game_board = get_node("/root/GameBoard")
-	#add_child(menu_b)
-	#menu_b.get_node("Panel").position = Vector2(360, 10)
-#
-### Position cancel button relative to trade UI popup
-	#$CancelButton.position = Vector2(180, 520)  # fixed position inside popup
-#
-	#if cursor:
-		#cursor.visible = false
-		#cursor.process_mode = Node.PROCESS_MODE_DISABLED
-		#cursor.zoom_enabled = false

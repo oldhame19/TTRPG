@@ -1,4 +1,3 @@
-#held_items_menu.gd 
 extends CanvasLayer
 class_name HeldItemsMenu
 @export var unit: Unit

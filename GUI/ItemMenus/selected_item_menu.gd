@@ -1,4 +1,3 @@
-#selected_item_menu.gd
 extends Control  # Or PopupPanel, etc.
 class_name SelectedItemMenu
 static var active_popup: Control = null
@@ -227,6 +226,10 @@ func _on_description_button_pressed() -> void:
 	if opened_from_summary:
 		# Same position regardless of unit/source when opened from summary
 		desc_box.set_position(Vector2(750, 365))
+	elif side == "A":
+		desc_box.set_position(Vector2(325, 365))
+	elif side =="B":
+		desc_box.set_position(Vector2(627, 365))
 	else:
 		if unit and unit.is_player:
 			if source == "inventory":
