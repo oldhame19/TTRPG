@@ -72,7 +72,7 @@ func _update_stat_labels() -> void:
 		# Show "old +increase -> new" if stat increased
 		if curr_val > prev_val:
 			var increase = curr_val - prev_val
-			label.text = str(prev_val) + " +" + str(increase) + " -> " + str(curr_val)
+			label.text = str(prev_val) + " + " + str(increase) + " -> " + str(curr_val)
 		else:
 			label.text = str(prev_val)
 		
@@ -85,7 +85,7 @@ func _update_stat_labels() -> void:
 	if totals_label:
 		if total_curr > total_prev:
 			var total_increase = total_curr - total_prev
-			totals_label.text = str(total_prev) + " +" + str(total_increase) + " -> " + str(total_curr)
+			totals_label.text = str(total_prev) + " + " + str(total_increase) + " -> " + str(total_curr)
 		else:
 			totals_label.text = str(total_prev)
 
