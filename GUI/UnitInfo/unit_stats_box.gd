@@ -59,5 +59,5 @@ func show_unit_stats(stats: StatBlock) -> void:
 	fth.text = " %d" % stats.faith
 
 	# Calculate and display total
-	var total := stats.strength + stats.defense + stats.speed + stats.dexterity + stats.charisma + stats.faith
+	var total := stats.strength + stats.defense + stats.speed + stats.dexterity + stats.charisma + stats.faith + stats.max_hp
 	total_label.text = "Total: %d" % total

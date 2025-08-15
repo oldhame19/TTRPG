@@ -10,7 +10,7 @@ offset_top = 132.0
 offset_right = 584.0
 offset_bottom = 252.0
 
-[node name="UntiNameLabel" type="Label" parent="UnitPanel"]
+[node name="UnitNameLabel" type="Label" parent="UnitPanel"]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -68,6 +68,7 @@ columns = 4
 [node name="HPLabel" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+text = "HP"
 
 [node name="hp" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
@@ -76,6 +77,7 @@ size_flags_horizontal = 3
 [node name="StrengthLabel" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+text = "STR"
 
 [node name="str" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
@@ -83,36 +85,42 @@ size_flags_horizontal = 3
 
 [node name="DefenseLabel" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
+text = "DEF"
 
 [node name="def" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
 
 [node name="SpeedLabel" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
+text = "SPD"
 
 [node name="spd" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
 
 [node name="DexterityLabel" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
+text = "DEX"
 
 [node name="dex" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
 
 [node name="CharismaLabel" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
+text = "CHA"
 
 [node name="cha" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
 
 [node name="FaithLabel" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
+text = "FTH"
 
 [node name="fth" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
 
 [node name="TotalsLabel" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2
+text = "TOTAL"
 
 [node name="totals" type="Label" parent="StatPanel/GridContainer"]
 layout_mode = 2

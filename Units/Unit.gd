@@ -2,6 +2,12 @@
 class_name Unit
 extends Path2D
 @onready var hp_bar: ProgressBar = $PathFollow2D/HPBar  
+# PackedScene reference to the LevelUpScreen scene
+var LevelUpScreenScene := preload("res://GUI/UnitInfo/LevelUpScreen.tscn")
+
+
+
+
 @onready var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 signal unit_died(unit) #singal to the gamebaord to remove unit from board, as well as anywhere else the unit may be accessible (units tab, etc)
 signal walk_finished ## Emitted when the unit reached the end of a path along which it was walking.
@@ -358,7 +364,7 @@ func get_reward_xp(attacker: Unit, defeated: bool = false) -> int:
 	
 	if defeated:
 		# XP for defeating enemy
-		base_xp = 20  # your existing base for defeat
+		base_xp = 100  # your existing base for defeat
 
 		# XP multipliers based on level difference
 		var multiplier := 1.0
@@ -410,58 +416,55 @@ func gain_xp(amount: int) -> void:
 
 func level_up() -> void:
 	level += 1
+
+	# Capture stats before growth
+	var previous_stats_copy := current_stats.copy()
+
+	# Apply stat growths
 	var gained_stats := []
-	
-	if unit_data == null or unit_data.growth_rates.size() == 0:
-		# fallback if no growth data
-		current_stats.max_hp += 1
-		hp = min(hp + 1, current_stats.max_hp)
-		update_hp_bar()
-		return
-
-	for key in unit_data.growth_rates.keys():
-		var growth_chance: int = int(unit_data.growth_rates[key])
-		var prob := float(growth_chance) / 100.0
-		if rng.randf() < prob:
-			match key:
-				"hp":
-					current_stats.max_hp += 1
-					hp += 1
-					gained_stats.append("hp")
-				"strength":
-					current_stats.strength += 1
-					gained_stats.append("strength")
-				"defense":
-					current_stats.defense += 1
-					gained_stats.append("defense")
-				"speed":
-					current_stats.speed += 1
-					gained_stats.append("speed")
-				"dexterity":
-					current_stats.dexterity += 1
-					gained_stats.append("dexterity")
-				"charisma":
-					current_stats.charisma += 1
-					gained_stats.append("charisma")
-				"faith":
-					current_stats.faith += 1
-					gained_stats.append("faith")
-				_:
-					pass
-
+	if unit_data != null and unit_data.growth_rates.size() > 0:
+		for key in unit_data.growth_rates.keys():
+			var growth_chance: int = int(unit_data.growth_rates[key])
+			if rng.randf() < float(growth_chance)/100.0:
+				match key:
+					"hp":
+						current_stats.max_hp += 1
+						gained_stats.append("hp")
+					"strength":
+						current_stats.strength += 1
+						gained_stats.append("strength")
+					"defense":
+						current_stats.defense += 1
+						gained_stats.append("defense")
+					"speed":
+						current_stats.speed += 1
+						gained_stats.append("speed")
+					"dexterity":
+						current_stats.dexterity += 1
+						gained_stats.append("dexterity")
+					"charisma":
+						current_stats.charisma += 1
+						gained_stats.append("charisma")
+					"faith":
+						current_stats.faith += 1
+						gained_stats.append("faith")
 	if gained_stats.size() == 0:
 		current_stats.max_hp += 1
-		hp += 1
 		gained_stats.append("hp (default)")
 
-	hp = min(hp, current_stats.max_hp)
-	update_hp_bar()
+	# Show LevelUpScreen dynamically
+	var level_up_screen := LevelUpScreenScene.instantiate() as LevelUpScreen
+	get_tree().current_scene.add_child(level_up_screen)
+	level_up_screen.previous_stats = previous_stats_copy
+	level_up_screen.show_level_up(self)
 
-	print("=== LEVEL UP ===")
-	print(unit_data.unit_name if unit_data else "Unit", "reached level", level)
-	print("Stats increased:", gained_stats)
-	print("================")
-	
+	# Connect signal to free the screen after animation
+	level_up_screen.finished.connect(func():
+		level_up_screen.queue_free()
+	)
+
+
+
 func update_acted_visual() -> void:
 	if has_acted:
 		# Dim sprite to gray (reduce color and alpha)

@@ -1,6 +1,7 @@
-# LevelUpScreen.gd
 extends CanvasLayer
 class_name LevelUpScreen
+
+signal finished
 
 @onready var stat_panel: GridContainer = $StatPanel/GridContainer
 @onready var unit_name_label: Label = $UnitPanel/UnitNameLabel
@@ -10,109 +11,90 @@ class_name LevelUpScreen
 var unit: Unit = null
 var previous_stats: StatBlock = null
 
-# Animation speed (seconds per stat increment)
-var stat_increment_delay := 0.3
+var labels: Dictionary
+
+func _ready():
+	labels = {
+		"hp": stat_panel.get_node("hp"),
+		"str": stat_panel.get_node("str"),
+		"def": stat_panel.get_node("def"),
+		"spd": stat_panel.get_node("spd"),
+		"dex": stat_panel.get_node("dex"),
+		"cha": stat_panel.get_node("cha"),
+		"fth": stat_panel.get_node("fth"),
+		"totals": stat_panel.get_node("totals"),
+	}
 
 func show_level_up(unit_to_display: Unit) -> void:
 	unit = unit_to_display
 	if unit == null:
 		return
 	
-	previous_stats = unit.get_raw_stats().duplicate()
+	
 	
 	unit_name_label.text = unit.unit_data.unit_name if unit.unit_data else "Unknown"
 	unit_class_label.text = unit.current_class.name if unit.current_class else "Unknown Class"
-	unit_level_label.text = str(unit.level - 1) + " -> " + str(unit.level)
 	
-	# Reset all stat labels to previous values first
-	_reset_stat_labels()
+	# Level label only shows arrow if level increased
+	var prev_level = unit.level - 1
+	if unit.level > prev_level:
+		unit_level_label.text = str(prev_level) + " -> " + str(unit.level)
+	else:
+		unit_level_label.text = str(unit.level)
 	
+	_update_stat_labels()
 	visible = true
-	
-	# Start the animated update
-	await _animate_stats()
+	emit_signal("finished")
 
-func _reset_stat_labels() -> void:
+func _update_stat_labels() -> void:
 	if unit == null or previous_stats == null:
 		return
 	
 	var current = unit.get_raw_stats()
-	for label_node in stat_panel.get_children():
-		if label_node is Label:
-			var stat_name = _get_stat_name_from_label(label_node.name)
-			if stat_name == "Totals":
-				label_node.text = ""
-			elif stat_name != "":
-				label_node.text = str(previous_stats.get(stat_name))
-
-# Removed the ": Callable" return type
-func _animate_stats() -> void:
-	if unit == null or previous_stats == null:
-		return
-	
-	var current = unit.get_raw_stats()
-	var total_prev = 0
-	var total_current = 0
-	
-	# Stat order to animate
 	var stat_order = [
-		["hp", "max_hp"], 
-		["str", "strength"], 
-		["def", "defense"], 
-		["spd", "speed"], 
-		["dex", "dexterity"], 
-		["cha", "charisma"], 
-		["fth", "faith"]
+		["hp", "max_hp"], ["str", "strength"], ["def", "defense"],
+		["spd", "speed"], ["dex", "dexterity"], ["cha", "charisma"], ["fth", "faith"]
 	]
+
+	var total_prev = 0
+	var total_curr = 0
 	
-	# Animate each stat
 	for pair in stat_order:
 		var label_name = pair[0]
 		var stat_key = pair[1]
-		
-		var label = stat_panel.get_node(label_name) if stat_panel.has_node(label_name) else null
+		var label: Label = labels.get(label_name)
 		if label == null:
 			continue
 		
 		var prev_val = previous_stats.get(stat_key)
 		var curr_val = current.get(stat_key)
-		total_prev += prev_val
-		total_current += curr_val
 		
+		# Show "old +increase -> new" if stat increased
 		if curr_val > prev_val:
-			var displayed_val = prev_val
-			while displayed_val < curr_val:
-				displayed_val += 1
-				label.text = str(prev_val) + " -> " + str(displayed_val) + " +" + str(displayed_val - prev_val)
-				await get_tree().create_timer(stat_increment_delay).timeout
+			var increase = curr_val - prev_val
+			label.text = str(prev_val) + " +" + str(increase) + " -> " + str(curr_val)
 		else:
-			label.text = str(curr_val)
-			await get_tree().create_timer(stat_increment_delay).timeout
+			label.text = str(prev_val)
+		
+		# Accumulate totals (including HP)
+		total_prev += prev_val
+		total_curr += curr_val
 	
-	# Animate totals at the end
-	var totals_label = stat_panel.get_node("totals") if stat_panel.has_node("totals") else null
+	# Set totals label with arrow and increase if changed
+	var totals_label: Label = labels.get("totals")
 	if totals_label:
-		var displayed_total = total_prev
-		while displayed_total < total_current:
-			displayed_total += 1
-			totals_label.text = str(total_prev) + " -> " + str(displayed_total)
-			await get_tree().create_timer(stat_increment_delay).timeout
-		totals_label.text = str(total_prev) + " -> " + str(total_current)
+		if total_curr > total_prev:
+			var total_increase = total_curr - total_prev
+			totals_label.text = str(total_prev) + " +" + str(total_increase) + " -> " + str(total_curr)
+		else:
+			totals_label.text = str(total_prev)
 
-func _get_stat_name_from_label(label_name: String) -> String:
-	var mapping = {
-		"hp": "max_hp",
-		"str": "strength",
-		"def": "defense",
-		"spd": "speed",
-		"dex": "dexterity",
-		"cha": "charisma",
-		"fth": "faith",
-		"totals": "Totals"
-	}
-	return mapping.get(label_name, "")
 
 func hide_screen() -> void:
 	visible = false
 	unit = null
 	previous_stats = null
+
+func _unhandled_input(event: InputEvent) -> void:
+	if visible and event is InputEventMouseButton and event.pressed:
+		hide_screen()

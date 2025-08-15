@@ -134,6 +134,8 @@ func _on_assist_button_pressed() -> void:
 
 	cursor.show_sprite = true
 	cursor.set_pointer_visible(false)
+	
+	unit.level_up()
 
 func _on_trade_button_pressed() -> void:
 	#game_board._unit_info_panel.visible = false
