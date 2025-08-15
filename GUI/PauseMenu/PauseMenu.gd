@@ -4,9 +4,23 @@ class_name PauseMenu
 @onready var cursor: Cursor = get_parent()._cursor
 @onready var turn_manager: TurnManager = get_parent().turn_manager
 
+# Updated paths to labels inside panels
+@onready var chapter_label: Label = $HBoxContainer/Panel/ChapterLabel
+@onready var turn_label: Label = $HBoxContainer/Panel2/TurnLabel
+
 func _ready() -> void:
 	$VBoxContainer/UnitsButton.grab_focus()
 	_disable_cursor()
+
+	# Update chapter name from current scene
+	var scene_name = get_tree().current_scene.name
+	chapter_label.text = scene_name 
+
+	# Update turn number from TurnManager
+	if turn_manager:
+		turn_label.text = "Turn: " + str(turn_manager.turn_count)
+	else:
+		turn_label.text = "Turn: - "
 
 # ================= Cursor =================
 

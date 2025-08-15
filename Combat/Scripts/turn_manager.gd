@@ -12,6 +12,8 @@ const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 
 var phases: Array[String] = ["player", "enemy"]
 var current_phase_index: int = 0
+var turn_count: int = 1
+
 var _phase_ending: bool = false
 
 var unit_groups := {
@@ -64,6 +66,11 @@ func end_phase() -> void:
 		return
 
 	current_phase_index = (current_phase_index + 1) % phases.size()
+	
+		# Increment turn count only when cycling back to player phase
+	if current_phase_index == 0:
+		turn_count += 1
+
 	print("Switched to phase index:", current_phase_index)
 	call_deferred("start_phase", phases[current_phase_index])
 	_phase_ending = false
