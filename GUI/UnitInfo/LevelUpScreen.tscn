@@ -1,0 +1,118 @@
+[gd_scene load_steps=2 format=3 uid="uid://rof7euyym44d"]
+
+[ext_resource type="Script" uid="uid://3uw0qhe6bifl" path="res://GUI/UnitInfo/level_up_screen.gd" id="1_77qhr"]
+
+[node name="LevelUpScreen" type="CanvasLayer"]
+script = ExtResource("1_77qhr")
+
+[node name="UnitPanel" type="Panel" parent="."]
+offset_top = 132.0
+offset_right = 584.0
+offset_bottom = 252.0
+
+[node name="UntiNameLabel" type="Label" parent="UnitPanel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -75.0
+offset_right = 90.0
+offset_bottom = 23.0
+grow_horizontal = 2
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UnitPanel"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -287.0
+offset_top = -74.0
+offset_right = 287.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="UnitClassLabel" type="Label" parent="UnitPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+
+[node name="UnitLevelLabel" type="Label" parent="UnitPanel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+
+[node name="StatPanel" type="Panel" parent="."]
+offset_top = 278.0
+offset_right = 584.0
+offset_bottom = 648.0
+
+[node name="GridContainer" type="GridContainer" parent="StatPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -292.0
+offset_top = -162.0
+offset_right = 292.0
+offset_bottom = 165.0
+grow_horizontal = 2
+grow_vertical = 2
+columns = 4
+
+[node name="HPLabel" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="hp" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StrengthLabel" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="str" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DefenseLabel" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="def" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="SpeedLabel" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="spd" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="DexterityLabel" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="dex" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="CharismaLabel" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="cha" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="FaithLabel" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="fth" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="TotalsLabel" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
+
+[node name="totals" type="Label" parent="StatPanel/GridContainer"]
+layout_mode = 2
