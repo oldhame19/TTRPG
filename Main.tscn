@@ -317,7 +317,7 @@ slots = Array[ExtResource("19_3b0ty")]([SubResource("Resource_gb15f")])
 script = ExtResource("28_w3rk5")
 allowed_weapon_types = Array[int]([1, 2, 3])
 name = "Champion"
-move_range = 4
+move_range = 2
 can_assist = false
 min_growth_rates = {
 "charisma": 0,
@@ -450,6 +450,7 @@ hp = 0
 unit_data = ExtResource("26_sqvbp")
 current_class = SubResource("Resource_sph85")
 attack_range = 1
+move_range = 2
 skin = ExtResource("7")
 skin_offset = Vector2(2, 9)
 

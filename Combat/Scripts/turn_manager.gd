@@ -108,14 +108,60 @@ func _run_ai_phase(units: Array[Unit]) -> void:
 		if not is_instance_valid(u) or u.is_dead:
 			continue
 
-		await get_tree().create_timer(0.3).timeout
+		# Boss-specific behavior
+		if u.is_boss:
+			# Find any player unit in attack range from current position
+			var player_in_range: Unit = null
+			for p in unit_groups["player"]:
+				if is_instance_valid(p) and not p.is_dead:
+					var dist = abs(u.cell.x - p.cell.x) + abs(u.cell.y - p.cell.y)
+					if dist <= u.attack_range:
+						player_in_range = p
+						break
 
+			if player_in_range:
+				# Attack without moving
+				await get_tree().create_timer(0.3).timeout
+				await _combat_attack(u, player_in_range)
+				u.has_acted = true
+				unit_finished_turn(u)
+			else:
+				# Check if any player can be reached and attacked if we move
+				var possible_moves = game_board._dijkstra(u.cell, u.move_range, false)
+				var found_action := false
+				for move_cell in possible_moves:
+					for p in unit_groups["player"]:
+						if is_instance_valid(p) and not p.is_dead:
+							var dist = abs(move_cell.x - p.cell.x) + abs(move_cell.y - p.cell.y)
+							if dist <= u.attack_range:
+								# Move and attack this target
+								await get_tree().create_timer(0.3).timeout
+								var path = _find_path_to_cell(possible_moves, move_cell, u.cell)
+								game_board._units.erase(u.cell)
+								u.cell = move_cell
+								game_board._units[u.cell] = u
+								u.walk_along(path)
+								await u.walk_finished
+								await _combat_attack(u, p)
+								u.has_acted = true
+								unit_finished_turn(u)
+								found_action = true
+								break
+					if found_action:
+						break
+				if not found_action:
+					# Boss does nothing this turn
+					u.has_acted = true
+					unit_finished_turn(u)
+			continue # Skip normal AI evaluation for bosses
+
+		# ===== Normal AI behavior for non-boss enemies =====
+		await get_tree().create_timer(0.3).timeout
 		var best_action: Dictionary = _evaluate_best_action(u, 2, planned_enemy_cells)
 		if best_action != {} and !u.has_acted:
 			await _execute_ai_action(u, best_action)
 			u.has_acted = true
 			planned_enemy_cells.append(best_action.move_to)
-
 
 # ================= AI Actions =================
 
