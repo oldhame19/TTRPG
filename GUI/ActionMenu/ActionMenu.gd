@@ -87,8 +87,7 @@ func _update_buttons_visibility() -> void:
 	$VBoxContainer/AttackButton.visible = enemy_in_range
 	
 	
-
-# Interact button logic
+# --- Interactable logic ---
 	var interactables_found := []
 
 	for tile_pos in game_board.interactables.keys():
@@ -112,7 +111,6 @@ func _update_buttons_visibility() -> void:
 		if child.name.begins_with("TempInteractButton_"):
 			child.queue_free()
 
-	# Handle Interact button(s)
 	if interactables_found.size() == 0:
 		$VBoxContainer/InteractButton.visible = false
 	elif interactables_found.size() == 1:
@@ -127,15 +125,19 @@ func _update_buttons_visibility() -> void:
 			_:
 				$VBoxContainer/InteractButton.text = str(tile.tile_type).capitalize()
 
-		# Reconnect signal dynamically
 		if $VBoxContainer/InteractButton.is_connected("pressed", _on_interact_button_pressed):
 			$VBoxContainer/InteractButton.disconnect("pressed", _on_interact_button_pressed)
 
-
+		# Connect the button to interact and handle turn-ending
 		$VBoxContainer/InteractButton.pressed.connect(func():
-			tile.interact(unit))
+			unit.collected_item_this_turn = false  # reset flag before interaction
+			tile.interact(unit)
+			if unit.collected_item_this_turn:
+				_end_turn()
+			_update_buttons_visibility()
+		)
 	else:
-		# Multiple tiles: hide default Interact button, create temporary buttons
+		# Multiple interactables - create temporary buttons
 		$VBoxContainer/InteractButton.visible = false
 		for idx in interactables_found.size():
 			var tile = interactables_found[idx]
@@ -153,8 +155,11 @@ func _update_buttons_visibility() -> void:
 			$VBoxContainer.add_child(temp_button)
 
 			temp_button.pressed.connect(func(t=tile):
+				unit.collected_item_this_turn = false
 				t.interact(unit)
-				# Cleanup temp buttons after interaction
+				if unit.collected_item_this_turn:
+					_end_turn()
+				# Cleanup temp buttons
 				for child in $VBoxContainer.get_children():
 					if child.name.begins_with("TempInteractButton_"):
 						child.queue_free()

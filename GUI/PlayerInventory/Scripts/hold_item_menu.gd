@@ -105,7 +105,7 @@ func _refresh_menus():
 			if child.get_script() and child.get_script().resource_path == "res://GUI/HeldItems/Scripts/held_item_menu.gd":
 				child.populate_items()
 			elif child.get_script() and child.get_script().resource_path == "res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd":
-				child.populate_items(-1)  # Show all
+				child.populate_items()  # Show all
 
 func _exit_tree():
 	if active_popup == self:
