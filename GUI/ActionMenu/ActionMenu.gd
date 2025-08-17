@@ -19,6 +19,7 @@ var is_enemy_menu: bool = false
 
 var _trade_menu_scene := preload("res://GUI/ActionMenu/trade_ui.tscn")
 var weapon_choice_menu = preload("res://GUI/CombatUI/weapon_choice_menu.tscn")
+
 func _ready() -> void:
 	$VBoxContainer/AttackButton.grab_focus()
 	cursor.hide()
@@ -26,20 +27,29 @@ func _ready() -> void:
 
 	_update_buttons_visibility()
 
-
 func _update_buttons_visibility() -> void:
 	if not unit or not game_board:
 		return
 
-	# If this is an enemy menu, only show Cancel and Summary
+	# Enemy menu special case
 	if is_enemy_menu:
-		for button in $VBoxContainer.get_children():
-			button.visible = button.name in ["CancelButton", "SummaryButton", "EmptyButton"]
+		_update_enemy_menu_buttons()
 		return
 
 	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
 
-	# Trade button logic
+	_update_trade_button(unit_cell)
+	_update_assist_button(unit_cell)
+	_update_attack_button(unit_cell)
+	_update_interact_buttons(unit_cell)
+
+
+# --- Individual button visibility functions ---
+func _update_enemy_menu_buttons() -> void:
+	for button in $VBoxContainer.get_children():
+		button.visible = button.name in ["CancelButton", "SummaryButton", "EmptyButton"]
+
+func _update_trade_button(unit_cell: Vector2) -> void:
 	var has_adjacent_ally = false
 	for dir in DIRECTIONS:
 		var neighbor_cell = unit_cell + dir
@@ -50,13 +60,18 @@ func _update_buttons_visibility() -> void:
 				break
 	$VBoxContainer/TradeButton.visible = has_adjacent_ally
 
-	# Assist button logic
+func _update_assist_button(unit_cell: Vector2) -> void:
 	var can_assist := false
-	if has_adjacent_ally and unit.current_class and unit.current_class.can_assist:
-		can_assist = true
+	for dir in DIRECTIONS:
+		var neighbor_cell = unit_cell + dir
+		if game_board._units.has(neighbor_cell):
+			var neighbor = game_board._units[neighbor_cell]
+			if not neighbor.is_enemy:
+				if unit.current_class and unit.current_class.can_assist:
+					can_assist = true
 	$VBoxContainer/AssistButton.visible = can_assist
 
-	# Attack button logic
+func _update_attack_button(unit_cell: Vector2) -> void:
 	var enemy_in_range = false
 	for slot in unit.held_items.slots:
 		if slot.item_data is WeaponItemData:
@@ -85,13 +100,14 @@ func _update_buttons_visibility() -> void:
 				break
 
 	$VBoxContainer/AttackButton.visible = enemy_in_range
-	
-	
-# --- Interactable logic ---
+
+func _update_interact_buttons(unit_cell: Vector2) -> void:
 	var interactables_found := []
 
 	for tile_pos in game_board.interactables.keys():
 		var tile : InteractableTile = game_board.interactables[tile_pos]
+		if tile.collected_flag:
+			continue
 		var is_adjacent := false
 
 		if tile.requires_adjacent:
@@ -106,7 +122,7 @@ func _update_buttons_visibility() -> void:
 		if is_adjacent:
 			interactables_found.append(tile)
 
-	# Remove any previously added temporary interact buttons
+	# Remove temporary interact buttons
 	for child in $VBoxContainer.get_children():
 		if child.name.begins_with("TempInteractButton_"):
 			child.queue_free()
@@ -114,57 +130,60 @@ func _update_buttons_visibility() -> void:
 	if interactables_found.size() == 0:
 		$VBoxContainer/InteractButton.visible = false
 	elif interactables_found.size() == 1:
-		var tile = interactables_found[0]
-		$VBoxContainer/InteractButton.visible = true
+		_setup_single_interact_button(interactables_found[0])
+	else:
+		_setup_multiple_interact_buttons(interactables_found)
+
+func _setup_single_interact_button(tile: InteractableTile) -> void:
+	$VBoxContainer/InteractButton.visible = true
+
+	match tile.tile_type:
+		InteractableTile.TileType.STONES:
+			$VBoxContainer/InteractButton.text = "COLLECT"
+		InteractableTile.TileType.THRONE:
+			$VBoxContainer/InteractButton.text = "SEIZE"
+		_:
+			$VBoxContainer/InteractButton.text = str(tile.tile_type).capitalize()
+
+	if $VBoxContainer/InteractButton.is_connected("pressed", _on_interact_button_pressed):
+		$VBoxContainer/InteractButton.disconnect("pressed", _on_interact_button_pressed)
+
+	$VBoxContainer/InteractButton.pressed.connect(func():
+		unit.collected_item_this_turn = false
+		tile.interact(unit)
+		if unit.collected_item_this_turn:
+			_end_turn()
+		_update_buttons_visibility()
+	)
+
+func _setup_multiple_interact_buttons(tiles: Array) -> void:
+	$VBoxContainer/InteractButton.visible = false
+	for idx in tiles.size():
+		var tile = tiles[idx]
+		var temp_button := Button.new()
+		temp_button.name = "TempInteractButton_%d" % idx
 
 		match tile.tile_type:
 			InteractableTile.TileType.STONES:
-				$VBoxContainer/InteractButton.text = "INTERACT"
+				temp_button.text = "INTERACT"
 			InteractableTile.TileType.THRONE:
-				$VBoxContainer/InteractButton.text = "SEIZE"
+				temp_button.text = "SEIZE"
 			_:
-				$VBoxContainer/InteractButton.text = str(tile.tile_type).capitalize()
+				temp_button.text = str(tile.tile_type).capitalize()
 
-		if $VBoxContainer/InteractButton.is_connected("pressed", _on_interact_button_pressed):
-			$VBoxContainer/InteractButton.disconnect("pressed", _on_interact_button_pressed)
+		$VBoxContainer.add_child(temp_button)
 
-		# Connect the button to interact and handle turn-ending
-		$VBoxContainer/InteractButton.pressed.connect(func():
-			unit.collected_item_this_turn = false  # reset flag before interaction
-			tile.interact(unit)
+		temp_button.pressed.connect(func(t=tile):
+			unit.collected_item_this_turn = false
+			t.interact(unit)
 			if unit.collected_item_this_turn:
 				_end_turn()
+			for child in $VBoxContainer.get_children():
+				if child.name.begins_with("TempInteractButton_"):
+					child.queue_free()
 			_update_buttons_visibility()
 		)
-	else:
-		# Multiple interactables - create temporary buttons
-		$VBoxContainer/InteractButton.visible = false
-		for idx in interactables_found.size():
-			var tile = interactables_found[idx]
-			var temp_button := Button.new()
-			temp_button.name = "TempInteractButton_%d" % idx
 
-			match tile.tile_type:
-				InteractableTile.TileType.STONES:
-					temp_button.text = "INTERACT"
-				InteractableTile.TileType.THRONE:
-					temp_button.text = "SEIZE"
-				_:
-					temp_button.text = str(tile.tile_type).capitalize()
-
-			$VBoxContainer.add_child(temp_button)
-
-			temp_button.pressed.connect(func(t=tile):
-				unit.collected_item_this_turn = false
-				t.interact(unit)
-				if unit.collected_item_this_turn:
-					_end_turn()
-				# Cleanup temp buttons
-				for child in $VBoxContainer.get_children():
-					if child.name.begins_with("TempInteractButton_"):
-						child.queue_free()
-				_update_buttons_visibility()
-			)
 
 func _on_attack_button_pressed() -> void:
 	attack_mode_active = true

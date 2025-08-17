@@ -5,9 +5,6 @@ extends Path2D
 # PackedScene reference to the LevelUpScreen scene
 var LevelUpScreenScene := preload("res://GUI/UnitInfo/LevelUpScreen.tscn")
 
-
-
-
 @onready var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 signal unit_died(unit) #singal to the gamebaord to remove unit from board, as well as anywhere else the unit may be accessible (units tab, etc)
 signal walk_finished ## Emitted when the unit reached the end of a path along which it was walking.
