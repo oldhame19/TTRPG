@@ -1,4 +1,4 @@
-[gd_scene load_steps=52 format=4 uid="uid://30jb4kc5kf5p"]
+[gd_scene load_steps=59 format=4 uid="uid://30jb4kc5kf5p"]
 
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://GameBoard/Cursor/Cursor.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="2"]
@@ -21,7 +21,10 @@
 [ext_resource type="Resource" uid="uid://dg3yf07bcnp7v" path="res://Units/Scripts/UnitData/david_data.tres" id="18_3b0ty"]
 [ext_resource type="Resource" uid="uid://db4v7fqoho8p4" path="res://GUI/HeldItems/test/test_held_items.tres" id="18_5tuhn"]
 [ext_resource type="Script" uid="uid://b3bnc4m3u2lkx" path="res://GUI/HeldItems/Scripts/held_items_data.gd" id="18_devvj"]
+[ext_resource type="Resource" uid="uid://bcpqj7dsmhwfs" path="res://GUI/PlayerInventory/test/test_slot3.tres" id="18_gb15f"]
 [ext_resource type="Script" uid="uid://dmphg5nlphaa6" path="res://GUI/PlayerInventory/Scripts/slot_data.gd" id="19_3b0ty"]
+[ext_resource type="Resource" uid="uid://bb66nenqr0wyu" path="res://Items/ItemResources/Provisions/supercededbread.tres" id="19_sph85"]
+[ext_resource type="Resource" uid="uid://ce2ntn4loeo46" path="res://Items/ItemResources/Weapons/sling.tres" id="20_o7g6l"]
 [ext_resource type="Resource" uid="uid://vgrdpkarv033" path="res://Units/Test_unit_data.tres" id="21_hri7i"]
 [ext_resource type="Script" uid="uid://blaaacoyl7slh" path="res://Units/Scripts/ResourceData/stat_block.gd" id="23_hhcpw"]
 [ext_resource type="Resource" uid="uid://basa4txhxdb7k" path="res://Items/ItemResources/Weapons/training_sword.tres" id="23_mxvw5"]
@@ -29,6 +32,7 @@
 [ext_resource type="Resource" uid="uid://dsgsre828qi7" path="res://Units/goliath_stats.tres" id="24_xrxkg"]
 [ext_resource type="Resource" uid="uid://df5q2a0550p" path="res://Units/Goliath_unit_data.tres" id="26_sqvbp"]
 [ext_resource type="Script" uid="uid://cvbyjqvw2u3cn" path="res://Units/Scripts/ResourceData/class_data.gd" id="28_w3rk5"]
+[ext_resource type="Script" uid="uid://b1l8uicvodmvw" path="res://Background/Scripts/stone_interactable_tile.gd" id="30_5mvff"]
 
 [sub_resource type="GDScript" id="GDScript_d1qvb"]
 script/source = "@export var movement_data: Dictionary
@@ -250,6 +254,23 @@ movement_data = {
 3: 2
 }
 
+[sub_resource type="Resource" id="Resource_bvekf"]
+script = ExtResource("19_3b0ty")
+item_data = ExtResource("19_sph85")
+quantity = 3
+metadata/_custom_type_script = "uid://dmphg5nlphaa6"
+
+[sub_resource type="Resource" id="Resource_hjrdd"]
+script = ExtResource("19_3b0ty")
+item_data = ExtResource("20_o7g6l")
+quantity = 1
+metadata/_custom_type_script = "uid://dmphg5nlphaa6"
+
+[sub_resource type="Resource" id="Resource_vi5kq"]
+script = ExtResource("18_devvj")
+slots = Array[ExtResource("19_3b0ty")]([ExtResource("18_gb15f"), SubResource("Resource_bvekf"), SubResource("Resource_hjrdd")])
+metadata/_custom_type_script = "uid://b3bnc4m3u2lkx"
+
 [sub_resource type="Resource" id="Resource_3b0ty"]
 script = ExtResource("18_devvj")
 slots = Array[ExtResource("19_3b0ty")]([])
@@ -413,7 +434,7 @@ position = Vector2(744.918, 553.46)
 position = Vector2(608.282, 367.192)
 is_player = true
 inventory = ExtResource("15_kjvhd")
-held_items = ExtResource("18_5tuhn")
+held_items = SubResource("Resource_vi5kq")
 hp = 18
 unit_data = ExtResource("18_3b0ty")
 attack_range = 1
@@ -468,7 +489,7 @@ skin_offset = Vector2(2, 9)
 
 [node name="EnemyBear" parent="GameBoard" instance=ExtResource("2")]
 modulate = Color(1, 0, 0, 1)
-position = Vector2(129.297, 359.254)
+position = Vector2(127.436, 288.25)
 is_enemy = true
 held_items = SubResource("Resource_xrxkg")
 hp = 0
@@ -478,6 +499,10 @@ attack_range = 1
 move_range = 4
 skin = ExtResource("8")
 skin_offset = Vector2(2, 9)
+
+[node name="Node2D" type="Node2D" parent="GameBoard"]
+position = Vector2(603.846, 589.714)
+script = ExtResource("30_5mvff")
 
 [connection signal="accept_pressed" from="GameBoard/Cursor" to="GameBoard" method="_on_Cursor_accept_pressed"]
 [connection signal="moved" from="GameBoard/Cursor" to="GameBoard" method="_on_Cursor_moved"]

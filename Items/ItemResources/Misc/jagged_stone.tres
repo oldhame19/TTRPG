@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=4 format=3 uid="uid://u2xf4u0j5lom"]
+
+[ext_resource type="Script" uid="uid://bj0jjuon8i1ta" path="res://Items/Scripts/item_data.gd" id="1_d67lp"]
+[ext_resource type="Texture2D" uid="uid://brf0to7jmbm48" path="res://Background/Tileset/terrain_tiled_80x80 (1).png" id="2_fhxqa"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fuh6n"]
+atlas = ExtResource("2_fhxqa")
+region = Rect2(2359, 1466, 32, 22)
+
+[resource]
+script = ExtResource("1_d67lp")
+name = "Jagged Stone"
+description = "A small, jagged stone. Less accurate at a distance, but packs a punch."
+category = 3
+stack_size = 5
+max_durability = 1
+durability = 1
+weight = 0
+texture = SubResource("AtlasTexture_fuh6n")
+equipped = false
+metadata/_custom_type_script = "uid://bj0jjuon8i1ta"

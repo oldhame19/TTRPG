@@ -1,16 +1,16 @@
 [gd_resource type="Resource" script_class="ItemData" load_steps=4 format=3 uid="uid://sj3kjirnpkk0"]
 
-[ext_resource type="Script" uid="uid://bj0jjuon8i1ta" path="res://Items/Scripts/item_data.gd" id="1_n2ssn"]
-[ext_resource type="Texture2D" uid="uid://bybooo6n8jonv" path="res://Items/terrain_tiled_80x80 (1).png" id="2_n2ssn"]
+[ext_resource type="Script" uid="uid://bj0jjuon8i1ta" path="res://Items/Scripts/item_data.gd" id="1_67qls"]
+[ext_resource type="Texture2D" uid="uid://bybooo6n8jonv" path="res://Items/terrain_tiled_80x80 (1).png" id="2_q35bv"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_gid0l"]
-atlas = ExtResource("2_n2ssn")
+atlas = ExtResource("2_q35bv")
 region = Rect2(2403, 1538, 29, 22)
 
 [resource]
-script = ExtResource("1_n2ssn")
-name = "Stone"
-description = "A small stone, good for slinging."
+script = ExtResource("1_67qls")
+name = "Smooth Stone"
+description = "A small, smooth stone. Accurate at a distance. "
 category = 3
 stack_size = 5
 max_durability = 1

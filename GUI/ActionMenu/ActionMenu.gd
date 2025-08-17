@@ -85,8 +85,81 @@ func _update_buttons_visibility() -> void:
 				break
 
 	$VBoxContainer/AttackButton.visible = enemy_in_range
-	$VBoxContainer/ActionButton.visible = false
+	
+	
 
+# Interact button logic
+	var interactables_found := []
+
+	for tile_pos in game_board.interactables.keys():
+		var tile : InteractableTile = game_board.interactables[tile_pos]
+		var is_adjacent := false
+
+		if tile.requires_adjacent:
+			for dir in DIRECTIONS:
+				if unit_cell + dir == tile_pos:
+					is_adjacent = true
+					break
+		else:
+			if unit_cell == tile_pos:
+				is_adjacent = true
+
+		if is_adjacent:
+			interactables_found.append(tile)
+
+	# Remove any previously added temporary interact buttons
+	for child in $VBoxContainer.get_children():
+		if child.name.begins_with("TempInteractButton_"):
+			child.queue_free()
+
+	# Handle Interact button(s)
+	if interactables_found.size() == 0:
+		$VBoxContainer/InteractButton.visible = false
+	elif interactables_found.size() == 1:
+		var tile = interactables_found[0]
+		$VBoxContainer/InteractButton.visible = true
+
+		match tile.tile_type:
+			InteractableTile.TileType.STONES:
+				$VBoxContainer/InteractButton.text = "INTERACT"
+			InteractableTile.TileType.THRONE:
+				$VBoxContainer/InteractButton.text = "SEIZE"
+			_:
+				$VBoxContainer/InteractButton.text = str(tile.tile_type).capitalize()
+
+		# Reconnect signal dynamically
+		if $VBoxContainer/InteractButton.is_connected("pressed", _on_interact_button_pressed):
+			$VBoxContainer/InteractButton.disconnect("pressed", _on_interact_button_pressed)
+
+
+		$VBoxContainer/InteractButton.pressed.connect(func():
+			tile.interact(unit))
+	else:
+		# Multiple tiles: hide default Interact button, create temporary buttons
+		$VBoxContainer/InteractButton.visible = false
+		for idx in interactables_found.size():
+			var tile = interactables_found[idx]
+			var temp_button := Button.new()
+			temp_button.name = "TempInteractButton_%d" % idx
+
+			match tile.tile_type:
+				InteractableTile.TileType.STONES:
+					temp_button.text = "INTERACT"
+				InteractableTile.TileType.THRONE:
+					temp_button.text = "SEIZE"
+				_:
+					temp_button.text = str(tile.tile_type).capitalize()
+
+			$VBoxContainer.add_child(temp_button)
+
+			temp_button.pressed.connect(func(t=tile):
+				t.interact(unit)
+				# Cleanup temp buttons after interaction
+				for child in $VBoxContainer.get_children():
+					if child.name.begins_with("TempInteractButton_"):
+						child.queue_free()
+				_update_buttons_visibility()
+			)
 
 func _on_attack_button_pressed() -> void:
 	attack_mode_active = true
@@ -135,7 +208,7 @@ func _on_assist_button_pressed() -> void:
 	cursor.show_sprite = true
 	cursor.set_pointer_visible(false)
 	
-	unit.level_up()
+	#unit.level_up() easy access to test level up screen
 
 func _on_trade_button_pressed() -> void:
 	#game_board._unit_info_panel.visible = false
@@ -158,10 +231,43 @@ func _on_trade_button_pressed() -> void:
 	cursor.show_sprite = true
 	cursor.set_pointer_visible(false)
 
-func _on_action_button_pressed() -> void:
-	game_board._unit_info_panel.visible = false
+func _on_interact_button_pressed() -> void:
+	if not unit or not game_board:
+		return
 
-	pass # Replace with function body.
+	var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
+	var interactables_found := []
+
+	for tile_pos in game_board.interactables.keys():
+		var tile : InteractableTile = game_board.interactables[tile_pos]
+		var is_adjacent := false
+
+		if tile.requires_adjacent:
+			for dir in DIRECTIONS:
+				if unit_cell + dir == tile_pos:
+					is_adjacent = true
+					break
+		else:
+			if unit_cell == tile_pos:
+				is_adjacent = true
+
+		if is_adjacent:
+			interactables_found.append(tile)
+
+	if interactables_found.size() == 0:
+		return
+	elif interactables_found.size() == 1:
+		# Only one interactable, just interact with it
+		interactables_found[0].interact(unit)
+	else:
+		# Multiple interactables - handled by temporary buttons
+		pass
+
+	# Only end turn if unit actually collected an item
+	if unit.collected_item_this_turn:
+		_end_turn()
+
+
 
 func _on_items_button_pressed() -> void:
 	game_board._unit_info_panel.visible = false
@@ -249,6 +355,9 @@ func _on_wait_button_pressed() -> void:
 	# Clear active unit
 	#game_board._active_unit.has_acted = true
 	#game_board._active_unit.update_acted_visual()
+	_end_turn()
+	
+func _end_turn()-> void:
 	turn_manager.unit_finished_turn(unit)
 	get_parent()._clear_active_unit()
 	# Enable cursor and close menu

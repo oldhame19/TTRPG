@@ -18,7 +18,9 @@ signal walk_finished ## Emitted when the unit reached the end of a path along wh
 
 @export var has_moved = false
 @export var has_acted = false
+
 var is_dead = false
+var collected_item_this_turn = false
 
 @export var move_speed := 600.0
 @export var grid: Resource ## Shared resource of type Grid, used to calculate map coordinates.
