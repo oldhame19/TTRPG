@@ -73,22 +73,27 @@ func _update_assist_button(unit_cell: Vector2) -> void:
 
 func _update_attack_button(unit_cell: Vector2) -> void:
 	var enemy_in_range = false
+
+	# Loop through all held weapons
 	for slot in unit.held_items.slots:
 		if slot.item_data is WeaponItemData:
 			var weapon := slot.item_data as WeaponItemData
 
+			# Check if the unit's class can use this weapon
 			if unit.current_class and weapon.weapon_type not in unit.current_class.allowed_weapon_types:
 				continue
 
+			# --- Check ammo for ranged weapons ---
 			if weapon.weapon_type == WeaponItemData.WeaponType.SLING:
-				var has_stone := false
+				var has_ammo = false
 				for ammo_slot in unit.held_items.slots:
-					if ammo_slot.item_data.name == "Stone" and ammo_slot.quantity > 0:
-						has_stone = true
+					if ammo_slot.item_data.name in ["Jagged Stone", "Smooth Stone"] and ammo_slot.quantity > 0:
+						has_ammo = true
 						break
-				if not has_stone:
-					continue
+				if not has_ammo:
+					continue  # skip this weapon, no ammo available
 
+			# --- Check for enemies in attack range ---
 			var weapon_range_cells = game_board._flood_fill(unit_cell, weapon.atk_range)
 			for cell_pos in weapon_range_cells:
 				if game_board._units.has(cell_pos):
@@ -97,9 +102,10 @@ func _update_attack_button(unit_cell: Vector2) -> void:
 						enemy_in_range = true
 						break
 			if enemy_in_range:
-				break
+				break  # no need to check other weapons
 
 	$VBoxContainer/AttackButton.visible = enemy_in_range
+
 
 func _update_interact_buttons(unit_cell: Vector2) -> void:
 	var interactables_found := []
@@ -305,6 +311,11 @@ func _on_items_button_pressed() -> void:
 		inventory_menu.game_board = game_board
 		inventory_menu.unit = selected_unit
 		get_tree().get_root().add_child(inventory_menu)
+		
+		inventory_menu.menu_closed.connect(func():
+			_update_buttons_visibility()
+			show()  # optionally re-show the action menu
+		)
 
 		var held_items_menu = preload("res://GUI/HeldItems/Scenes/held_item_menu.tscn").instantiate()
 		held_items_menu.unit = selected_unit

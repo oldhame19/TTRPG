@@ -1,4 +1,4 @@
-[gd_scene load_steps=59 format=4 uid="uid://30jb4kc5kf5p"]
+[gd_scene load_steps=61 format=4 uid="uid://30jb4kc5kf5p"]
 
 [ext_resource type="PackedScene" uid="uid://bv1ul1qynrdwd" path="res://GameBoard/Cursor/Cursor.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://d4mhjq651egt" path="res://Units/Unit.tscn" id="2"]
@@ -19,7 +19,6 @@
 [ext_resource type="Texture2D" uid="uid://x4kxxdinjx3r" path="res://Units/bugcat.png" id="9"]
 [ext_resource type="Resource" uid="uid://dvworp6jnpmkd" path="res://GUI/PlayerInventory/test/test_inventory.tres" id="15_kjvhd"]
 [ext_resource type="Resource" uid="uid://dg3yf07bcnp7v" path="res://Units/Scripts/UnitData/david_data.tres" id="18_3b0ty"]
-[ext_resource type="Resource" uid="uid://db4v7fqoho8p4" path="res://GUI/HeldItems/test/test_held_items.tres" id="18_5tuhn"]
 [ext_resource type="Script" uid="uid://b3bnc4m3u2lkx" path="res://GUI/HeldItems/Scripts/held_items_data.gd" id="18_devvj"]
 [ext_resource type="Resource" uid="uid://bcpqj7dsmhwfs" path="res://GUI/PlayerInventory/test/test_slot3.tres" id="18_gb15f"]
 [ext_resource type="Script" uid="uid://dmphg5nlphaa6" path="res://GUI/PlayerInventory/Scripts/slot_data.gd" id="19_3b0ty"]
@@ -30,7 +29,9 @@
 [ext_resource type="Resource" uid="uid://basa4txhxdb7k" path="res://Items/ItemResources/Weapons/training_sword.tres" id="23_mxvw5"]
 [ext_resource type="Script" uid="uid://u3i27lovwmxw" path="res://Units/Scripts/ResourceData/unit_data.gd" id="24_mxvw5"]
 [ext_resource type="Resource" uid="uid://dsgsre828qi7" path="res://Units/goliath_stats.tres" id="24_xrxkg"]
+[ext_resource type="Resource" uid="uid://clra7hhuxjfdt" path="res://GUI/PlayerInventory/test/test_slot1.tres" id="26_sph85"]
 [ext_resource type="Resource" uid="uid://df5q2a0550p" path="res://Units/Goliath_unit_data.tres" id="26_sqvbp"]
+[ext_resource type="Resource" uid="uid://dexsegaw7vcr8" path="res://GUI/PlayerInventory/test/test_slot2.tres" id="27_o7g6l"]
 [ext_resource type="Script" uid="uid://cvbyjqvw2u3cn" path="res://Units/Scripts/ResourceData/class_data.gd" id="28_w3rk5"]
 [ext_resource type="Script" uid="uid://b1l8uicvodmvw" path="res://Background/Scripts/stone_interactable_tile.gd" id="30_5mvff"]
 
@@ -286,6 +287,11 @@ charisma = 1
 faith = 1
 metadata/_custom_type_script = "uid://blaaacoyl7slh"
 
+[sub_resource type="Resource" id="Resource_5mkgo"]
+script = ExtResource("18_devvj")
+slots = Array[ExtResource("19_3b0ty")]([ExtResource("26_sph85"), ExtResource("27_o7g6l"), ExtResource("18_gb15f"), SubResource("Resource_bvekf"), SubResource("Resource_hjrdd")])
+metadata/_custom_type_script = "uid://b3bnc4m3u2lkx"
+
 [sub_resource type="Resource" id="Resource_ud8ml"]
 script = ExtResource("23_hhcpw")
 max_hp = 1
@@ -453,7 +459,7 @@ skin_offset = Vector2(5, 12)
 
 [node name="Squirrel" parent="GameBoard" instance=ExtResource("2")]
 position = Vector2(671.294, 361.315)
-held_items = ExtResource("18_5tuhn")
+held_items = SubResource("Resource_5mkgo")
 hp = 50
 unit_data = SubResource("Resource_hri7i")
 current_stats = SubResource("Resource_40n85")

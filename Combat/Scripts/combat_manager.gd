@@ -67,28 +67,30 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 		print("No weapon equipped for attack")
 		return false
 
+	# --- Handle ammo for ranged weapons ---
 	if weapon.weapon_type == WeaponItemData.WeaponType.SLING:
-		var has_stones = false
+		var ammo_slot: SlotData = null
 		for slot in attacker.held_items.slots:
-			if slot.item_data.name == "Stone" and slot.quantity > 0:
-				has_stones = true
+			if slot.item_data.name in ["Jagged Stone", "Smooth Stone"] and slot.quantity > 0:
+				ammo_slot = slot
 				break
-		if not has_stones:
+
+		if ammo_slot == null:
 			print("⚠ Cannot attack with sling — no stones!")
-			return false  # cancel attack
+			return false
 
-		for slot in attacker.held_items.slots:
-			if slot.item_data.name == "Stone" and slot.quantity > 0:
-				slot.quantity -= 1
-				if slot.quantity == 0:
-					attacker.held_items.slots.erase(slot)
-				break
+		# Consume 1 ammo
+		ammo_slot.quantity -= 1
+		if ammo_slot.quantity <= 0:
+			attacker.held_items.slots.erase(ammo_slot)
 
+	# --- Calculate combat stats ---
 	var stats = CombatCalculator.calculate_combat_stats(attacker, defender)
 	var hit_chance = stats.get("ah", 0)
 	var crit_chance = stats.get("ac", 0)
 	var damage = stats.get("dpa", 0)
-	
+
+	# --- Roll hit / crit ---
 	var did_hit = _roll_chance(hit_chance)
 	var did_crit = false
 	if did_hit:
@@ -96,25 +98,28 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 		if did_crit:
 			damage *= 3
 		defender.take_damage(damage)
-		print(attacker.unit_data.unit_name, "hits", defender.unit_data.unit_name, "for", damage, ( "(CRIT)" if did_crit else "") )
+		print("%s hits %s for %d%s" % [attacker.unit_data.unit_name, defender.unit_data.unit_name, damage, "(CRIT)" if did_crit else ""])
 
-		# Grant XP on hit (not only on kill)
+		# Grant XP on hit
 		var defeated = defender.hp <= 0
-		var xp_reward = defender.get_reward_xp(attacker, defeated )
+		var xp_reward = defender.get_reward_xp(attacker, defeated)
 		attacker.gain_xp(xp_reward)
 	else:
-		print(attacker.unit_data.unit_name, "misses", defender.unit_data.unit_name)
+		print("%s misses %s" % [attacker.unit_data.unit_name, defender.unit_data.unit_name])
 
+	# --- Decrement weapon durability ---
 	var broken = weapon.decrement_durability()
 	if broken:
 		print(weapon.name, "broke!")
 		attacker.equipped_weapon = null
 
+	# --- Check for unit death ---
 	if defender.hp <= 0:
 		_emit_unit_death(defender)
 		return false
 
 	return true
+
 
 
 

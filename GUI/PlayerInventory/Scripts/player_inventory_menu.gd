@@ -1,11 +1,14 @@
 #player_inventory_menu.gd
 extends CanvasLayer
 
-@export var unit: Unit
-@onready var item_list_container = $Panel/VBoxContainer/ScrollContainer/ItemListContainer
-var game_board: GameBoard
 const CATEGORY_ALL: int = -1  # For showing everything
+signal menu_closed
+
+@export var unit: Unit
+var game_board: GameBoard
 var current_category: int = CATEGORY_ALL
+
+@onready var item_list_container = $Panel/VBoxContainer/ScrollContainer/ItemListContainer
 @onready var tab_buttons := {
 	ItemData.Category.PROVISIONS: $Panel/VBoxContainer/CategoryTabs/ProvisionsButton,
 	ItemData.Category.MISC: $Panel/VBoxContainer/CategoryTabs/MiscButton,
@@ -145,7 +148,8 @@ func _on_close_button_pressed() -> void:
 		if child.get_script() and child.get_script().resource_path == "res://GUI/ItemMenus/selected_item_menu.gd":
 			child.queue_free()
 			break
-
+	
+	emit_signal("menu_closed")
 	# Close this inventory menu
 	queue_free()
 

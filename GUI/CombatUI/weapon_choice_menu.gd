@@ -243,6 +243,6 @@ func _reset_to_initial_weapon():
 
 func _has_sling_ammo() -> bool:
 	for ammo_slot in unit.held_items.slots:
-		if ammo_slot.item_data.name == "Stone" and ammo_slot.quantity > 0:
+		if (ammo_slot.item_data.name == "Jagged Stone" or ammo_slot.item_data.name == "Smooth Stone") and ammo_slot.quantity > 0:
 			return true
 	return false
