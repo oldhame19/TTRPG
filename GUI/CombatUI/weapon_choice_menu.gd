@@ -175,9 +175,9 @@ func populate_weapons():
 func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
 	var menu_panel = Panel.new()
 	menu_panel.name = "SlingAmmoChoice"
-	menu_panel.custom_minimum_size = Vector2(200, 120)  # correct for Panel
+	menu_panel.custom_minimum_size = Vector2(200, 120)
 	add_child(menu_panel)
-	menu_panel.position = Vector2(300, 200)  # adjust to screen
+	menu_panel.position = Vector2(300, 200)
 
 	var vbox_menu = VBoxContainer.new()
 	menu_panel.add_child(vbox_menu)
@@ -191,19 +191,33 @@ func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
 		var ammo_btn = Button.new()
 		ammo_btn.text = ammo_name
 		vbox_menu.add_child(ammo_btn)
+
 		ammo_btn.pressed.connect(func():
 			selected_sling_ammo_name = ammo_name
 			has_selected_weapon = true
+			
+			if weapon is SlingWeapon:
+				weapon._reset_to_base_stats()
+				weapon.set_ammo(ammo_name)
+			
 			unit.equip_item(weapon)
+
 			unit.attack_range = weapon.atk_range
+
+			# Update forecast immediately
 			_update_forecast_label(weapon)
+			# Update attackable cells
 			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, weapon)
 			game_board._unit_overlay.clear_attackable_cells()
 			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
 			game_board.cursor.set_allowed_cells(attackable_cells)
 			game_board.cursor.show_sprite = true
 			game_board.cursor.set_pointer_visible(false)
-			menu_panel.queue_free()  # close menu
+
+			# Refresh weapon list to update "[E]" indicator
+			populate_weapons()
+
+			menu_panel.queue_free()
 		)
 
 	# Close button
@@ -213,6 +227,7 @@ func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
 	close_btn.pressed.connect(func():
 		menu_panel.queue_free()
 	)
+
 
 
 func _can_weapon_hit_enemies(weapon: WeaponItemData) -> bool:

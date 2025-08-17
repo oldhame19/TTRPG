@@ -67,22 +67,31 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 		print("No weapon equipped for attack")
 		return false
 
-	# --- Handle ammo for ranged weapons ---
+	# --- Handle ammo for slings ---
 	if weapon.weapon_type == WeaponItemData.WeaponType.SLING:
+		var sling_weapon := weapon as SlingWeapon
+		var selected_ammo_name := sling_weapon.get_selected_ammo()
+		if selected_ammo_name == "":
+			print("⚠ No ammo selected for sling!")
+			return false
+
 		var ammo_slot: SlotData = null
 		for slot in attacker.held_items.slots:
-			if slot.item_data.name in ["Jagged Stone", "Smooth Stone"] and slot.quantity > 0:
+			if slot.item_data.name == selected_ammo_name and slot.quantity > 0:
 				ammo_slot = slot
 				break
 
 		if ammo_slot == null:
-			print("⚠ Cannot attack with sling — no stones!")
+			print("⚠ Selected ammo '%s' is out!" % selected_ammo_name)
+			# Optionally prompt for another ammo here
+			sling_weapon.set_ammo("")  # reset selected ammo
 			return false
 
 		# Consume 1 ammo
 		ammo_slot.quantity -= 1
 		if ammo_slot.quantity <= 0:
 			attacker.held_items.slots.erase(ammo_slot)
+			sling_weapon.set_ammo("")  # reset if no ammo left
 
 	# --- Calculate combat stats ---
 	var stats = CombatCalculator.calculate_combat_stats(attacker, defender)
@@ -119,6 +128,7 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 		return false
 
 	return true
+
 
 
 
