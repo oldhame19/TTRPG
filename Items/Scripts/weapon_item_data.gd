@@ -13,8 +13,6 @@ enum Effectiveness {NONE, GIANT, CAVALRY}
 @export var crit_chance: int = 0
 @export var effective_against: Effectiveness = Effectiveness.NONE
 
-
-
 func decrement_durability() -> bool:
 	durability -= 1
 	return durability <= 0

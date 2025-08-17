@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SlotData" load_steps=3 format=3 uid="uid://plbjmftkhbiy"]
+
+[ext_resource type="Script" uid="uid://dmphg5nlphaa6" path="res://GUI/PlayerInventory/Scripts/slot_data.gd" id="1_8xjil"]
+[ext_resource type="Resource" uid="uid://u2xf4u0j5lom" path="res://Items/ItemResources/Misc/jagged_stone.tres" id="1_gsih8"]
+
+[resource]
+script = ExtResource("1_8xjil")
+item_data = ExtResource("1_gsih8")
+quantity = 5
+metadata/_custom_type_script = "uid://dmphg5nlphaa6"

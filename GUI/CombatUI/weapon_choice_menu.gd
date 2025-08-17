@@ -11,7 +11,7 @@ var unit: Unit
 var game_board: GameBoard
 var attackable_cells := []
 var position_on_screen: Vector2 = Vector2(100, 100)
-
+var selected_sling_ammo_name: String = ""
 var original_weapon: WeaponItemData
 var original_attack_range: int
 var has_selected_weapon := false
@@ -136,13 +136,22 @@ func populate_weapons():
 		)
 
 		button.pressed.connect(func():
+			if w.weapon_type == WeaponItemData.WeaponType.SLING:
+				var ammo_types := []
+				for ammo_slot in unit.held_items.slots:
+					if ammo_slot.item_data.name in ["Jagged Stone", "Smooth Stone"] and ammo_slot.quantity > 0:
+						ammo_types.append(ammo_slot.item_data.name)
+				if ammo_types.size() > 1:
+					_show_sling_ammo_choice_menu(w, ammo_types)
+					return  # wait for player to pick ammo
+				elif ammo_types.size() == 1:
+					selected_sling_ammo_name = ammo_types[0]
 			if w != unit.equipped_weapon:
 				has_selected_weapon = true
 				unit.equip_item(w)
 			unit.attack_range = w.atk_range
 
 			_update_forecast_label(w)
-
 			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, w)
 			game_board._unit_overlay.clear_attackable_cells()
 			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
@@ -162,6 +171,48 @@ func populate_weapons():
 		)
 
 		vbox.add_child(button)
+
+func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
+	var menu_panel = Panel.new()
+	menu_panel.name = "SlingAmmoChoice"
+	menu_panel.custom_minimum_size = Vector2(200, 120)  # correct for Panel
+	add_child(menu_panel)
+	menu_panel.position = Vector2(300, 200)  # adjust to screen
+
+	var vbox_menu = VBoxContainer.new()
+	menu_panel.add_child(vbox_menu)
+	vbox_menu.anchor_right = 1
+	vbox_menu.anchor_bottom = 1
+	vbox_menu.size_flags_vertical = Control.SIZE_FILL
+	vbox_menu.size_flags_horizontal = Control.SIZE_FILL
+
+	# Ammo buttons
+	for ammo_name in ammo_types:
+		var ammo_btn = Button.new()
+		ammo_btn.text = ammo_name
+		vbox_menu.add_child(ammo_btn)
+		ammo_btn.pressed.connect(func():
+			selected_sling_ammo_name = ammo_name
+			has_selected_weapon = true
+			unit.equip_item(weapon)
+			unit.attack_range = weapon.atk_range
+			_update_forecast_label(weapon)
+			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, weapon)
+			game_board._unit_overlay.clear_attackable_cells()
+			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
+			game_board.cursor.set_allowed_cells(attackable_cells)
+			game_board.cursor.show_sprite = true
+			game_board.cursor.set_pointer_visible(false)
+			menu_panel.queue_free()  # close menu
+		)
+
+	# Close button
+	var close_btn = Button.new()
+	close_btn.text = "Close"
+	vbox_menu.add_child(close_btn)
+	close_btn.pressed.connect(func():
+		menu_panel.queue_free()
+	)
 
 
 func _can_weapon_hit_enemies(weapon: WeaponItemData) -> bool:
