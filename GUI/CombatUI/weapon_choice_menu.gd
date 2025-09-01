@@ -192,6 +192,28 @@ func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
 		ammo_btn.text = ammo_name
 		vbox_menu.add_child(ammo_btn)
 
+		# Hover preview
+		ammo_btn.mouse_entered.connect(func():
+			if weapon is SlingWeapon:
+				var current_ammo = weapon.get_selected_ammo()
+				
+				weapon._reset_to_base_stats()
+				weapon._apply_ammo_stats(ammo_name)
+				_update_forecast_label(weapon)
+
+		# IMPORTANT: reset back so we don’t actually equip it yet
+				weapon._reset_to_base_stats()
+				if weapon.get_selected_ammo() != "":
+					weapon.set_ammo(current_ammo)
+		)
+
+		# Reset forecast when leaving button
+		ammo_btn.mouse_exited.connect(func():
+			#_update_forecast_label(weapon)
+			forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+		)
+
+		# Selection
 		ammo_btn.pressed.connect(func():
 			selected_sling_ammo_name = ammo_name
 			has_selected_weapon = true
@@ -199,14 +221,12 @@ func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
 			if weapon is SlingWeapon:
 				weapon._reset_to_base_stats()
 				weapon.set_ammo(ammo_name)
-			
-			unit.equip_item(weapon)
 
+			unit.equip_item(weapon)
 			unit.attack_range = weapon.atk_range
 
-			# Update forecast immediately
+			# Update forecast and overlays
 			_update_forecast_label(weapon)
-			# Update attackable cells
 			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, weapon)
 			game_board._unit_overlay.clear_attackable_cells()
 			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
@@ -224,9 +244,12 @@ func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
 	var close_btn = Button.new()
 	close_btn.text = "Close"
 	vbox_menu.add_child(close_btn)
+	close_btn.mouse_entered.connect(func():
+	# explicitly do nothing so forecast stays whatever it was
+		pass
+)
 	close_btn.pressed.connect(func():
-		menu_panel.queue_free()
-	)
+		menu_panel.queue_free())
 
 
 

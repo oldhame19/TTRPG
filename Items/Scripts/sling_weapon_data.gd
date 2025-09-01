@@ -19,10 +19,6 @@ func _init():
 	base_crit_chance = crit_chance
 
 func set_ammo(ammo_name: String) -> void:
-	if base_power == 0 and base_hit_chance == 0 and base_crit_chance == 0:
-		base_power = power
-		base_hit_chance = hit_chance
-		base_crit_chance = crit_chance
 	if ammo_name in ammo_modifiers:
 		selected_ammo = ammo_name
 		_apply_ammo_stats(ammo_name)
@@ -37,9 +33,26 @@ func _apply_ammo_stats(ammo_name: String) -> void:
 	crit_chance = base_crit_chance + mods.get("crit_chance", 0)
 
 func _reset_to_base_stats() -> void:
-	base_power = power
-	base_hit_chance = hit_chance
-	base_crit_chance = crit_chance
+	power = base_power
+	hit_chance = base_hit_chance
+	crit_chance = base_crit_chance
 
 func get_selected_ammo() -> String:
 	return selected_ammo
+
+func get_forecast_with_ammo(ammo_name: String) -> Dictionary:
+	var preview_power = base_power
+	var preview_hit = base_hit_chance
+	var preview_crit = base_crit_chance
+
+	if ammo_modifiers.has(ammo_name):
+		var mods = ammo_modifiers[ammo_name]
+		preview_power += mods.get("power")
+		preview_hit += mods.get("hit_chance")
+		preview_crit += mods.get("crit_chance")
+
+	return {
+		"power": preview_power,
+		"hit_chance": preview_hit,
+		"crit_chance": preview_crit
+	}
