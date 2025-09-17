@@ -1,5 +1,6 @@
 #item_data.gd
-class_name ItemData extends Resource
+class_name ItemData 
+extends Resource
 
 enum Category {MELEE, RANGED, PROVISIONS, MISC, EQUIPMENT}
 

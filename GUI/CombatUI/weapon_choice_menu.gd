@@ -173,6 +173,8 @@ func populate_weapons():
 		vbox.add_child(button)
 
 func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
+	if has_node("SlingAmmoChoice"):
+		return
 	var menu_panel = Panel.new()
 	menu_panel.name = "SlingAmmoChoice"
 	menu_panel.custom_minimum_size = Vector2(200, 120)
@@ -195,22 +197,19 @@ func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
 		# Hover preview
 		ammo_btn.mouse_entered.connect(func():
 			if weapon is SlingWeapon:
-				var current_ammo = weapon.get_selected_ammo()
-				
-				weapon._reset_to_base_stats()
-				weapon._apply_ammo_stats(ammo_name)
-				_update_forecast_label(weapon)
-
-		# IMPORTANT: reset back so we don’t actually equip it yet
-				weapon._reset_to_base_stats()
-				if weapon.get_selected_ammo() != "":
-					weapon.set_ammo(current_ammo)
+				var preview_weapon = weapon.duplicate() # if SlingWeapon supports it
+				preview_weapon._reset_to_base_stats()
+				preview_weapon._apply_ammo_stats(ammo_name)
+				_update_forecast_label(preview_weapon)
 		)
 
 		# Reset forecast when leaving button
 		ammo_btn.mouse_exited.connect(func():
-			#_update_forecast_label(weapon)
-			forecast_label.text = "ATK: --     HIT: --     CRIT: --"
+			if unit.equipped_weapon:
+				_update_forecast_label(unit.equipped_weapon)
+			else:
+				#_update_forecast_label(weapon)
+				forecast_label.text = "ATK: --     HIT: --     CRIT: --"
 		)
 
 		# Selection
