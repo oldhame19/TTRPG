@@ -193,11 +193,6 @@ func walk_along(path: PackedVector2Array) -> void:
 	
 
 func equip_item(item: ItemData) -> void:
-	print("=== EQUIP DEBUG ===")
-	print("Before Equip:")
-	print("Equipped Weapon:", equipped_weapon.name if equipped_weapon else "None")
-	print("Equipped Armor:", equipped_armor.name if equipped_armor else "None")
-	print("Strength:", current_stats.strength, " | Defense:", current_stats.defense, " | Speed:", current_stats.speed)
 
 	if item is WeaponItemData:
 		var weapon := item as WeaponItemData
@@ -230,12 +225,6 @@ func equip_item(item: ItemData) -> void:
 		equipment.equipped = true
 		apply_stat_bonuses(equipment)
 		current_stats.speed -= equipment.weight  # Apply new weight
-
-	print("After Equip:")
-	print("Equipped Weapon:", equipped_weapon.name if equipped_weapon else "None")
-	print("Equipped Armor:", equipped_armor.name if equipped_armor else "None")
-	print("Strength:", current_stats.strength, " | Defense:", current_stats.defense, " | Speed:", current_stats.speed)
-	print("===================")
 
 
 func unequip_item(item: ItemData) -> void:

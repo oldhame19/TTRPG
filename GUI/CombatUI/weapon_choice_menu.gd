@@ -146,9 +146,9 @@ func _show_sling_mode_choice_menu(sling_weapon: SlingWeapon, available_modes: Ar
 		return
 	var panel = Panel.new()
 	panel.name = "SlingModeChoice"
-	panel.custom_minimum_size = Vector2(220, 140)
+	panel.custom_minimum_size = Vector2(150, 100)
 	add_child(panel)
-	panel.position = Vector2(300, 200)
+	panel.position = Vector2(400, 200)
 
 	var vbox_menu = VBoxContainer.new()
 	panel.add_child(vbox_menu)
@@ -164,10 +164,13 @@ func _show_sling_mode_choice_menu(sling_weapon: SlingWeapon, available_modes: Ar
 
 		# Hover preview: use the sling's forecast helper so no mutation happens
 		btn.mouse_entered.connect(func():
-			var preview = sling_weapon.get_forecast_with_mode(mode)
-			forecast_label.text = "ATK: %d     HIT: %d     CRIT: %d" % [
-				preview.power, preview.hit, preview.crit
-	]
+			sling_weapon.set_mode(mode)
+			unit.equip_item(sling_weapon)
+			_update_forecast_label(unit.equipped_weapon)
+			#var preview = sling_weapon.get_forecast_with_mode(mode)
+			#forecast_label.text = "ATK: %d     HIT: %d     CRIT: %d" % [
+				#preview.power, preview.hit, preview.crit
+	#]
 )
 
 
@@ -177,17 +180,22 @@ func _show_sling_mode_choice_menu(sling_weapon: SlingWeapon, available_modes: Ar
 
 		btn.pressed.connect(func():
 			# set the mode first (mutates the sling instance)
-			sling_weapon.set_mode(mode)
+			
 
 			# ensure the unit is equipping the exact sling instance (so calculators read the new mode)
-			has_selected_weapon = true
+			sling_weapon.set_mode(mode)
 			unit.equip_item(sling_weapon)
+			
+			has_selected_weapon = true
 			unit.attack_range = sling_weapon.atk_range
 
-			# update forecasts and overlays using the equipped weapon (consistent)
-			_update_forecast_label(unit.equipped_weapon)
-			_draw_weapon_attack_cells(unit.equipped_weapon)
+			game_board.cursor.set_allowed_cells(attackable_cells)
+			game_board.cursor.hide()
 			game_board.cursor.process_mode = Node.PROCESS_MODE_INHERIT
+			game_board.cursor.show_sprite = true
+			game_board.cursor.set_pointer_visible(false)
+			game_board.cursor.center_on_unit(unit)
+			
 			populate_weapons()
 			panel.queue_free()
 		)
