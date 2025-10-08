@@ -11,7 +11,7 @@ var unit: Unit
 var game_board: GameBoard
 var attackable_cells := []
 var position_on_screen: Vector2 = Vector2(100, 100)
-var selected_sling_ammo_name: String = ""
+var selected_sling_mode: int = SlingWeapon.SlingMode.DEFAULT
 var original_weapon: WeaponItemData
 var original_attack_range: int
 var has_selected_weapon := false
@@ -82,28 +82,12 @@ func populate_weapons():
 			weapon.max_durability
 		]
 
-		var can_hit_enemy := false
-
-		if unit.current_class and weapon.weapon_type in unit.current_class.allowed_weapon_types:
-			if weapon.weapon_type != WeaponItemData.WeaponType.SLING or _has_sling_ammo():
-				var unit_cell = unit.grid.calculate_grid_coordinates(unit.position)
-				var weapon_range_cells = game_board._flood_fill(unit_cell, weapon.atk_range)
-
-				for cell_pos in weapon_range_cells:
-					if game_board._units.has(cell_pos):
-						var target_unit = game_board._units[cell_pos]
-						if target_unit.is_enemy:
-							can_hit_enemy = true
-							break
-
-		button.disabled = not can_hit_enemy
+		button.disabled = not _can_weapon_hit_enemies(weapon)
 
 		var w := weapon
 
 		button.mouse_entered.connect(func():
-			# Show hovered weapon forecast
 			_update_forecast_label(w)
-
 			game_board.cursor.center_on_unit(unit)
 			if game_board.combat_forecast_panel:
 				game_board.combat_forecast_panel.visible = false
@@ -114,45 +98,29 @@ func populate_weapons():
 		)
 
 		button.mouse_exited.connect(func():
-			# Return to showing equipped weapon forecast if available
-			if unit.equipped_weapon:
-				_update_forecast_label(unit.equipped_weapon)
-				if _can_weapon_hit_enemies(unit.equipped_weapon):
-					_draw_weapon_attack_cells(unit.equipped_weapon)
-				else:
-					var longest_weapon = _get_longest_range_weapon()
-					if longest_weapon:
-						_draw_weapon_attack_cells(longest_weapon)
-					else:
-						game_board._unit_overlay.clear_attackable_cells()
-			else:
-				var longest_weapon = _get_longest_range_weapon()
-				if longest_weapon:
-					forecast_label.text = "ATK: --     HIT: --     CRIT: --"
-					_draw_weapon_attack_cells(longest_weapon)
-				else:
-					forecast_label.text = "ATK: --     HIT: --     CRIT: --"
-					game_board._unit_overlay.clear_attackable_cells()
+			_reset_to_initial_weapon()
 		)
 
 		button.pressed.connect(func():
-			if w.weapon_type == WeaponItemData.WeaponType.SLING:
-				var ammo_types := []
-				for ammo_slot in unit.held_items.slots:
-					if ammo_slot.item_data.name in ["Jagged Stone", "Smooth Stone"] and ammo_slot.quantity > 0:
-						ammo_types.append(ammo_slot.item_data.name)
-				if ammo_types.size() > 1:
-					_show_sling_ammo_choice_menu(w, ammo_types)
-					return  # wait for player to pick ammo
-				elif ammo_types.size() == 1:
-					selected_sling_ammo_name = ammo_types[0]
+			# If it's a sling, handle mode selection/auto-select
+			if w is SlingWeapon:
+				var available_modes := _get_available_sling_modes()
+				if available_modes.size() > 1:
+					_show_sling_mode_choice_menu(w, available_modes)
+					return
+				elif available_modes.size() == 1:
+					# set mode on the weapon *before* equipping so forecasts & calculators pick it up
+					w.set_mode(available_modes[0])
+
 			if w != unit.equipped_weapon:
 				has_selected_weapon = true
+				# ensure unit's equipped reference is the exact instance we modified (important for SlingWeapon modes)
 				unit.equip_item(w)
 			unit.attack_range = w.atk_range
 
-			_update_forecast_label(w)
-			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, w)
+			# refresh forecast and overlays using the equipped weapon (consistent source)
+			_update_forecast_label(unit.equipped_weapon)
+			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, unit.equipped_weapon)
 			game_board._unit_overlay.clear_attackable_cells()
 			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
 
@@ -172,84 +140,62 @@ func populate_weapons():
 
 		vbox.add_child(button)
 
-func _show_sling_ammo_choice_menu(weapon: WeaponItemData, ammo_types: Array):
-	if has_node("SlingAmmoChoice"):
+
+func _show_sling_mode_choice_menu(sling_weapon: SlingWeapon, available_modes: Array):
+	if has_node("SlingModeChoice"):
 		return
-	var menu_panel = Panel.new()
-	menu_panel.name = "SlingAmmoChoice"
-	menu_panel.custom_minimum_size = Vector2(200, 120)
-	add_child(menu_panel)
-	menu_panel.position = Vector2(300, 200)
+	var panel = Panel.new()
+	panel.name = "SlingModeChoice"
+	panel.custom_minimum_size = Vector2(220, 140)
+	add_child(panel)
+	panel.position = Vector2(300, 200)
 
 	var vbox_menu = VBoxContainer.new()
-	menu_panel.add_child(vbox_menu)
+	panel.add_child(vbox_menu)
 	vbox_menu.anchor_right = 1
 	vbox_menu.anchor_bottom = 1
 	vbox_menu.size_flags_vertical = Control.SIZE_FILL
 	vbox_menu.size_flags_horizontal = Control.SIZE_FILL
 
-	# Ammo buttons
-	for ammo_name in ammo_types:
-		var ammo_btn = Button.new()
-		ammo_btn.text = ammo_name
-		vbox_menu.add_child(ammo_btn)
+	for mode in available_modes:
+		var btn = Button.new()
+		btn.text = _mode_to_ammo_name(mode)
+		vbox_menu.add_child(btn)
 
-		# Hover preview
-		ammo_btn.mouse_entered.connect(func():
-			if weapon is SlingWeapon:
-				var preview_weapon = weapon.duplicate() # if SlingWeapon supports it
-				preview_weapon._reset_to_base_stats()
-				preview_weapon._apply_ammo_stats(ammo_name)
-				_update_forecast_label(preview_weapon)
-		)
-
-		# Reset forecast when leaving button
-		ammo_btn.mouse_exited.connect(func():
-			if unit.equipped_weapon:
-				_update_forecast_label(unit.equipped_weapon)
-			else:
-				#_update_forecast_label(weapon)
-				forecast_label.text = "ATK: --     HIT: --     CRIT: --"
-		)
-
-		# Selection
-		ammo_btn.pressed.connect(func():
-			selected_sling_ammo_name = ammo_name
-			has_selected_weapon = true
-			
-			if weapon is SlingWeapon:
-				weapon._reset_to_base_stats()
-				weapon.set_ammo(ammo_name)
-
-			unit.equip_item(weapon)
-			unit.attack_range = weapon.atk_range
-
-			# Update forecast and overlays
-			_update_forecast_label(weapon)
-			attackable_cells = game_board.get_attackable_cells_for_weapon(unit, weapon)
-			game_board._unit_overlay.clear_attackable_cells()
-			game_board._unit_overlay.draw_attackable_cells(attackable_cells)
-			game_board.cursor.set_allowed_cells(attackable_cells)
-			game_board.cursor.show_sprite = true
-			game_board.cursor.set_pointer_visible(false)
-
-			# Refresh weapon list to update "[E]" indicator
-			populate_weapons()
-
-			menu_panel.queue_free()
-		)
-
-	# Close button
-	var close_btn = Button.new()
-	close_btn.text = "Close"
-	vbox_menu.add_child(close_btn)
-	close_btn.mouse_entered.connect(func():
-	# explicitly do nothing so forecast stays whatever it was
-		pass
+		# Hover preview: use the sling's forecast helper so no mutation happens
+		btn.mouse_entered.connect(func():
+			var preview = sling_weapon.get_forecast_with_mode(mode)
+			forecast_label.text = "ATK: %d     HIT: %d     CRIT: %d" % [
+				preview.power, preview.hit, preview.crit
+	]
 )
-	close_btn.pressed.connect(func():
-		menu_panel.queue_free())
 
+
+		btn.mouse_exited.connect(func():
+			_reset_to_initial_weapon()
+		)
+
+		btn.pressed.connect(func():
+			# set the mode first (mutates the sling instance)
+			sling_weapon.set_mode(mode)
+
+			# ensure the unit is equipping the exact sling instance (so calculators read the new mode)
+			has_selected_weapon = true
+			unit.equip_item(sling_weapon)
+			unit.attack_range = sling_weapon.atk_range
+
+			# update forecasts and overlays using the equipped weapon (consistent)
+			_update_forecast_label(unit.equipped_weapon)
+			_draw_weapon_attack_cells(unit.equipped_weapon)
+			game_board.cursor.process_mode = Node.PROCESS_MODE_INHERIT
+			populate_weapons()
+			panel.queue_free()
+		)
+
+	var close_btn = Button.new()
+	close_btn.text = "Cancel"
+	vbox_menu.add_child(close_btn)
+	close_btn.pressed.connect(func(): panel.queue_free())
 
 
 func _can_weapon_hit_enemies(weapon: WeaponItemData) -> bool:
@@ -267,6 +213,12 @@ func _can_weapon_hit_enemies(weapon: WeaponItemData) -> bool:
 			var target_unit = game_board._units[cell_pos]
 			if target_unit.is_enemy:
 				return true
+	return false
+
+func _has_sling_ammo() -> bool:
+	for ammo_slot in unit.held_items.slots:
+		if (ammo_slot.item_data.name == "Jagged Stone" or ammo_slot.item_data.name == "Smooth Stone") and ammo_slot.quantity > 0:
+			return true
 	return false
 
 
@@ -329,8 +281,24 @@ func _reset_to_initial_weapon():
 			game_board._unit_overlay.clear_attackable_cells()
 
 
-func _has_sling_ammo() -> bool:
+func _get_available_sling_modes() -> Array:
+	var modes := []
 	for ammo_slot in unit.held_items.slots:
-		if (ammo_slot.item_data.name == "Jagged Stone" or ammo_slot.item_data.name == "Smooth Stone") and ammo_slot.quantity > 0:
-			return true
-	return false
+		match ammo_slot.item_data.name:
+			"Jagged Stone":
+				if not modes.has(SlingWeapon.SlingMode.JAGGED):
+					modes.append(SlingWeapon.SlingMode.JAGGED)
+			"Smooth Stone":
+				if not modes.has(SlingWeapon.SlingMode.SMOOTH):
+					modes.append(SlingWeapon.SlingMode.SMOOTH)
+	return modes
+
+
+func _mode_to_ammo_name(mode: int) -> String:
+	match mode:
+		SlingWeapon.SlingMode.JAGGED:
+			return "Jagged Stone"
+		SlingWeapon.SlingMode.SMOOTH:
+			return "Smooth Stone"
+		_:
+			return "Unknown"

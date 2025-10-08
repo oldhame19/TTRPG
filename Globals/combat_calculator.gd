@@ -1,4 +1,3 @@
-#combat_calculator.gd
 extends Node
 
 # =========================
@@ -66,12 +65,28 @@ static func calculate_forecast_stats(attacker: Unit, defender: Unit, temp_weapon
 	var crit := 0
 	var effectiveness := 1
 
+	# === Prepare weapon-based values in a type-safe way ===
+	var weapon_power: int = 0
+	var weapon_hit: int = 0
+	var weapon_crit: int = 0
+
+	if weapon != null:
+		if weapon is SlingWeapon:
+			var sling := weapon as SlingWeapon
+			weapon_power = int(sling.get_power())
+			weapon_hit = int(sling.get_hit_chance())
+			weapon_crit = int(sling.get_crit_chance())
+		else:
+			weapon_power = int(weapon.power)
+			weapon_hit = int(weapon.hit_chance)
+			weapon_crit = int(weapon.crit_chance)
+
 	# ========== ATTACK ==========
 	if weapon != null:
 		if weapon.effective_against != WeaponItemData.Effectiveness.NONE and defender != null and defender.current_class != null:
 			if weapon.effective_against == defender.current_class.class_type:
 				effectiveness = 2
-		attack = str + int(weapon.power * effectiveness)
+		attack = str + int(weapon_power * effectiveness)
 	else:
 		attack = str
 
@@ -83,13 +98,13 @@ static func calculate_forecast_stats(attacker: Unit, defender: Unit, temp_weapon
 		var manhattan_distance: int = abs(attacker_pos.x - defender_pos.x) + abs(attacker_pos.y - defender_pos.y)
 		if manhattan_distance > 1:
 			distance_penalty = weapon.distance_hit_penalty
-		hit = weapon.hit_chance + int((dex + faith) / 2) - distance_penalty + hit_bonus
+		hit = weapon_hit + int((dex + faith) / 2) - distance_penalty + hit_bonus
 	else:
 		hit = (dex * 2) + int(faith / 2) + hit_bonus
 
 	# ========== CRIT ==========
 	if weapon != null:
-		crit = weapon.crit_chance + int((dex + faith) / 2) + crit_bonus
+		crit = weapon_crit + int((dex + faith) / 2) + crit_bonus
 	else:
 		crit = int((dex + faith) / 2) + crit_bonus
 
@@ -194,11 +209,18 @@ static func calculate_combat_stats(attacker: Unit, defender: Unit) -> Dictionary
 	# ========== DPA ==========
 	var atk_power: int = atk_str
 	if atk_weapon != null:
+		var weapon_power: int = 0
+		if atk_weapon is SlingWeapon:
+			var atk_sling := atk_weapon as SlingWeapon
+			weapon_power = int(atk_sling.get_power())
+		else:
+			weapon_power = int(atk_weapon.power)
+
 		var effectiveness: int = 1
 		if atk_weapon.effective_against != WeaponItemData.Effectiveness.NONE and defender.current_class != null:
 			if int(atk_weapon.effective_against) == int(defender.current_class.class_type):
 				effectiveness = 2
-		atk_power += int(atk_weapon.power * effectiveness)
+		atk_power += int(weapon_power * effectiveness)
 
 	var dpa: int = max(0, atk_power - prt)
 

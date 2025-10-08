@@ -1,58 +1,42 @@
 extends WeaponItemData
 class_name SlingWeapon
 
-var selected_ammo: String = ""
+enum SlingMode { DEFAULT, JAGGED, SMOOTH }
 
-var ammo_modifiers := {
-	"Jagged Stone": {"power": 6, "hit_chance": -10, "crit_chance": 5},
-	"Smooth Stone": {"power": 3, "hit_chance": 10, "crit_chance": 0}
+var mode: SlingMode = SlingMode.DEFAULT
+
+# Keep immutable base stats
+@export var base_power: int
+@export var base_hit: int
+@export var base_crit: int
+
+# Store ammo modifiers per mode
+var mode_modifiers := {
+	SlingMode.JAGGED: {"power": 6, "hit": 75, "crit": 5},
+	SlingMode.SMOOTH: {"power": 3, "hit": 90, "crit": 0},
+	SlingMode.DEFAULT: {"power": 0, "hit": 0, "crit": 0},
 }
 
-# Store the original base stats when the weapon is created
-var base_power: int
-var base_hit_chance: int
-var base_crit_chance: int
+func set_mode(new_mode: SlingMode) -> void:
+	mode = new_mode
 
-func _init():
-	base_power = power
-	base_hit_chance = hit_chance
-	base_crit_chance = crit_chance
+func get_mode() -> SlingMode:
+	return mode
 
-func set_ammo(ammo_name: String) -> void:
-	if ammo_name in ammo_modifiers:
-		selected_ammo = ammo_name
-		_apply_ammo_stats(ammo_name)
-	else:
-		selected_ammo = ""
-		_reset_to_base_stats()
+# Computed properties (no stat mutation!)
+func get_power() -> int:
+	return base_power + mode_modifiers[mode].get("power", 0)
 
-func _apply_ammo_stats(ammo_name: String) -> void:
-	var mods = ammo_modifiers[ammo_name]
-	power = base_power + mods.get("power", 0)
-	hit_chance = base_hit_chance + mods.get("hit_chance", 0)
-	crit_chance = base_crit_chance + mods.get("crit_chance", 0)
+func get_hit_chance() -> int:
+	return base_hit + mode_modifiers[mode].get("hit", 0)
 
-func _reset_to_base_stats() -> void:
-	power = base_power
-	hit_chance = base_hit_chance
-	crit_chance = base_crit_chance
+func get_crit_chance() -> int:
+	return base_crit + mode_modifiers[mode].get("crit", 0)
 
-func get_selected_ammo() -> String:
-	return selected_ammo
-
-func get_forecast_with_ammo(ammo_name: String) -> Dictionary:
-	var preview_power = base_power
-	var preview_hit = base_hit_chance
-	var preview_crit = base_crit_chance
-
-	if ammo_modifiers.has(ammo_name):
-		var mods = ammo_modifiers[ammo_name]
-		preview_power += mods.get("power")
-		preview_hit += mods.get("hit_chance")
-		preview_crit += mods.get("crit_chance")
-
+func get_forecast_with_mode(test_mode: SlingMode) -> Dictionary:
+	var mods = mode_modifiers[test_mode]
 	return {
-		"power": preview_power,
-		"hit_chance": preview_hit,
-		"crit_chance": preview_crit
+		"power": base_power + mods.get("power", 0),
+		"hit": base_hit + mods.get("hit", 0),
+		"crit": base_crit + mods.get("crit", 0),
 	}

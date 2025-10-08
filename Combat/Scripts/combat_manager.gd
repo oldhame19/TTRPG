@@ -1,26 +1,17 @@
 extends CanvasLayer
 class_name CombatManager
 
-signal combat_finished(attacker, defender, result) 
-# result can be a dictionary or enum for win/loss/draw if needed
+signal combat_finished(attacker, defender, result)
 
-# To be assigned externally before starting combat
 var attacker: Unit
 var defender: Unit
-
-# Reference to the combat_calculator singleton or autoload
-#@onready var combat_calc = preload("res://Globals/combat_calculator.gd")
 
 func start_combat(attacking_unit: Unit, defending_unit: Unit) -> void:
 	attacker = attacking_unit
 	defender = defending_unit
-	
+
 	attacker.has_acted = true
 	attacker.update_acted_visual()
-	# Disable input or pause game as needed here
-
-	# Run combat sequence asynchronously (simulate step-by-step)
-	# For now just run straight through
 	_run_combat()
 
 func _run_combat() -> void:
@@ -28,10 +19,7 @@ func _run_combat() -> void:
 		print("CombatManager: attacker or defender null")
 		return
 
-	# Small delay before starting
-	#await get_tree().create_timer(0.05).timeout
-
-	# Step 1: Attacker hits defender
+	# Step 1: Attacker attacks
 	if !_perform_attack(attacker, defender):
 		emit_signal("combat_finished", attacker, defender, {"status": "finished"})
 		return
@@ -44,14 +32,14 @@ func _run_combat() -> void:
 			return
 		await get_tree().process_frame
 
-	# Step 3: Attacker double attacks if possible
+	# Step 3: Attacker double attacks
 	if _can_double_attack(attacker, defender):
 		if !_perform_attack(attacker, defender):
 			emit_signal("combat_finished", attacker, defender, {"status": "finished"})
 			return
 		await get_tree().process_frame
 
-	# Step 4: Defender double attacks if possible and can retaliate
+	# Step 4: Defender double attacks if possible
 	if _can_retaliate(defender, attacker) and _can_double_attack(defender, attacker):
 		if !_perform_attack(defender, attacker):
 			emit_signal("combat_finished", attacker, defender, {"status": "finished"})
@@ -64,34 +52,49 @@ func _run_combat() -> void:
 func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 	var weapon = attacker.equipped_weapon
 	if weapon == null:
-		print("No weapon equipped for attack")
+		print("⚠ No weapon equipped for attack")
 		return false
 
-	# --- Handle ammo for slings ---
-	if weapon.weapon_type == WeaponItemData.WeaponType.SLING:
-		var sling_weapon := weapon as SlingWeapon
-		var selected_ammo_name := sling_weapon.get_selected_ammo()
-		if selected_ammo_name == "":
-			print("⚠ No ammo selected for sling!")
+	# --- Sling-specific handling ---
+	if weapon.weapon_type == WeaponItemData.WeaponType.SLING and weapon is SlingWeapon:
+		var sling_weapon: SlingWeapon = weapon
+		var mode = sling_weapon.get_mode()
+
+		if mode == SlingWeapon.SlingMode.DEFAULT:
+			print("⚠ No ammo mode selected for sling!")
 			return false
 
+		# Determine which ammo type corresponds to mode
+		var ammo_name := ""
+		match mode:
+			SlingWeapon.SlingMode.JAGGED:
+				ammo_name = "Jagged Stone"
+			SlingWeapon.SlingMode.SMOOTH:
+				ammo_name = "Smooth Stone"
+			_:
+				ammo_name = ""
+
+		if ammo_name == "":
+			print("⚠ Unknown ammo mode")
+			return false
+
+		# Find matching ammo and consume 1 unit
 		var ammo_slot: SlotData = null
 		for slot in attacker.held_items.slots:
-			if slot.item_data.name == selected_ammo_name and slot.quantity > 0:
+			if slot.item_data and slot.item_data.name == ammo_name and slot.quantity > 0:
 				ammo_slot = slot
 				break
 
 		if ammo_slot == null:
-			print("⚠ Selected ammo '%s' is out!" % selected_ammo_name)
-			# Optionally prompt for another ammo here
-			sling_weapon.set_ammo("")  # reset selected ammo
+			print("⚠ Out of %s ammo!" % ammo_name)
+			sling_weapon.set_mode(SlingWeapon.SlingMode.DEFAULT)
 			return false
 
-		# Consume 1 ammo
 		ammo_slot.quantity -= 1
 		if ammo_slot.quantity <= 0:
 			attacker.held_items.slots.erase(ammo_slot)
-			sling_weapon.set_ammo("")  # reset if no ammo left
+			print("💥 %s ammo depleted!" % ammo_name)
+			sling_weapon.set_mode(SlingWeapon.SlingMode.DEFAULT)
 
 	# --- Calculate combat stats ---
 	var stats = CombatCalculator.calculate_combat_stats(attacker, defender)
@@ -107,7 +110,12 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 		if did_crit:
 			damage *= 3
 		defender.take_damage(damage)
-		print("%s hits %s for %d%s" % [attacker.unit_data.unit_name, defender.unit_data.unit_name, damage, "(CRIT)" if did_crit else ""])
+		print("%s hits %s for %d%s" % [
+			attacker.unit_data.unit_name,
+			defender.unit_data.unit_name,
+			damage,
+			"(CRIT)" if did_crit else ""
+		])
 
 		# Grant XP on hit
 		var defeated = defender.hp <= 0
@@ -122,7 +130,7 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 		print(weapon.name, "broke!")
 		attacker.equipped_weapon = null
 
-	# --- Check for unit death ---
+	# --- Check for death ---
 	if defender.hp <= 0:
 		_emit_unit_death(defender)
 		return false
@@ -130,39 +138,34 @@ func _perform_attack(attacker: Unit, defender: Unit) -> bool:
 	return true
 
 
-
-
-
 func _can_retaliate(defender: Unit, attacker: Unit) -> bool:
-	# Check if defender has weapon equipped and can attack attacker based on range
 	if defender.equipped_weapon == null:
 		return false
 	if not _is_in_attack_range(defender, attacker):
 		return false
 	return true
 
+
 func _can_double_attack(attacker: Unit, defender: Unit) -> bool:
 	var stats = CombatCalculator.calculate_combat_stats(attacker, defender)
 	return stats.get("double", false)
+
 
 func _is_in_attack_range(attacker: Unit, defender: Unit) -> bool:
 	if attacker.attack_range <= 0:
 		return false
 
-	# Make sure positions are grid-aligned
 	var atk_pos = attacker.grid.calculate_grid_coordinates(attacker.position)
 	var def_pos = defender.grid.calculate_grid_coordinates(defender.position)
 	var dist = abs(atk_pos.x - def_pos.x) + abs(atk_pos.y - def_pos.y)
 
-	# Allow attacks within attack_range, including melee (adjacent)
 	return dist > 0 and dist <= attacker.attack_range
 
 
 func _roll_chance(chance: int) -> bool:
-	# chance is percentage 0-100
 	return randi() % 100 < chance
+
 
 func _emit_unit_death(unit: Unit) -> void:
 	print(unit.unit_data.unit_name, "has died!")
 	unit.emit_signal("unit_died", unit)
-	# Additional cleanup can be done here (e.g. removing from board)

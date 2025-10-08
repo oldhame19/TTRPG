@@ -9,6 +9,9 @@ region = Rect2(223, 1718, 20, 21)
 
 [resource]
 script = ExtResource("1_nkw3v")
+base_power = 0
+base_hit = 0
+base_crit = 0
 weapon_type = 6
 power = 0
 atk_range = 2
