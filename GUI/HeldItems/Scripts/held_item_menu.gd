@@ -1,41 +1,46 @@
 extends CanvasLayer
 class_name HeldItemsMenu
+
 @export var unit: Unit
 @onready var item_list_container = $Panel/VBoxContainer/ScrollContainer/ItemListContainer
 var game_board: GameBoard
 var opened_from_summary: bool = false
 
 const CATEGORY_ALL: int = -1
-var side: String = "A" 
+var side: String = "A"
 
 func _ready():
 	if not unit:
 		push_warning("No unit provided for HeldItemsMenu.")
 		queue_free()
 		return
+
 	var unit_name = unit.unit_data.unit_name if unit.unit_data != null else unit.name
 	$Panel/VBoxContainer/Label.text = "%s's Items" % unit_name
 	populate_items()
+
 
 func populate_items():
 	# Clear previous UI children
 	for child in item_list_container.get_children():
 		child.queue_free()
 
-	# Clone and pad the held items to always show 5 slots
-	var padded_slots: Array[SlotData] = []
+	# Sync equipped flags with the unit
 	for slot in unit.held_items.slots:
-		padded_slots.append(slot)
-	
+		if slot.item_data:
+			slot.item_data.equipped = (
+				slot.item_data == unit.equipped_weapon or slot.item_data == unit.equipped_armor
+			)
 
-	# Pad with empty slots if needed
+	# Pad the held items to always show 5 slots
+	var padded_slots: Array[SlotData] = unit.held_items.slots.duplicate()
 	while padded_slots.size() < 5:
 		var empty_slot := SlotData.new()
-		empty_slot.item_data = null  # no item
+		empty_slot.item_data = null
 		empty_slot.quantity = 0
 		padded_slots.append(empty_slot)
 
-	# Populate UI using the padded slots
+	# Build the list
 	for slot in padded_slots:
 		var button := Button.new()
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -54,7 +59,7 @@ func populate_items():
 		left_spacer.custom_minimum_size = Vector2(10, 0)
 		hbox.add_child(left_spacer)
 
-		# Item icon
+		# Icon
 		var icon := TextureRect.new()
 		icon.custom_minimum_size = Vector2(32, 32)
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -75,8 +80,10 @@ func populate_items():
 		var name_label := Label.new()
 
 		if slot.item_data:
-			var equipped_indicator = " [E] " if slot.item_data.equipped else ""
-			name_label.text =  equipped_indicator + slot.item_data.name
+			var equipped_indicator := ""
+			if slot.item_data == unit.equipped_weapon or slot.item_data == unit.equipped_armor:
+				equipped_indicator = " [E] "
+			name_label.text = equipped_indicator + slot.item_data.name
 		else:
 			name_label.text = "(Empty)"
 		name_label.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -116,6 +123,7 @@ func populate_items():
 func _on_item_selected(slot: SlotData, button: Button) -> void:
 	if slot.item_data == null and not SelectedItemMenu.pending_trade_data.has("slot"):
 		return
+
 	if SelectedItemMenu.pending_trade_data.has("slot"):
 		var first_data = SelectedItemMenu.pending_trade_data
 		var temp_data = first_data.slot.item_data
@@ -125,10 +133,8 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 		slot.item_data = temp_data
 		slot.quantity = temp_qty
 
-		# Refresh this menu (held items menu)
 		populate_items()
 
-		# Refresh other menus correctly depending on their populate_items signature
 		for node in get_tree().get_root().get_children():
 			if node is CanvasLayer and node != self:
 				var script = node.get_script()
@@ -144,7 +150,6 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 			SelectedItemMenu.active_popup.queue_free()
 		return
 
-	# Normal item select flow (open selected item popup)
 	var popup = preload("res://GUI/ItemMenus/selected_item_menu.tscn").instantiate()
 	popup.slot = slot
 	popup.unit = unit
@@ -152,7 +157,7 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	popup.source_button = button
 	popup.game_board = game_board
 	popup.side = side
-	
+
 	if opened_from_summary:
 		popup.opened_from_summary = true
 
@@ -161,15 +166,14 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 	var button_pos = button.get_position()
 	var offset := Vector2()
 
-	# Use trade UI positioning if active
 	if game_board._current_trade_scene != null:
 		match side:
 			"A":
-				offset = Vector2(113, 75)  # Trade UI - Left side
+				offset = Vector2(113, 75)
 			"B":
-				offset = Vector2(970, 75)    # Trade UI - Right side
+				offset = Vector2(970, 75)
 			_:
-				offset = Vector2(140, 75)   # Fallback
+				offset = Vector2(140, 75)
 	else:
 		if unit and unit.is_player:
 			offset = Vector2(140, 75)
@@ -193,13 +197,16 @@ func _on_item_selected(slot: SlotData, button: Button) -> void:
 
 	if slot.item_data and slot.item_data.equipped:
 		offset.x -= 22
+
 	popup.set_position(button_pos + offset)
-	
+
 	if opened_from_summary:
-		popup.set_position(button_pos + Vector2(690, 105))  # Custom offset for summary view
+		popup.set_position(button_pos + Vector2(690, 105))
+
 
 func _on_close_button_pressed() -> void:
 	game_board._unit_info_panel.visible = true
+
 	if unit and unit.is_player:
 		for child in get_tree().get_root().get_children():
 			if child is CanvasLayer and child.get_script().resource_path == "res://GUI/PlayerInventory/Scripts/player_inventory_menu.gd":
@@ -212,4 +219,4 @@ func _on_close_button_pressed() -> void:
 			child.queue_free()
 			break
 
-	queue_free() 
+	queue_free()
