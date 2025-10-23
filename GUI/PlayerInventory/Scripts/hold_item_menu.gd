@@ -63,31 +63,38 @@ func _hold_items(amount_to_hold: int) -> void:
 
 	var total_transferred = 0
 
-	# Merge into existing stacks in held items
-	for held_slot in held_items.slots:
-		if held_slot.item_data.name == item_data.name and \
-		   held_slot.item_data.durability == item_data.durability:
+	# Check if item is a weapon
+	var is_weapon := item_data is WeaponItemData
 
-			var max_stack = held_slot.item_data.stack_size
-			var space_left = max_stack - held_slot.quantity
-			if space_left > 0:
-				var transfer = min(remaining, space_left)
-				held_slot.quantity += transfer
-				remaining -= transfer
-				total_transferred += transfer
-				if remaining <= 0:
-					break
+	if not is_weapon:
+		# Merge into existing stacks for non-weapons
+		for held_slot in held_items.slots:
+			if held_slot.item_data.name == item_data.name and \
+			   held_slot.item_data.durability == item_data.durability:
 
-	# Add as new stack if any remain
-	if remaining > 0:
+				var max_stack = held_slot.item_data.stack_size
+				var space_left = max_stack - held_slot.quantity
+				if space_left > 0:
+					var transfer = min(remaining, space_left)
+					held_slot.quantity += transfer
+					remaining -= transfer
+					total_transferred += transfer
+					if remaining <= 0:
+						break
+
+	# Add as new slot(s) for remaining items
+	while remaining > 0 and held_items.slots.size() < 5:
 		var new_slot = slot.clone()
-		new_slot.quantity = remaining
+		new_slot.quantity = 1 if is_weapon else min(remaining, item_data.stack_size)
 		held_items.slots.append(new_slot)
-		total_transferred += remaining
-		remaining = 0
+		total_transferred += new_slot.quantity
+		remaining -= new_slot.quantity
 
-	# Decrement player inventory slot only once after transfers
-	# Find actual slot in player inventory and update it
+	# If held items are full and items remain, they stay in inventory
+	if remaining > 0:
+		print("Held items full — could not transfer all items.")
+
+	# Decrement from player inventory only once
 	for i in range(player_inventory.slots.size()):
 		var inv_slot = player_inventory.slots[i]
 		if inv_slot == slot:
@@ -96,8 +103,8 @@ func _hold_items(amount_to_hold: int) -> void:
 				player_inventory.slots.remove_at(i)
 			break
 
-	# Refresh menus to update UI
 	_refresh_menus()
+
 
 func _refresh_menus():
 	for child in get_tree().get_root().get_children():
