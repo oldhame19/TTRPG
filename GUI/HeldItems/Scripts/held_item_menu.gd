@@ -25,7 +25,7 @@ func populate_items():
 	# Clone and pad the held items to always show 5 slots
 	var padded_slots: Array[SlotData] = []
 	for slot in unit.held_items.slots:
-		padded_slots.append(slot.clone())
+		padded_slots.append(slot)
 	
 
 	# Pad with empty slots if needed

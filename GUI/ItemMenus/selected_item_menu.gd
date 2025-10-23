@@ -1,3 +1,4 @@
+#selected_item_menu.gd
 extends Control  # Or PopupPanel, etc.
 class_name SelectedItemMenu
 static var active_popup: Control = null

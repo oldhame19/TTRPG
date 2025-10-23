@@ -34,23 +34,18 @@ func _ready():
 
 
 func populate_items() -> void:
-	# Deep copy inventory slots to ensure unique instances
-	var copied_slots: Array[SlotData] = []
-	for slot in unit.inventory.slots:
-		copied_slots.append(slot.clone())
+	# Use the actual inventory slots — don't clone or overwrite them.
+	var items: Array[SlotData] = []
 
-	# Replace inventory slots with copies
-	unit.inventory.slots = copied_slots
-
-	var items: Array[SlotData]
 	if current_category == CATEGORY_ALL:
-		items = copied_slots
+		items = unit.inventory.slots
 	else:
-		items = copied_slots.filter(func(slot: SlotData) -> bool:
-			return slot.item_data.category == current_category
+		items = unit.inventory.slots.filter(func(slot: SlotData) -> bool:
+			return slot.item_data and slot.item_data.category == current_category
 		)
 
 	display_items(items)
+
 
 
 func display_items(items: Array[SlotData]) -> void:
