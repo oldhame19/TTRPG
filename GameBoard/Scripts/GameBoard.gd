@@ -89,6 +89,62 @@ func _ready() -> void:
 	# Start the battle after nodes are safely in the tree
 	start_battle()
 
+## Generates a list of walkable cells based on unit movement value and tile movement cost
+func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Array:
+	var curr_unit = _units[cell]
+	var movable_cells = [cell] # append our base cell to the array
+	var visited = [] # 2d array that keeps track of which cells we've already looked at while running the algorithm
+	var distances = [] # shows distance to each cell, might be useful. can omit if you want to
+	var previous = [] #2d array that shows you which cell you have to take to get there to get the shortest path. can omit if you want to
+	
+	for y in range(grid.size.y):
+		visited.append([])
+		distances.append([])
+		previous.append([])
+		for x in range(grid.size.x):
+			visited[y].append(false)
+			distances[y].append(MAX_VALUE)
+			previous[y].append(null)
+	
+	var queue = PriorityQueue.new()
+	
+	queue.push(cell, 0) #starting cell
+	distances[cell.y][cell.x] = 0
+	
+	var tile_cost
+	var distance_to_node
+	var occupied_cells = []
+	
+	while not queue.is_empty():
+		var current = queue.pop() #take out the front node
+		visited[current.value.y][current.value.x] = true #mark front node as visited
+		
+		for direction in  DIRECTIONS:
+			var coordinates = current.value + direction #Go through all four neighbors of current node
+			if grid.is_within_bounds(coordinates):
+				if visited[coordinates.y][coordinates.x]:
+					continue
+				else:
+					tile_cost = _movement_costs[coordinates.y][coordinates.x]
+					
+					distance_to_node = current.priority + tile_cost #calculate tile cost normally
+					
+					if is_occupied(coordinates):
+						if curr_unit.is_enemy != _units[coordinates].is_enemy:
+							distance_to_node = current.priority + MAX_VALUE
+						elif _units[coordinates].has_acted and attackable_check:
+							occupied_cells.append(coordinates)
+					
+					visited[coordinates.y][coordinates.x] = true
+					distances[coordinates.y][coordinates.x] = distance_to_node
+				
+				if distance_to_node <= max_distance:
+					previous[coordinates.y][coordinates.x] = current.value
+					movable_cells.append(coordinates)
+					queue.push(coordinates, distance_to_node)
+	
+	return movable_cells.filter(func(i): return i not in occupied_cells)
+
 func get_adjacent_interactable(unit: Unit) -> InteractableTile:
 	for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
 		var neighbor_cell = unit.cell + direction
@@ -638,6 +694,80 @@ func _on_combat_finished(attacker: Unit):
 		combat_manager_instance.queue_free()
 		combat_manager_instance = null
 
+
+	
+
+	
+
+func _hover_display(cell: Vector2) -> void:
+	if not _unit_info_panel:
+		return
+
+	var hovered_unit = _units.get(cell, null)
+
+	if _current_action_menu:
+		if _current_action_menu.attack_mode_active:
+			_handle_attack_mode_hover(cell, hovered_unit)
+			return
+
+		if _current_action_menu.trade_mode_active:
+			_unit_info_panel.update_info(hovered_unit)
+			return
+
+		if _current_action_menu.assist_mode_active:
+			_unit_info_panel.update_info(hovered_unit)
+			return
+	
+	_handle_normal_hover(cell, hovered_unit)
+
+
+func _handle_attack_mode_hover(cell: Vector2, hovered_unit) -> void:
+	if hovered_unit != null and is_instance_valid(hovered_unit):
+		if _active_unit != null and hovered_unit.is_enemy and hovered_unit != _active_unit:
+			var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
+			var combat_stats = CombatCalculator.calculate_full_combat_stats(_active_unit, hovered_unit)
+			combat_forecast_panel.attacker_unit = _active_unit
+			combat_forecast_panel.defender_unit = hovered_unit
+			combat_forecast_panel.update_forecast(forecast, combat_stats)
+			combat_forecast_panel.visible = true
+			_unit_info_panel.visible = false
+
+			if _current_action_menu.weapon_choice_active:
+				return
+	else:
+		combat_forecast_panel.visible = false
+
+
+func _handle_normal_hover(cell: Vector2, hovered_unit) -> void:
+	if hovered_unit and is_instance_valid(hovered_unit):
+		_unit_info_panel.update_info(hovered_unit)
+		_unit_info_panel.visible = true
+
+		if _current_action_menu and _current_action_menu.weapon_choice_active:
+			return
+
+		
+		var walkable_cells = get_walkable_cells(hovered_unit)
+		var attackable_cells = get_attackable_cells(hovered_unit)
+
+		_unit_overlay.clear()
+		_unit_overlay.draw_walkable_cells(walkable_cells)
+		_unit_overlay.draw_attackable_cells(attackable_cells)
+		
+		if hovered_unit.current_class and hovered_unit.current_class.can_assist:
+			var assistable_cells = get_reachable_assistable_cells(hovered_unit)
+			_unit_overlay.draw_assistable_cells(assistable_cells)
+	#else:
+		#_clear_hover_display()
+
+
+func _clear_hover_display() -> void:
+	_unit_overlay.clear()
+	_unit_info_panel.update_info(null)
+	combat_forecast_panel.visible = false
+	_unit_info_panel.visible = false
+	
+	
 func _handle_trade_mode(cell: Vector2) -> void:
 	if _active_unit == null:
 		return
@@ -720,132 +850,6 @@ func _cleanup_after_trade(retained_unit: Unit) -> void:
 			_clear_active_unit()
 		_current_action_menu = null
 	)
-	
-## Generates a list of walkable cells based on unit movement value and tile movement cost
-func _dijkstra(cell: Vector2, max_distance: int, attackable_check: bool) -> Array:
-	var curr_unit = _units[cell]
-	var movable_cells = [cell] # append our base cell to the array
-	var visited = [] # 2d array that keeps track of which cells we've already looked at while running the algorithm
-	var distances = [] # shows distance to each cell, might be useful. can omit if you want to
-	var previous = [] #2d array that shows you which cell you have to take to get there to get the shortest path. can omit if you want to
-	
-	for y in range(grid.size.y):
-		visited.append([])
-		distances.append([])
-		previous.append([])
-		for x in range(grid.size.x):
-			visited[y].append(false)
-			distances[y].append(MAX_VALUE)
-			previous[y].append(null)
-	
-	var queue = PriorityQueue.new()
-	
-	queue.push(cell, 0) #starting cell
-	distances[cell.y][cell.x] = 0
-	
-	var tile_cost
-	var distance_to_node
-	var occupied_cells = []
-	
-	while not queue.is_empty():
-		var current = queue.pop() #take out the front node
-		visited[current.value.y][current.value.x] = true #mark front node as visited
-		
-		for direction in  DIRECTIONS:
-			var coordinates = current.value + direction #Go through all four neighbors of current node
-			if grid.is_within_bounds(coordinates):
-				if visited[coordinates.y][coordinates.x]:
-					continue
-				else:
-					tile_cost = _movement_costs[coordinates.y][coordinates.x]
-					
-					distance_to_node = current.priority + tile_cost #calculate tile cost normally
-					
-					if is_occupied(coordinates):
-						if curr_unit.is_enemy != _units[coordinates].is_enemy:
-							distance_to_node = current.priority + MAX_VALUE
-						elif _units[coordinates].has_acted and attackable_check:
-							occupied_cells.append(coordinates)
-					
-					visited[coordinates.y][coordinates.x] = true
-					distances[coordinates.y][coordinates.x] = distance_to_node
-				
-				if distance_to_node <= max_distance:
-					previous[coordinates.y][coordinates.x] = current.value
-					movable_cells.append(coordinates)
-					queue.push(coordinates, distance_to_node)
-	
-	return movable_cells.filter(func(i): return i not in occupied_cells)
-	
-
-func _hover_display(cell: Vector2) -> void:
-	if not _unit_info_panel:
-		return
-
-	var hovered_unit = _units.get(cell, null)
-
-	if _current_action_menu:
-		if _current_action_menu.attack_mode_active:
-			_handle_attack_mode_hover(cell, hovered_unit)
-			return
-
-		if _current_action_menu.trade_mode_active:
-			_unit_info_panel.update_info(hovered_unit)
-			return
-
-		if _current_action_menu.assist_mode_active:
-			_unit_info_panel.update_info(hovered_unit)
-			return
-	
-	_handle_normal_hover(cell, hovered_unit)
-
-
-func _handle_attack_mode_hover(cell: Vector2, hovered_unit) -> void:
-	if hovered_unit != null and is_instance_valid(hovered_unit):
-		if _active_unit != null and hovered_unit.is_enemy and hovered_unit != _active_unit:
-			var forecast = CombatCalculator.get_combat_forecast(_active_unit, hovered_unit)
-			var combat_stats = CombatCalculator.calculate_full_combat_stats(_active_unit, hovered_unit)
-			combat_forecast_panel.attacker_unit = _active_unit
-			combat_forecast_panel.defender_unit = hovered_unit
-			combat_forecast_panel.update_forecast(forecast, combat_stats)
-			combat_forecast_panel.visible = true
-			_unit_info_panel.visible = false
-
-			if _current_action_menu.weapon_choice_active:
-				return
-	else:
-		combat_forecast_panel.visible = false
-
-
-func _handle_normal_hover(cell: Vector2, hovered_unit) -> void:
-	if hovered_unit and is_instance_valid(hovered_unit):
-		_unit_info_panel.update_info(hovered_unit)
-		_unit_info_panel.visible = true
-
-		if _current_action_menu and _current_action_menu.weapon_choice_active:
-			return
-
-		
-		var walkable_cells = get_walkable_cells(hovered_unit)
-		var attackable_cells = get_attackable_cells(hovered_unit)
-
-		_unit_overlay.clear()
-		_unit_overlay.draw_walkable_cells(walkable_cells)
-		_unit_overlay.draw_attackable_cells(attackable_cells)
-		
-		if hovered_unit.current_class and hovered_unit.current_class.can_assist:
-			var assistable_cells = get_reachable_assistable_cells(hovered_unit)
-			_unit_overlay.draw_assistable_cells(assistable_cells)
-	#else:
-		#_clear_hover_display()
-
-
-func _clear_hover_display() -> void:
-	_unit_overlay.clear()
-	_unit_info_panel.update_info(null)
-	combat_forecast_panel.visible = false
-	_unit_info_panel.visible = false
-	
 func _get_configuration_warning() -> String:
 	var warning := ""
 	if not grid:
