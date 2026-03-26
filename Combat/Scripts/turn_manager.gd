@@ -334,6 +334,7 @@
 		#reward += 5.0
 #
 	#return reward
+	
 extends Node
 class_name TurnManager
 
@@ -346,14 +347,26 @@ signal battle_ended(winner: String)
 
 const DIRECTIONS = [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]
 
-# ================= Reinforcement Learning Settings =================
+# ================= DBN Hidden State =================
+# Hidden variable 1: Player Intent
+var belief_player_intent := {
+	"aggressive": 0.4,
+	"defensive": 0.4,
+	"retreating": 0.2
+}
 
-const LEARNING_RATE := 0.1
-const DISCOUNT := 0.9
-const EPSILON := 0.15
+# Hidden variable 2: Threat level per tile
+var threat_map := {}   # Dictionary<Vector2, float>
 
-# Q(s,a) table
-var q_table := {}
+# Hidden variable 3: Probability each player unit will be targeted / is threatening
+var target_priority := {}   # Dictionary<int, float>  (unit instance id -> probability)
+
+# ================= Observation History =================
+var last_player_observation := {
+	"num_attacks": 0,
+	"num_waits": 0,
+	"avg_forward_movement": 0.0
+}
 
 # ================= Phase Management =================
 
@@ -381,7 +394,13 @@ func start_phase(phase_name: String) -> void:
 			for u in unit_groups.get(group_name, []):
 				if is_instance_valid(u) and not u.is_dead:
 					u.reset_turn()
+
 	else:
+		# Before enemy acts, update DBN beliefs from previous player behavior
+		_observe_player_turn()
+		_prediction_step()
+		_update_step()
+
 		await game_board.phase_transition_finished
 		var units: Array[Unit] = _alive_units("enemy")
 		if units.is_empty():
@@ -394,7 +413,7 @@ func end_phase() -> void:
 		return
 	_phase_ending = true
 
-	emit_signal("phase_ended")
+	emit_signal("phase_ended", phases[current_phase_index])
 
 	if _check_battle_end():
 		_phase_ending = false
@@ -432,9 +451,7 @@ func _check_battle_end() -> bool:
 # ================= AI Phase =================
 
 func _run_ai_phase(units: Array[Unit]) -> void:
-
 	for u in units:
-
 		if not is_instance_valid(u) or u.is_dead:
 			continue
 
@@ -444,24 +461,13 @@ func _run_ai_phase(units: Array[Unit]) -> void:
 			await _run_boss_ai(u)
 			continue
 
-		var state = _extract_state(u)
-
-		var action = _choose_action(u, state)
-
-		var reward = await _execute_learning_action(u, action)
-
-		var next_state = "terminal"
-		if is_instance_valid(u) and not u.is_dead:
-			next_state = _extract_state(u)
-
-		_td_update(state, action, reward, next_state)
-
+		var action = _choose_dbn_action(u)
+		await _execute_dbn_action(u, action)
 		unit_finished_turn(u)
 
 # ================= Boss AI =================
 
 func _run_boss_ai(u: Unit) -> void:
-
 	for p in _alive_units("player"):
 		var dist = abs(u.cell.x - p.cell.x) + abs(u.cell.y - p.cell.y)
 		if dist <= u.attack_range:
@@ -475,7 +481,6 @@ func _run_boss_ai(u: Unit) -> void:
 		for p in _alive_units("player"):
 			var dist = abs(move_cell.x - p.cell.x) + abs(move_cell.y - p.cell.y)
 			if dist <= u.attack_range:
-
 				var path = _find_path_to_cell(moves, move_cell, u.cell)
 
 				game_board._units.erase(u.cell)
@@ -492,108 +497,271 @@ func _run_boss_ai(u: Unit) -> void:
 
 	unit_finished_turn(u)
 
-# ================= RL State Representation =================
+# =========================================================
+# ================= DBN OBSERVATION MODEL =================
+# =========================================================
 
-func _extract_state(unit: Unit) -> String:
+func _observe_player_turn() -> void:
+	# Simple approximation of observed player behavior.
+	# Replace this with your actual player action logs if available.
 
-	if not is_instance_valid(unit):
-		return "terminal"
+	var num_attacks := 0
+	var num_waits := 0
+	var total_forward := 0.0
+	var counted := 0
 
-	if unit.is_dead:
-		return "terminal"
-
-	if unit.current_stats == null:
-		return "terminal"
-
-	var max_hp := unit.current_stats.max_hp
-
-	if max_hp <= 0:
-		return "terminal"
-
-	var hp_ratio = float(unit.hp) / float(max_hp)
-	var hp_bucket = int(hp_ratio * 10) / 10.0
-
-	var nearest_enemy_dist := 999
-
-	for enemy in _alive_units("player"):
-		if not is_instance_valid(enemy) or enemy.is_dead:
+	for p in _alive_units("player"):
+		if not is_instance_valid(p) or p.is_dead:
 			continue
 
-		var d = _dist(unit.cell, enemy.cell)
-		if d < nearest_enemy_dist:
-			nearest_enemy_dist = d
+		# If you track actual player action history, use that instead.
+		# Placeholder logic:
+		if p.has_acted:
+			num_attacks += 1
 
-	var in_enemy_range := false
+		# Estimate forward pressure by closeness to nearest enemy
+		var nearest_enemy_dist := 999
+		for e in _alive_units("enemy"):
+			var d = _dist(p.cell, e.cell)
+			if d < nearest_enemy_dist:
+				nearest_enemy_dist = d
 
-	for enemy in _alive_units("player"):
-		if not is_instance_valid(enemy) or enemy.is_dead:
+		total_forward += max(0, 10 - nearest_enemy_dist)
+		counted += 1
+
+	last_player_observation["num_attacks"] = num_attacks
+	last_player_observation["num_waits"] = num_waits
+	last_player_observation["avg_forward_movement"] = (total_forward / max(1, counted))
+
+# =========================================================
+# ================= DBN TRANSITION MODEL ==================
+# =========================================================
+
+func _prediction_step() -> void:
+	# Transition model P(X_t | X_t-1)
+	# Predict new intent beliefs before incorporating observations.
+
+	var prev = belief_player_intent.duplicate()
+
+	var new_aggressive = (
+		prev["aggressive"] * 0.70 +
+		prev["defensive"] * 0.20 +
+		prev["retreating"] * 0.10
+	)
+
+	var new_defensive = (
+		prev["aggressive"] * 0.20 +
+		prev["defensive"] * 0.60 +
+		prev["retreating"] * 0.20
+	)
+
+	var new_retreating = (
+		prev["aggressive"] * 0.10 +
+		prev["defensive"] * 0.20 +
+		prev["retreating"] * 0.70
+	)
+
+	belief_player_intent["aggressive"] = new_aggressive
+	belief_player_intent["defensive"] = new_defensive
+	belief_player_intent["retreating"] = new_retreating
+
+	_normalize_intent_beliefs()
+
+# =========================================================
+# ================= DBN UPDATE / INFERENCE ================
+# =========================================================
+
+func _update_step() -> void:
+	# Observation model P(E_t | X_t)
+	# Update beliefs using observed player behavior.
+
+	var attacks = last_player_observation["num_attacks"]
+	var forward = last_player_observation["avg_forward_movement"]
+
+	# Likelihood estimates
+	var likelihood_aggressive = 1.0 + attacks * 0.35 + forward * 0.08
+	var likelihood_defensive = 1.0 + max(0, 2 - attacks) * 0.20
+	var likelihood_retreating = 1.0 + max(0, 3 - forward) * 0.15
+
+	belief_player_intent["aggressive"] *= likelihood_aggressive
+	belief_player_intent["defensive"] *= likelihood_defensive
+	belief_player_intent["retreating"] *= likelihood_retreating
+
+	_normalize_intent_beliefs()
+
+	_rebuild_threat_map()
+	_rebuild_target_priority()
+
+func _normalize_intent_beliefs() -> void:
+	var total = (
+		belief_player_intent["aggressive"] +
+		belief_player_intent["defensive"] +
+		belief_player_intent["retreating"]
+	)
+
+	if total <= 0:
+		belief_player_intent = {
+			"aggressive": 0.4,
+			"defensive": 0.4,
+			"retreating": 0.2
+		}
+		return
+
+	for k in belief_player_intent.keys():
+		belief_player_intent[k] /= total
+
+# =========================================================
+# ================= THREAT MAP INFERENCE ==================
+# =========================================================
+
+func _rebuild_threat_map() -> void:
+	threat_map.clear()
+
+	for p in _alive_units("player"):
+		if not is_instance_valid(p) or p.is_dead:
 			continue
 
-		if _dist(unit.cell, enemy.cell) <= enemy.attack_range:
-			in_enemy_range = true
-			break
+		var reachable = game_board._dijkstra(p.cell, p.move_range, false)
 
-	return str(unit.cell) + "|" + str(hp_bucket) + "|" + str(nearest_enemy_dist) + "|" + str(in_enemy_range)
-# ================= RL Action Space =================
+		for tile in reachable:
+			var dist = _dist(tile, p.cell)
+			var tile_threat = 1.0
+
+			if dist <= p.move_range + p.attack_range:
+				tile_threat += 2.0
+
+			# Adjust by inferred player intent
+			tile_threat *= (
+				1.0 +
+				belief_player_intent["aggressive"] * 0.75 -
+				belief_player_intent["retreating"] * 0.35
+			)
+
+			if not threat_map.has(tile):
+				threat_map[tile] = 0.0
+
+			threat_map[tile] += tile_threat
+
+func _rebuild_target_priority() -> void:
+	target_priority.clear()
+
+	for e in _alive_units("enemy"):
+		if not is_instance_valid(e) or e.is_dead:
+			continue
+
+		var score := 0.0
+
+		# Low HP enemies are more likely targets
+		var hp_ratio = float(e.hp) / max(1.0, float(e.current_stats.max_hp))
+		score += (1.0 - hp_ratio) * 2.0
+
+		# Closer to player front line = higher chance of being targeted
+		for p in _alive_units("player"):
+			var d = _dist(e.cell, p.cell)
+			score += max(0, 6 - d) * 0.25
+
+		score *= (1.0 + belief_player_intent["aggressive"] * 0.5)
+
+		target_priority[e.get_instance_id()] = score
+
+# =========================================================
+# ================= ACTION GENERATION =====================
+# =========================================================
 
 func _available_actions(unit: Unit) -> Array:
-
 	var actions := []
 
 	var reachable = game_board._dijkstra(unit.cell, unit.move_range, false)
 
 	for cell in reachable:
-		if cell != unit.cell:
-			actions.append("move_" + str(cell.x) + "_" + str(cell.y))
+		if cell == unit.cell:
+			continue
+
+		# HARD BLOCK: never allow moving into an occupied cell
+		if game_board.is_occupied(cell):
+			continue
+
+		actions.append("move_" + str(cell.x) + "_" + str(cell.y))
 
 	for enemy in _alive_units("player"):
 		if _dist(unit.cell, enemy.cell) <= unit.attack_range:
 			actions.append("attack_" + str(enemy.get_instance_id()))
 
 	actions.append("wait")
-
 	return actions
 
-# ================= ε-Greedy Policy =================
+# =========================================================
+# ================= DBN DECISION-MAKING ===================
+# =========================================================
 
-func _choose_action(unit: Unit, state: String) -> String:
-
+func _choose_dbn_action(unit: Unit) -> String:
 	var actions = _available_actions(unit)
 
-	if not q_table.has(state):
-		q_table[state] = {}
-
-	for a in actions:
-		if not q_table[state].has(a):
-			q_table[state][a] = 0.0
-
-	if randf() < EPSILON:
-		return actions.pick_random()
+	if actions.is_empty():
+		return "wait"
 
 	var best_action = actions[0]
-	var best_value = -INF
+	var best_score = -INF
 
-	for a in actions:
-		var v = q_table[state][a]
-		if v > best_value:
-			best_value = v
-			best_action = a
+	for action in actions:
+		var score = _evaluate_action_with_beliefs(unit, action)
 
+		if score > best_score:
+			best_score = score
+			best_action = action
+
+	print("DBN chose action:", best_action, " score:", best_score)
 	return best_action
 
-# ================= Execute Action =================
+func _evaluate_action_with_beliefs(unit: Unit, action: String) -> float:
+	var score := 0.0
 
-func _execute_learning_action(unit: Unit, action: String) -> float:
+	if action.begins_with("attack_"):
+		var id = action.split("_")[1].to_int()
 
-	var reward := 0.0
+		for player_unit in _alive_units("player"):
+			if player_unit.get_instance_id() == id:
+				score += _simulate_combat_reward(unit, player_unit)
 
+				# Aggressive player intent encourages proactive attacks
+				score += belief_player_intent["aggressive"] * 15.0
+				score -= belief_player_intent["retreating"] * 5.0
+
+				break
+
+	elif action.begins_with("move_"):
+		var parts = action.split("_")
+		var target = Vector2(parts[1].to_int(), parts[2].to_int())
+
+		var tile_threat = threat_map.get(target, 0.0)
+
+		# Prefer lower threat if player is aggressive
+		score -= tile_threat * 1.8
+
+		# Encourage moving toward high-value targets
+		for p in _alive_units("player"):
+			var d = _dist(target, p.cell)
+			score += max(0, 8 - d) * 1.2
+
+		# If this enemy is likely to be targeted, avoid dangerous tiles
+		var self_target_prob = target_priority.get(unit.get_instance_id(), 0.0)
+		score -= self_target_prob * tile_threat * 0.5
+
+	elif action == "wait":
+		score -= 10.0
+
+	return score
+
+# =========================================================
+# ================= ACTION EXECUTION ======================
+# =========================================================
+
+func _execute_dbn_action(unit: Unit, action: String) -> void:
 	if action.begins_with("move_"):
-
 		var parts = action.split("_")
 		var target = Vector2(parts[1].to_int(), parts[2].to_int())
 
 		var reachable = game_board._dijkstra(unit.cell, unit.move_range, false)
-
 		var path = _find_path_to_cell(reachable, target, unit.cell)
 
 		game_board._units.erase(unit.cell)
@@ -603,46 +771,30 @@ func _execute_learning_action(unit: Unit, action: String) -> float:
 		unit.walk_along(path)
 		await unit.walk_finished
 
-		reward += 5.0
+		# After moving, check if any player is now in range and attack best one
+		var best_target: Unit = null
+		var best_score := -INF
+
+		for p in _alive_units("player"):
+			if _dist(unit.cell, p.cell) <= unit.attack_range:
+				var s = _simulate_combat_reward(unit, p)
+				if s > best_score:
+					best_score = s
+					best_target = p
+
+		if best_target != null:
+			await _combat_attack(unit, best_target)
 
 	elif action.begins_with("attack_"):
-
 		var id = action.split("_")[1].to_int()
 
 		for enemy in _alive_units("player"):
 			if enemy.get_instance_id() == id:
-
-				reward += _simulate_combat_reward(unit, enemy)
-
 				await _combat_attack(unit, enemy)
-
-				if enemy.is_dead:
-					reward += 100
+				break
 
 	elif action == "wait":
-
-		reward -= 2.0
-
-	return reward
-
-# ================= Temporal Difference Update =================
-
-func _td_update(state: String, action: String, reward: float, next_state: String) -> void:
-
-	if not q_table.has(next_state):
-		q_table[next_state] = {}
-
-	var max_next := 0.0
-
-	for v in q_table[next_state].values():
-		if v > max_next:
-			max_next = v
-
-	var old_q = q_table[state][action]
-
-	var new_q = old_q + LEARNING_RATE * (reward + DISCOUNT * max_next - old_q)
-
-	q_table[state][action] = new_q
+		pass
 
 # ================= Helpers =================
 
@@ -654,19 +806,16 @@ func _alive_units(team: String) -> Array:
 	return arr
 
 func _dist(a: Vector2, b: Vector2) -> int:
-	return abs(a.x-b.x) + abs(a.y-b.y)
+	return abs(a.x - b.x) + abs(a.y - b.y)
 
 func _find_path_to_cell(reachable_cells: Array, target: Vector2, start: Vector2) -> Array[Vector2]:
-
 	var path: Array[Vector2] = []
 	var current: Vector2 = target
 	var safety_counter: int = 0
 	const MAX_ITER: int = 100
 
 	while current != start and safety_counter < MAX_ITER:
-
 		safety_counter += 1
-
 		path.insert(0, current)
 
 		var next_cell: Vector2 = Vector2(-1, -1)
@@ -676,7 +825,6 @@ func _find_path_to_cell(reachable_cells: Array, target: Vector2, start: Vector2)
 			var neighbor: Vector2 = current - dir
 
 			if reachable_cells.has(neighbor):
-
 				var dist: float = (neighbor - start).length()
 
 				if dist < min_dist:
@@ -702,11 +850,9 @@ func _on_combat_finished(attacker: Unit, defender: Unit, result: Dictionary) -> 
 	_combat_finished_flag = true
 
 func _combat_attack(attacker: Unit, defender: Unit) -> void:
-
 	_combat_finished_flag = false
 
 	combat_manager.connect("combat_finished", Callable(self, "_on_combat_finished"), CONNECT_ONE_SHOT)
-
 	combat_manager.start_combat(attacker, defender)
 
 	while not _combat_finished_flag:
@@ -715,7 +861,6 @@ func _combat_attack(attacker: Unit, defender: Unit) -> void:
 # ================= Reward Utility =================
 
 func _simulate_combat_reward(attacker: Unit, defender: Unit) -> float:
-
 	var combat_stats := CombatCalculator.calculate_combat_stats(attacker, defender)
 
 	var damage: float = float(combat_stats.get("dpa", 0))
